@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -97,7 +98,7 @@ class CustomSearchDelegate extends SearchDelegate {
     searchResult.clear();
 
     searchResult =   allNames.where((element) => element.toLowerCase().contains(query.trim().toLowerCase())).toList();
-    print ("searchResult:  ))))))))))))))))");print (searchResult);
+    print ("searchResult:  ");print (searchResult);
     return Container(
       margin: EdgeInsets.all(20),
       child: ListView.builder(
@@ -130,7 +131,24 @@ class CustomSearchDelegate extends SearchDelegate {
                   ),
                 ),
                 subtitle: Text("Código: "+_itemsBuscador[indexB]['itemCode']),
-                leading: Image.network(_itemsBuscador[indexB]['pictureUrl']),
+                leading:  GestureDetector(
+                  onTap: () {
+
+                    Navigator.push(context, MaterialPageRoute(builder: (_) {
+                      return DetailScreen(_itemsBuscador[indexB]['pictureUrl']);
+                    }));
+
+
+
+                  }, // Image tapped
+                  child: //Image.network(_items[index]['pictureUrl'], width: 40,height: 40),
+                  CachedNetworkImage(
+                    imageUrl: _itemsBuscador[indexB]['pictureUrl'],
+                    placeholder: (context, url) => CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
+                  ),
+                ),
+                //Image.network(_itemsBuscador[indexB]['pictureUrl']),
                 trailing: TextButton.icon(
                   onPressed: () {
                     ///BUSCAR ITEM SELLECCIONADO

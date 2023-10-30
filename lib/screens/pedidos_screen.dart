@@ -1,3 +1,6 @@
+import 'dart:ffi';
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -10,7 +13,7 @@ import 'package:intl/intl.dart';
 import 'buscador.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
-
+import 'package:productos_app/models/DatabaseHelper.dart';
 
 class PedidosPage extends StatefulWidget {
   const PedidosPage({Key? key}) : super(key: key);
@@ -19,7 +22,8 @@ class PedidosPage extends StatefulWidget {
   State<PedidosPage> createState() => _PedidosPageState();
 }
 
-class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClientMixin {
+class _PedidosPageState extends State<PedidosPage>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -27,9 +31,8 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
   final _formKey = GlobalKey<FormState>();
   List _items = [];
   List _stock = [];
-  List listaItems=[];
-  String empresa=GetStorage().read('empresa');
-
+  List listaItems = [];
+  String empresa = GetStorage().read('empresa');
 
   TextEditingController cantidadController = TextEditingController();
   TextEditingController observacionesController = TextEditingController();
@@ -38,13 +41,12 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
 
   String dropdownvalue2 = 'Elija un destino';
 
+  String nit = "";
+  String urlImagenItem = "";
 
-  String nit="";
-  String urlImagenItem="";
-
-  final pedidoJson={
+  final pedidoJson = {
     "cardCode": "C890911260",
-    "cardName":"TRANSALGAR SA",
+    "cardName": "TRANSALGAR SA",
     "nit": "890911260-7",
     "comments": "Prueba Sistemas",
     "companyName": "IGB",
@@ -60,7 +62,6 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
         "itemName": "(**)LLANTA 90-90-17 TL SPORT TOURING.TS692/TIMSUN_CONV",
         "whsCode": "01"
       },
-
       {
         "quantity": 3,
         "itemCode": "ED0023",
@@ -70,9 +71,9 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
     ]
   };
 
-  final pedidoTemp={
+  final pedidoTemp = {
     "cardCode": "",
-    "cardName":"",
+    "cardName": "",
     "nit": "",
     "comments": "",
     "companyName": "IGB",
@@ -81,90 +82,82 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
     "payToCode": "",
     "slpCode": 0,
     "discountPercent": 0.0,
-    "docTotal":  ""
+    "docTotal": ""
   };
-
-
 
   Future<void> _leerDatos() async {
     List clientesGuardados = [];
-    clientesGuardados=GetStorage().read('datosClientes');
-    datosClientesArr =clientesGuardados;
+    clientesGuardados = GetStorage().read('datosClientes');
+    datosClientesArr = clientesGuardados;
   }
 
   Future<void> _leerDatosold() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     //Map json = jsonDecode(jsonString);
     var userPref = pref.getString('datosClientes');
-    if(userPref!= null) {
+    if (userPref != null) {
       List<dynamic> clientesMap = jsonDecode(userPref);
       if (!mounted) return;
       setState(() {
         datosClientesArr = clientesMap;
       });
-    } else {print("userPref es null");}
+    } else {
+      print("userPref es null");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-
     return MaterialApp(
         home: DefaultTabController(
-        length: 4,
-        child: Scaffold(
-        appBar: AppBar(backgroundColor: Color.fromRGBO(30, 129, 235, 1),
-          leading: GestureDetector(
-            child: Icon( Icons.arrow_back_ios, color: Colors.white,  ),
-            onTap: () {
-              Navigator.pop(context);
-            } ,
-          ) ,
-          title: ListTile(
-            onTap: () {
-
-              showSearch(
-                context: context,
-                delegate: CustomSearchDelegate(),
-              );
-            },
-            title: Text('Buscar',style: TextStyle(color: Colors.white)),
-          ),
-
-          bottom: const TabBar(
-            tabs: [
-              Tab(child: Text('Cliente')),
-              Tab(child: Text('Items')),
-              Tab(child: Text('Detalle')),
-              Tab(child: Text('Total')),
-            ],
-          ),
-
-
-        ),
-        body: TabBarView(
-          children: [
-            formulario(context),
-            items(context),
-            detalle(context),
-            total(context)
-
-          ],
-        ),
-
-
-
-        )
-        )
-    );
-
-
+            length: 4,
+            child: Scaffold(
+              appBar: AppBar(
+                backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+                leading: GestureDetector(
+                  child: Icon(
+                    Icons.arrow_back_ios,
+                    color: Colors.white,
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                title: ListTile(
+                  onTap: () {
+                    showSearch(
+                      context: context,
+                      delegate: CustomSearchDelegate(),
+                    );
+                  },
+                  title: Text('Buscar', style: TextStyle(color: Colors.white)),
+                ),
+                bottom: const TabBar(
+                  tabs: [
+                    Tab(child: Text('Cliente')),
+                    Tab(child: Text('Items')),
+                    Tab(child: Text('Detalle')),
+                    Tab(child: Text('Total')),
+                  ],
+                ),
+              ),
+              body: TabBarView(
+                children: [
+                  formulario(context),
+                  items(context),
+                  detalle(context),
+                  total(context)
+                ],
+              ),
+            )));
   }
 
   Future<void> _listarItems() async {
-    if (GetStorage().read('items')==null) {
-      final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/items/'+empresa;
+    if (GetStorage().read('items') == null) {
+      final String apiUrl =
+          'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
 
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
@@ -180,13 +173,19 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
         //String itemsG = jsonEncode(_items);
         storage.write('items', _items);
         //_guardarItems();
-
       });
-    } else {_items=GetStorage().read('items');}
+    } else {
+      _items = GetStorage().read('items');
+    }
   }
 
-  Future<void> _listarStock( String item) async {
-    final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/'+empresa+'?itemcode='+item+'&whscode=0';
+  Future<void> _listarStock(String item) async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
+            empresa +
+            '?itemcode=' +
+            item +
+            '&whscode=0';
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
@@ -200,7 +199,6 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
     });
   }
 
-///
   Future<void> _selectDate(BuildContext context) async {
     DateTime currentDate = DateTime.now();
     final DateTime? pickedDate = await showDatePicker(
@@ -209,11 +207,11 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
         firstDate: DateTime(2015),
         lastDate: DateTime(2050));
     if (pickedDate != null && pickedDate != currentDate)
-
       setState(() {
         currentDate = pickedDate;
       });
   }
+
   ///
 
   int findItemIndex(List<dynamic> list, dynamic item) {
@@ -227,176 +225,208 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
 
   @override
   Widget formulario(BuildContext context) {
-    var direccionesEnvio=['Elija un destino'];
-    var direccionesEnvioAsesor=['Elija un destino'];
+    var direccionesEnvio = ['Elija un destino'];
+    var direccionesEnvioAsesor = ['Elija un destino'];
 
     _leerDatos();
-     List _direcciones = [];
-     var indice=0;
-     var i=0;
-     storage.remove('pedido');
+    List _direcciones = [];
+    var indice = 0;
+    var i = 0;
+    storage.remove('pedido');
 
-     List direccionesTemp=[];
+    List direccionesTemp = [];
     final numberFormat = new NumberFormat.simpleCurrency();
-     /// DIRECCIONES DE ENVIO
-     if (GetStorage().read('datosClientes')==null)
-     {}else
-     {
-       /////BUSCAR nit en lista de clientes para hallar direcciones de envio
 
-       clientesGuardados=GetStorage().read('datosClientes');
-       nit=GetStorage().read('nit');
-       clientesGuardados.forEach((k) {
-         // print("K:  #####################");
-         // print (k);
-         if(nit==k['nit'])
-         {  //print ("Encontrada dir @@@@@@@@@@@@@@@@@@@@@@@@@@@");
-           direccionesTemp=k['addresses'];}
-       });
+    /// DIRECCIONES DE ENVIO
+    if (GetStorage().read('datosClientes') == null) {
+    } else {
+      /////BUSCAR nit en lista de clientes para hallar direcciones de envio
 
-     }
-     for(var dir in direccionesTemp)
-     { direccionesEnvio.add(dir['lineNum']);
-     direccionesEnvioAsesor.add(dir['address']);
-     }
-     ///
+      // clientesGuardados=GetStorage().read('datosClientes');
+      // if (GetStorage().read('nit')!=null)
+      //   nit=GetStorage().read('nit');
+      // else nit="no exite nit";
+      //
+      // clientesGuardados.forEach((k) {
+      //   print ("NIT2: "); print (k['nit']);
+      //   if(nit==k['nit'])
+      //   { print ("Nitencontrado: ");
+      //     direccionesTemp=k['addresses'];}
+      // });
 
-     //BUSCAR CLIENTE CON EL NIT QUE TRAE DE PESTAÑA DE CLIENTES
-     for (var cliente in datosClientesArr) {
-       if (cliente['nit']==GetStorage().read('nit'))
-         {indice=i;}
-       i++;
-     }
-     _direcciones=datosClientesArr[indice]['addresses'];
-     String dirs="";
-     _direcciones.forEach((element) {dirs=dirs+element['lineNum']+'\n';});
+      clientesGuardados = GetStorage().read('datosClientes');
+      if (GetStorage().read('cardCode') != null)
+        nit = GetStorage().read('cardCode');
+      else
+        nit = "no exite nit";
 
-     pedidoTemp['cardCode']=datosClientesArr[indice]['cardCode'].toString();
-     pedidoTemp['cardName']=datosClientesArr[indice]['cardName'].toString();
-     pedidoTemp['nit']=datosClientesArr[indice]['nit'].toString();
-     pedidoTemp['companyName']="IGB";
-    pedidoTemp['lineNum']=dirs;
-     pedidoTemp['shipToCode']=datosClientesArr[indice]['addressToDef'].toString();
-     pedidoTemp['payToCode']=datosClientesArr[indice]['addressToDef'].toString();
-     pedidoTemp['slpCode']=GetStorage().read('usuario');
-     pedidoTemp['discountPercent']=datosClientesArr[indice]['discountCommercial'].toString();
-     storage.write('pedido', pedidoTemp);
+      clientesGuardados.forEach((k) {
+        print("NIT2: ");
+        print(k['cardCode']);
+        print("NIT2: ");
+        print(nit);
+        if (nit == k['cardCode']) {
+          print("Nitencontrado: ");
+          direccionesTemp = k['addresses'];
+        }
+      });
+    }
+    for (var dir in direccionesTemp) {
+      direccionesEnvio.add(dir['lineNum']);
+      direccionesEnvioAsesor.add(dir['address']);
+    }
 
+    ///
 
-    String saldoTxt=numberFormat.format(datosClientesArr[indice]['balance']);
+    /// SI EL PEDIDO ES GUARDADO, MOSTRAR LINENUM
+    // if (GetStorage().read('pedidoGuardado') != null)
+    // {
+    //   Map<String, dynamic> pedidoFinalG = GetStorage().read('pedidoGuardado');
+    //    direccionesEnvioAsesor.clear();
+    //    direccionesEnvioAsesor.add('Elija un destino');
+    //   direccionesEnvioAsesor.add(pedidoFinalG['lineNum'] ?? 'Sin dirección');
+    //
+    // }
+
+    //BUSCAR CLIENTE CON EL NIT QUE TRAE DE PESTAÑA DE CLIENTES
+    for (var cliente in datosClientesArr) {
+      if (cliente['cardCode'] == GetStorage().read('cardCode')) {
+        indice = i;
+      }
+
+      i++;
+    }
+    _direcciones = datosClientesArr[indice]['addresses'];
+    String dirs = "";
+    _direcciones.forEach((element) {
+      dirs = dirs + element['lineNum'] + '\n';
+    });
+
+    pedidoTemp['cardCode'] = datosClientesArr[indice]['cardCode'].toString();
+    pedidoTemp['cardName'] = datosClientesArr[indice]['cardName'].toString();
+    pedidoTemp['nit'] = datosClientesArr[indice]['nit'].toString();
+    pedidoTemp['companyName'] = "IGB";
+    pedidoTemp['lineNum'] = _direcciones[0]['lineNum'].toString();
+    pedidoTemp['shipToCode'] =
+        datosClientesArr[indice]['addressToDef'].toString();
+    pedidoTemp['payToCode'] =
+        datosClientesArr[indice]['addressToDef'].toString();
+    pedidoTemp['slpCode'] = GetStorage().read('usuario');
+    pedidoTemp['discountPercent'] =
+        datosClientesArr[indice]['discountCommercial'].toString();
+    storage.write('pedido', pedidoTemp);
+
+    String saldoTxt = numberFormat.format(datosClientesArr[indice]['balance']);
     if (saldoTxt.contains('.')) {
       int decimalIndex = saldoTxt.indexOf('.');
-      saldoTxt=saldoTxt.substring(0, decimalIndex);
+      saldoTxt = saldoTxt.substring(0, decimalIndex);
     }
 
-    String cupoTxt=numberFormat.format(datosClientesArr[indice]['cupo']);
+    String cupoTxt = numberFormat.format(datosClientesArr[indice]['cupo']);
     if (cupoTxt.contains('.')) {
       int decimalIndex = cupoTxt.indexOf('.');
-      cupoTxt=cupoTxt.substring(0, decimalIndex);
+      cupoTxt = cupoTxt.substring(0, decimalIndex);
     }
 
-    return SingleChildScrollView( child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Card(
-          elevation: 10,
-          child: SizedBox(
-            width: 400,
-            child: Padding(
-                padding: EdgeInsets.all(8),
-
-                child:Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(datosClientesArr[indice]['nit'].toString()+' - '+datosClientesArr[indice]['cardName'].toString(),style:TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Cliente',textAlign: TextAlign.left),
-                      SizedBox(
-                        height: 30,
-                      ),
-
-                      Text(datosClientesArr[indice]['addressToDef'].toString(),style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Dirección ',textAlign: TextAlign.left,
-                      ),
-                      SizedBox(
-                        height: 30,
-                      ),
-                      Text(datosClientesArr[indice]['location'].toString(),style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Ciudad ',textAlign: TextAlign.left),
-                      SizedBox(
-                        height: 30,
-                      ),
-                      Text(datosClientesArr[indice]['wayToPay'].toString(),style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Forma de Pago ',textAlign: TextAlign.left),
-                      SizedBox(
-                        height: 30,
-                      ),
-                      Text(datosClientesArr[indice]['cupo'].toString(),style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Cupo',textAlign: TextAlign.left),
-                      SizedBox(
-                        height: 30,
-                      ),
-                      Text(saldoTxt,style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Saldo',textAlign: TextAlign.left),
-                      SizedBox(
-                        height: 30,
-                      ),
-                      DropdownButton<String>(
-                        isExpanded: true,
-                        value: dropdownvalue2.isNotEmpty ? dropdownvalue2 : null,
-
-                        // Down Arrow Icon
-                        icon: const Icon(Icons.keyboard_arrow_down),
-
-
-                        items: direccionesEnvioAsesor.map((String items) {
-                          return DropdownMenuItem(
-
-                            value: items,
-                            child: Text(items),
-                          );
-                        }).toList(),
-
-                        onChanged: (String? newValue) {
-                          if (!mounted) return;
-                          setState(() {
-                            int indice=findItemIndex(direccionesEnvioAsesor,newValue);
-                            print("direccion elegida");print(newValue);
-                            print ("direcion lineNum");
-                            print(direccionesEnvio[indice]);
-                            print(indice);
-                            storage.write("dirEnvio", direccionesEnvio[indice]);
-                            //pedidoFinal['shipToCode']=newValue;
-                            dropdownvalue2 = newValue!;
-
-
-                          });
-                        },
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-
-
-
-
-                    ]
-                )
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Card(
+            elevation: 10,
+            child: SizedBox(
+              width: 400,
+              child: Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                            datosClientesArr[indice]['nit'].toString() +
+                                ' - ' +
+                                datosClientesArr[indice]['cardName'].toString(),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Cliente', textAlign: TextAlign.left),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        Text(
+                            datosClientesArr[indice]['addressToDef'].toString(),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text(
+                          'Dirección ',
+                          textAlign: TextAlign.left,
+                        ),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        Text(datosClientesArr[indice]['location'].toString(),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Ciudad ', textAlign: TextAlign.left),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        Text(datosClientesArr[indice]['wayToPay'].toString(),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Forma de Pago ', textAlign: TextAlign.left),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        Text(cupoTxt,
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Cupo', textAlign: TextAlign.left),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        Text(saldoTxt,
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Saldo', textAlign: TextAlign.left),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        DropdownButton<String>(
+                          isExpanded: true,
+                          value:
+                              dropdownvalue2.isNotEmpty ? dropdownvalue2 : null,
+                          // Down Arrow Icon
+                          icon: const Icon(Icons.keyboard_arrow_down),
+                          items: direccionesEnvioAsesor.map((String items) {
+                            return DropdownMenuItem(
+                              value: items,
+                              child: Text(items),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (!mounted) return;
+                            setState(() {
+                              int indice = findItemIndex(
+                                  direccionesEnvioAsesor, newValue);
+                              // print("direccion elegida");print(newValue);
+                              // print ("direcion lineNum");
+                              // print(direccionesEnvio[indice]);
+                              // print(indice);
+                              storage.write(
+                                  "dirEnvio", direccionesEnvio[indice]);
+                              //pedidoFinal['shipToCode']=newValue;
+                              dropdownvalue2 = newValue!;
+                            });
+                          },
+                        ),
+                        Text('Dirección de destino', textAlign: TextAlign.left),
+                        SizedBox(
+                          height: 10,
+                        ),
+                      ])),
             ),
           ),
-        ),
-
-        SizedBox(
-          height: 20,
-        ),
-
-         ],
-    ),
-    )
-    ;
-
-
-
+          SizedBox(
+            height: 20,
+          ),
+        ],
+      ),
+    );
   }
+
   void _updatePage() {
     setState(() {});
   }
@@ -411,89 +441,77 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
     //_listarStock("D0023");
     _listarItems();
     return SafeArea(
-        child:  ListView.builder(
-          itemCount: _items.length,
-          itemBuilder: (context, index) {
+      child: ListView.builder(
+        itemCount: _items.length,
+        itemBuilder: (context, index) {
+          final itemTemp = {
+            "quantity": "",
+            "itemCode": "",
+            "itemName": "",
+            "whsCode": ""
+          };
 
-
-            final itemTemp={
-              "quantity": "",
-              "itemCode": "",
-              "itemName": "",
-              "whsCode": ""
-            };
-
-            return Card(
-              child: Padding(
-                padding: EdgeInsets.all(1),
-                child: ListTile(
-                  title: Text(
-                    _items[index]['itemName'],
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
-                  subtitle: Text("Código: "+_items[index]['itemCode'],style: TextStyle(
-                    fontSize: 13,
-                  ),),
-                  leading:  GestureDetector(
-                    onTap: () {
-                      urlImagenItem=_items[index]['pictureUrl'];
-                      Navigator.push(context, MaterialPageRoute(builder: (_) {
-                        return DetailScreen(_items[index]['pictureUrl']);
-                      }));
-
-
-
-                    }, // Image tapped
-                    child: //Image.network(_items[index]['pictureUrl'], width: 40,height: 40),
-                    CachedNetworkImage(
-                      imageUrl: _items[index]['pictureUrl'],
-                      placeholder: (context, url) => CircularProgressIndicator(),
-                      errorWidget: (context, url, error) => Icon(Icons.error),
-                    ),
-                  ),
-                  //leading: Image.network("http://179.50.4.10/item.jpg", width: 40,height: 40,),
-                  trailing: IconButton(
-                      icon: const Icon(Icons.add),
-                    onPressed: () {
-
-                      String dropdownvalue = 'Elija una Bodega';
-
-                      showDialog(context: context,
-                          builder: (_) {
-                            storage.write("index", index);
-                            return MyDialog();
-                          });
-                    },
+          return Card(
+            child: Padding(
+              padding: EdgeInsets.all(1),
+              child: ListTile(
+                title: Text(
+                  _items[index]['itemName'],
+                  style: TextStyle(
+                    fontSize: 15,
                   ),
                 ),
+                subtitle: Text(
+                  "Código: " + _items[index]['itemCode'],
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+                leading: GestureDetector(
+                  onTap: () {
+                    urlImagenItem = _items[index]['pictureUrl'];
+                    Navigator.push(context, MaterialPageRoute(builder: (_) {
+                      return DetailScreen(_items[index]['pictureUrl']);
+                    }));
+                  }, // Image tapped
+                  child: //Image.network(_items[index]['pictureUrl'], width: 40,height: 40),
+                      CachedNetworkImage(
+                    imageUrl: _items[index]['pictureUrl'],
+                    placeholder: (context, url) => CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
+                  ),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
+                    String dropdownvalue = 'Elija una Bodega';
+
+                    showDialog(
+                        context: context,
+                        builder: (_) {
+                          storage.write("index", index);
+                          return MyDialog();
+                        });
+                  },
+                ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
+      ),
     );
   }
 
-
-
   @override
   Widget detalle(BuildContext context) {
-
     return DetallePedido();
-
   }
 
-
-
-  showAlertDialog(BuildContext context,String pedido) {
-
+  void showAlertDialog(BuildContext context, String pedido) {
     // set up the button
     Widget okButton = TextButton(
       child: Text("OK"),
-
-
-      onPressed: () { },
+      onPressed: () {},
     );
 
     // set up the AlertDialog
@@ -513,19 +531,18 @@ class _PedidosPageState extends State<PedidosPage> with AutomaticKeepAliveClient
       },
     );
   }
+
   @override
   Widget total(BuildContext context) {
     return TotalPedido();
- }
-
+  }
 }
 
 class MyDialog extends StatefulWidget {
-
   @override
   _MyDialogState createState() => new _MyDialogState();
-
 }
+
 ////////////////////////&/
 class DetailScreen extends StatelessWidget {
   final String image;
@@ -536,7 +553,7 @@ class DetailScreen extends StatelessWidget {
       body: GestureDetector(
         onTap: () {
           Navigator.pop(context);
-         // Navigator.pop(context);
+          // Navigator.pop(context);
         },
         child: Center(
           child: Hero(
@@ -551,14 +568,13 @@ class DetailScreen extends StatelessWidget {
   }
 }
 
-
 ///////
 
 class _MyDialogState extends State<MyDialog> {
-  int index=0;
+  int index = 0;
   List _items = [];
   List _stock = [];
-  List listaItems=[];
+  List listaItems = [];
   List _inventario = [];
   GetStorage storage = GetStorage();
   bool isDropDownVisible = false;
@@ -570,75 +586,76 @@ class _MyDialogState extends State<MyDialog> {
   List<dynamic> itemsPedidoLocal = [];
   List<dynamic> itemsPedido = [];
 
-
   String dropdownvalue = 'Elija una Bodega';
-  String empresa=GetStorage().read('empresa');
-  String mensaje="";
-  bool btnAgregarActivo=false;
+  String empresa = GetStorage().read('empresa');
+  String mensaje = "";
+  bool btnAgregarActivo = false;
   final numberFormat = new NumberFormat.simpleCurrency();
   var stockItem;
-  String zona="";
-  String usuario=GetStorage().read('usuario');
-  List _stockFull=[];
+  String zona = "";
+  String usuario = GetStorage().read('usuario');
+  List _stockFull = [];
+  int idPedidoDb = 0;
+  int idLocal = 0;
 
   Connectivity _connectivity = Connectivity();
-  final itemTemp={
+  final itemTemp = {
     "quantity": "",
     "itemCode": "",
     "itemName": "",
-    "group":"",
+    "group": "",
     "whsCode": "",
-    "presentation" :"",
-    "price":"",
-    "discountItem":"",
-    "discountPorc":"",
-    "iva":""
-
+    "presentation": "",
+    "price": "",
+    "discountItem": "",
+    "discountPorc": "",
+    "iva": ""
   };
-
+  final actualizarPedidoGuardado = {"id": "", "docNum": ""};
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-  //sincronizarStock();
+    //sincronizarStock();
   }
 
   Future<void> _listarItems() async {
-    final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/items/'+empresa;
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    //print ("Respuesta: --------------------");
-    //print(resp.toString());
     final data = resp["content"];
-    //print(data.toString());
+
     if (!mounted) return;
     setState(() {
       _items = data;
+
       /// GUARDAR EN SHAREDPREFERENCES MIENTRAS SE HACE CON SQL
       //String itemsG = jsonEncode(_items);
       storage.write('items', _items);
       //_guardarItems();
-
     });
   }
 
   Future<void> sincronizarStock() async {
     //Map<String, String> stockTemp = {"id","valor"};
 
-    final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/'+empresa+'?itemcode=0&whscode=0&slpcode='+usuario;
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
+            empresa +
+            '?itemcode=0&whscode=0&slpcode=' +
+            usuario;
     bool isConnected = await checkConnectivity();
-    if(isConnected==false)
-    {print("Error de red, cambiando a modo local");
-    if (GetStorage().read('stockFull') != null) {
-      List _stockFullLocal = GetStorage().read('stockFull');
-      setState(() {
-        _stockFull = _stockFullLocal;
-      });
-
-    }
-    }
-    else {
+    if (isConnected == false) {
+      print("Error de red, cambiando a modo local");
+      if (GetStorage().read('stockFull') != null) {
+        List _stockFullLocal = GetStorage().read('stockFull');
+        setState(() {
+          _stockFull = _stockFullLocal;
+        });
+      }
+    } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
       // print ("REspuesta stock: --------------------");
@@ -649,8 +666,8 @@ class _MyDialogState extends State<MyDialog> {
         print("Error de red");
       } else {
         final data = resp["content"];
-        print("Stockfull a guardar");
-        print(data.toString());
+        //print("Stockfull a guardar");
+        //print(data.toString());
         if (!mounted) return;
         setState(() {
           _stockFull = data;
@@ -658,7 +675,6 @@ class _MyDialogState extends State<MyDialog> {
           /// GUARDAR
           storage.write('stockFull', _stock);
         });
-
       }
     }
   }
@@ -718,149 +734,244 @@ class _MyDialogState extends State<MyDialog> {
     return true;
   }
 
+  Future<void> insertItemDb(Item newItem) async {
+    // Supongamos que tienes un objeto de tipo Item que quieres insertar en la base de datos
+
+    // Insertar el nuevo item en la base de datos
+    DatabaseHelper dbHelper = DatabaseHelper();
+    int insertedItemId = await dbHelper.insertItem(newItem);
+    idLocal = insertedItemId;
+    if (insertedItemId != null && insertedItemId > 0) {
+      print("El item ha sido insertado con éxito con el ID: $insertedItemId");
+    } else {
+      print("Error al insertar el item en la base de datos");
+    }
+  }
+
+  Future<void> listarItemDb() async {
+    DatabaseHelper dbHelper = DatabaseHelper();
+    List<Item> items = await dbHelper.getItems();
+
+    if (items.isNotEmpty) {
+      print("Lista de items:");
+      for (Item item in items) {
+        // print("ID: ${item.id}");
+        // print("ID Pedido: ${item.idPedido}");
+        // print("Quantity: ${item.quantity}");
+        // // ... Mostrar los demás atributos del item ...
+        // print("--------------------------");
+      }
+    } else {
+      print("No hay items en la base de datos.");
+    }
+  }
+
+  Future<void> listarPedidos() async {
+    DatabaseHelper dbHelper = DatabaseHelper();
+    List<Pedido> pedidos = await dbHelper.getPedidos();
+
+    if (pedidos.isNotEmpty) {
+      print("Lista de Pedidos:");
+      for (Pedido pedido in pedidos) {
+        print("ID: ${pedido.id}");
+        print("Cardcode: ${pedido.cardCode}");
+        print("Nombre: ${pedido.cardName}");
+        // ... Mostrar los demás atributos del item ...
+        print("--------------------------");
+      }
+    } else {
+      print("No hay items en la base de datos.");
+    }
+  }
+
+  Future<void> insertPedidoDb() async {
+    Pedido newPedido = Pedido(
+      cardCode: "C12345",
+      cardName: "Cliente Ejemplo",
+      comments: "Pedido de prueba",
+      companyName: "Empresa Ejemplo",
+      numAtCard: "123456",
+      shipToCode: "S123",
+      payToCode: "P123",
+      slpCode: 5,
+      discountPercent: 0.1,
+      docTotal: 100.0,
+      lineNum: "L001",
+      detailSalesOrder: "Detalle del pedido",
+    );
+
+    // Insertar el nuevo pedido en la base de datos y obtener el ID asignado
+    DatabaseHelper dbHelper = DatabaseHelper();
+    int insertedPedidoId = await dbHelper.insertPedido(newPedido);
+
+    if (insertedPedidoId != null && insertedPedidoId > 0) {
+      print(
+          "El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
+    } else {
+      print("Error al insertar el pedido en la base de datos");
+    }
+    idPedidoDb = insertedPedidoId;
+  }
+
   Future<bool> checkConnectivity() async {
     var connectivityResult = await _connectivity.checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
   }
 
-
-    @override
+  @override
   Widget build(BuildContext context) {
-
-    if (GetStorage().read('items')==null)
-    {_listarItems();}else {
-      itemsGuardados=GetStorage().read('items');
-    }
-    if (GetStorage().read('zona')==null)
-    { zona="01";}else {
-      zona=GetStorage().read('zona');
-    }
-
-    if (GetStorage().read('index')==null)
-    {
-      index=0;
+    if (GetStorage().read('items') == null) {
+      _listarItems();
     } else {
-      index=GetStorage().read('index');
+      itemsGuardados = GetStorage().read('items');
     }
-    var _bodegas1=[];
-    var fullStock=0;
 
+    if (GetStorage().read('zona') == null) {
+      zona = "01";
+    } else {
+      zona = GetStorage().read('zona');
+    }
+    if (GetStorage().read('index') == null) {
+      index = 0;
+    } else {
+      index = GetStorage().read('index');
+    }
+    var _bodegas1 = [];
+    var fullStock = 0;
 
-    if(itemsGuardados.length>0){
-      List _stockTemp=[];
+    if (itemsGuardados.length > 0) {
+      List _stockTemp = [];
 
-     // _listarStock(itemsGuardados[index]["itemCode"]);
+      // _listarStock(itemsGuardados[index]["itemCode"]);
 
-      print("itemcode index");print(itemsGuardados[index]["itemCode"]);
-      if (GetStorage().read('stockFull')!=null) {
-
+      print("itemcode index");
+      print(itemsGuardados[index]["itemCode"]);
+      if (GetStorage().read('stockFull') != null) {
         _stockFull = GetStorage().read('stockFull');
-        print("stockFULL: ");print(_stockFull);
+        print("stockFULL: ");
+        print(_stockFull);
         _stockFull.forEach((j) {
           if (itemsGuardados[index]["itemCode"] == j["itemCode"]) {
             _stockTemp.add(j);
-            print ("encontrado item en stock local");
-          }   //else {print("no ENCONTRADO");}
+            print("encontrado item en stock local");
+          } //else {print("no ENCONTRADO");}
         });
 
         setState(() {
           _stock = _stockTemp;
         });
-      } else {print("stockfull en 0");}
+      } else {
+        print("stockfull en 0");
+      }
     }
 
-    if ( _stock.length>0) {
+    if (_stock.length > 0) {
       _inventario = _stock[0]['stockWarehouses'];
-      fullStock=_stock[0]['stockFull'];
-    } else {print("_stock <= 0");}
+      fullStock = _stock[0]['stockFull'];
+    } else {
+      print("_stock <= 0");
+    }
 
     //print ("fullstock:  $fullStock");
-    num stockSuma=0;
-    int mayor=0;
-    print ("Inventario: ++++++++++++++");print(_inventario.toString());
+    num stockSuma = 0;
+    int mayor = 0;
+    print("Inventario: ++++++++++++++");
+    print(_inventario.toString());
     for (var bodega in _inventario) {
-      if(bodega['quantity']>0 && bodega['whsCode']==zona) {
-
+      if (bodega['quantity'] > 0 && bodega['whsCode'] == zona) {
         stockItem = bodega['whsCode'];
-        fullStock=bodega['quantity'];
-      } else stockItem=itemsGuardados[index]["whsCode"];
-
-      stockSuma=stockSuma+bodega['quantity'];
+        fullStock = bodega['quantity'];
+      } else {
+        stockItem = itemsGuardados[index]["whsCode"];
+        stockSuma = stockSuma + bodega['quantity'];
+      }
     }
 
-   String precioTxt=numberFormat.format(itemsGuardados[index]['price']);
+    String precioTxt = numberFormat.format(itemsGuardados[index]['price']);
     if (precioTxt.contains('.')) {
       int decimalIndex = precioTxt.indexOf('.');
-      precioTxt=precioTxt.substring(0, decimalIndex);
+      precioTxt = precioTxt.substring(0, decimalIndex);
     }
 
     return AlertDialog(
       title: Text(itemsGuardados[index]['itemName']),
-
-      content: Text('Codigo: '+itemsGuardados[index]['itemCode']),
-      actions: <Widget>[Text('Stock: '+fullStock.toString()),
-        Text('Precio: '+precioTxt),
-
+      content: Text('Codigo: ' + itemsGuardados[index]['itemCode']),
+      actions: <Widget>[
+        Text('Stock: ' + fullStock.toString()),
+        Text('Precio: ' + precioTxt),
         Text('Cantidad: '),
-    SizedBox(
-    //height: 40,
-    width: 200,
-    child:        TextField(
-          onChanged: (text) {
+        SizedBox(
+            //height: 40,
+            width: 200,
+            child: TextField(
+              onChanged: (text) {
+                RegExp regex = RegExp(r'0+[1-9]');
+                if (text.length == 0) {
+                  setState(() {
+                    btnAgregarActivo = false;
+                  });
+                }
 
-
-                if (text.isEmpty )
-                  {btnAgregarActivo=false;}
-                else {
+                if (text.isEmpty) {
+                  btnAgregarActivo = false;
+                } else {
                   if (!areAllCharactersNumbers(text)) {
                     setState(() {
-                    mensaje = "La cantidad debe ser un número ";
-                    textoVisible = true;
-                    btnAgregarActivo = false;
-                   });
-                  }
-
-                  else {
-
-            if (int.parse(text) > fullStock)
-            {
-
-
-            setState(() {
-                      mensaje = "Cantidad ingresada es mayor al stock disponible";
+                      mensaje = "La cantidad debe ser un número ";
                       textoVisible = true;
                       btnAgregarActivo = false;
-            });
-            }
-                    else {
-
+                    });
+                  } else {
+                    if (int.parse(text) > fullStock) {
                       setState(() {
-                        mensaje = "";
-                      textoVisible = false;
-                      btnAgregarActivo = true;
+                        mensaje =
+                            "Cantidad ingresada es mayor al stock disponible";
+                        textoVisible = true;
+                        btnAgregarActivo = false;
+                        print("mensaje:");
+                        print(mensaje);
                       });
+                    } else {
+                      if (int.parse(text) < 1) {
+                        setState(() {
+                          mensaje = "Cantidad ingresada debe ser mayor a 0";
+                          textoVisible = true;
+                          btnAgregarActivo = false;
+                        });
+                      } else {
+                        if (regex.hasMatch(text)) {
+                          setState(() {
+                            mensaje =
+                                "Cantidad ingresada contiene ceros a la izquierda";
+                            textoVisible = true;
+                            btnAgregarActivo = false;
+                          });
+                        } else {
+                          setState(() {
+                            mensaje = "";
+                            textoVisible = false;
+                            btnAgregarActivo = true;
+                          });
+                        }
+                      }
                     }
                   }
                 }
               },
-
-          style: const TextStyle(color: Colors.black),
-          controller:  cantidadController,
-          keyboardType: TextInputType.text,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            hintText: 'Por favor ingrese cantidad',
-            border: OutlineInputBorder(
-    borderRadius: BorderRadius.circular(10.0),
-    ),
-            contentPadding: const EdgeInsets.all(15),
-            hintStyle: const TextStyle(color: Colors.black , fontSize: 10),
-
-          ),
-        )
-    ),
-
+              style: const TextStyle(color: Colors.black),
+              controller: cantidadController,
+              keyboardType: TextInputType.text,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                hintText: 'Por favor ingrese cantidad',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                contentPadding: const EdgeInsets.all(15),
+                hintStyle: const TextStyle(color: Colors.black, fontSize: 10),
+              ),
+            )),
 
         SizedBox(
           height: 10,
@@ -871,172 +982,250 @@ class _MyDialogState extends State<MyDialog> {
         Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children:<Widget>[
+            children: <Widget>[
+              // IconButton(
+              //   icon: const Icon(Icons.search_sharp),
+              //   onPressed: (){setState(() {
+              //     isDropDownVisible= !isDropDownVisible;
+              //
+              //   });},
+              //   //child: const Text('Consultar Bodega'),
+              // ),
+              IconButton(
+                icon: const Icon(Icons.add_shopping_cart_rounded),
+                //child: Text("Agregar al pedido"),
+                onPressed: btnAgregarActivo
+                    ? () {
+                        setState(() {
+                          //// AGREGAR ITEM AL PEDIDO
+                          itemTemp["quantity"] = cantidadController.text;
+                          itemTemp["itemCode"] =
+                              itemsGuardados[index]["itemCode"];
+                          itemTemp["itemName"] =
+                              itemsGuardados[index]["itemName"];
+                          itemTemp["group"] = itemsGuardados[index]["grupo"];
+                          if (itemsGuardados[index]["presentation"] != null)
+                            itemTemp["presentation"] =
+                                itemsGuardados[index]["presentation"];
+                          else
+                            itemTemp["presentation"] = "";
+                          itemTemp["price"] =
+                              itemsGuardados[index]["price"].toString();
+                          itemTemp["discountItem"] =
+                              itemsGuardados[index]["discountItem"].toString();
+                          itemTemp["discountPorc"] =
+                              itemsGuardados[index]["discountPorc"].toString();
+                          itemTemp["whsCode"] = stockItem;
+                          itemTemp["iva"] =
+                              itemsGuardados[index]["iva"].toString();
+                          itemsPedido.add(itemTemp);
+                          print(
+                              "Item a guardar clase Mydialog: ///////////////////////////");
+                          print(itemsPedido);
+///// INSERTAR EN SQLITE
+                          //listarPedidos();
 
-        // IconButton(
-        //   icon: const Icon(Icons.search_sharp),
-        //   onPressed: (){setState(() {
-        //     isDropDownVisible= !isDropDownVisible;
-        //
-        //   });},
-        //   //child: const Text('Consultar Bodega'),
-        // ),
-        IconButton(
-          icon: const Icon(Icons.add_shopping_cart_rounded),
-          //child: Text("Agregar al pedido"),
-          onPressed: btnAgregarActivo ? () {
-            setState(() {
+                          int precioI = itemsGuardados[index]["price"];
+                          double precioD = precioI.toDouble();
+                          int discountI = itemsGuardados[index]["discountPorc"];
+                          double discountD = discountI.toDouble();
+                          int discountItemI =
+                              itemsGuardados[index]["discountItem"];
+                          double discountItemD = discountItemI.toDouble();
+                          int ivaI = itemsGuardados[index]["iva"];
+                          double ivaD = ivaI.toDouble();
 
-              //// AGREGAR ITEM AL PEDIDO
-              itemTemp["quantity"]=cantidadController.text;
-              itemTemp["itemCode"]=itemsGuardados[index]["itemCode"];
-              itemTemp["itemName"]=itemsGuardados[index]["itemName"];
-              itemTemp["group"]=itemsGuardados[index]["grupo"];
-              if(itemsGuardados[index]["presentation"]!=null)
-                itemTemp["presentation"]=itemsGuardados[index]["presentation"];
-              else itemTemp["presentation"]="";
-              itemTemp["price"]=itemsGuardados[index]["price"].toString();
-              itemTemp["discountItem"]=itemsGuardados[index]["discountItem"].toString();
-              itemTemp["discountPorc"]=itemsGuardados[index]["discountPorc"].toString();
-              itemTemp["whsCode"]=stockItem;
-              itemTemp["iva"]=itemsGuardados[index]["iva"].toString();
-              itemsPedido.add(itemTemp);
-              print("Item a guardar clase Mydialog: ///////////////////////////");
-              print(itemsPedido);
+                          Item newItem = Item(
+                            idPedido: idPedidoDb,
+                            quantity: int.parse(cantidadController.text),
+                            itemCode: itemsGuardados[index]["itemCode"],
+                            itemName: itemsGuardados[index]["itemName"],
+                            grupo: itemsGuardados[index]["grupo"],
+                            whsCode: stockItem,
+                            presentation: itemsGuardados[index]["presentation"],
+                            price: precioD,
+                            discountItem: discountItemD,
+                            discountPorc: discountD,
+                            iva: ivaD,
+                          );
 
-              if (GetStorage().read('itemsPedido')==null)  {
-                storage.write('itemsPedido',itemsPedido);
-              } else {
-                print ("itemsPedido en STORAGE:  ");
-                print(GetStorage().read('itemsPedido'));
-                itemsPedidoLocal=GetStorage().read('itemsPedido');
-                //// VALIDAR SI EL ITME SELECCIONADO YA ESTÁ,ENTONCES SE SUMA LA CANTIDAD
-                int repetido=0;
-                itemsPedidoLocal.forEach((j) {
-                if (itemTemp["itemCode"]==j["itemCode"])
-                  {int cant=0;
-                    cant=int.parse(j["quantity"]!)+int.parse(itemTemp["quantity"]!);
-                    j["quantity"]=cant.toString();
-                    repetido=1;
-                  }
-                });
-                if (repetido==0)
-                {itemsPedidoLocal.add(itemTemp);}
-                storage.write('itemsPedido',itemsPedidoLocal);
-              }
+                          // Insertar el nuevo item en la base de datos
+                          insertItemDb(newItem);
 
+                          ///guardar id en map
 
-              print("Items guardados clase Mydialog: //////************//////////////");
-              print(GetStorage().read('itemsPedido'));
-              storage.write('index', index);
-            });
+                          // actualizarPedidoGuardado["docNum"]=idLocal.toString();
+                          // storage.write('actualizarPedidoGuardado', actualizarPedidoGuardado);
+                          ////// LISTAR ITEMS DE SQLITE
+                          listarItemDb();
 
-            Navigator.pop(context);
+                          ////
 
-          } : null,
-        ),
-    ]),
+                          if (GetStorage().read('itemsPedido') == null) {
+                            storage.write('itemsPedido', itemsPedido);
+                          } else {
+                            print("itemsPedido en STORAGE:  ");
+                            print(GetStorage().read('itemsPedido'));
+                            itemsPedidoLocal = GetStorage().read('itemsPedido');
+                            //// VALIDAR SI EL ITME SELECCIONADO YA ESTÁ,ENTONCES SE SUMA LA CANTIDAD
+                            int repetido = 0;
+                            itemsPedidoLocal.forEach((j) {
+                              if (itemTemp["itemCode"] == j["itemCode"]) {
+                                int cant = 0;
+                                cant = int.parse(j["quantity"]!) +
+                                    int.parse(itemTemp["quantity"]!);
+                                j["quantity"] = cant.toString();
+                                repetido = 1;
+                              }
+                            });
+                            if (repetido == 0) {
+                              itemsPedidoLocal.add(itemTemp);
+                            }
+                            storage.write('itemsPedido', itemsPedidoLocal);
+                          }
+
+                          print(
+                              "Items guardados clase Mydialog: //////************//////////////");
+                          print(GetStorage().read('itemsPedido'));
+                          storage.write('index', index);
+                        });
+
+                        Navigator.pop(context);
+                      }
+                    : null,
+              ),
+            ]),
         SizedBox(
           height: 10,
         ),
-        Visibility (visible:textoVisible,
-        child:
-        Center(
-        child: Material(
-        elevation: 5,
-              color: Colors.grey,
-              borderRadius: BorderRadius.horizontal(),
-              child: Container(
-              width: 250,
-              height: 40,
-              child: Center(
-              child: Text(
-              mensaje,
-              style: TextStyle(fontSize: 15),
+        Visibility(
+            visible: textoVisible,
+            child: Center(
+              child: Material(
+                elevation: 5,
+                color: Colors.grey,
+                borderRadius: BorderRadius.horizontal(),
+                child: Container(
+                  width: 250,
+                  height: 40,
+                  child: Center(
+                    child: Text(
+                      mensaje,
+                      style: TextStyle(fontSize: 15),
+                    ),
+                  ),
+                ),
               ),
-    ),
-    ),
-    ),
-    )
-        //Text("Cantidad ingresa es mayor al stock disponible")
-        )
-
+            )
+            //Text("Cantidad ingresa es mayor al stock disponible")
+            )
       ],
     );
   }
 }
 
 class DetallePedido extends StatefulWidget {
-
   @override
   _DetallePedidoState createState() => new _DetallePedidoState();
-
 }
 
 class _DetallePedidoState extends State<DetallePedido> {
   //var itemsPedidoLocal = <Map<String, String>>[];
   List<dynamic> itemsPedidoLocal = [];
-  List listaItems=[];
-  num subtotalDetalle=0;
-  num iva=0;
-  num totalDetalle=0;
-  int borrar=0;
+  List listaItems = [];
+  num subtotalDetalle = 0;
+  num iva = 0;
+  num totalDetalle = 0;
+  int borrar = 0;
   //final numberFormat = NumberFormat.currency(locale: 'es.CO', symbol:"\$");
   final numberFormat = new NumberFormat.simpleCurrency();
+  int cantidadAdicionalItem = 0;
+  GetStorage storage = GetStorage();
+  List _stock2 = [];
+  List _stockFull2 = [];
+  var fullStock = 0;
+  var stockItem;
 
+  void _mostrarDialogoCantidad(BuildContext context) {}
 
-  void borrarItemDetalle(String item)
-  {
+  void borrarItemDetalle(String item) {
     itemsPedidoLocal = GetStorage().read('itemsPedido');
     itemsPedidoLocal.forEach((j) {
-        if(j['itemCode']==item)
-          {
-            itemsPedidoLocal.remove(j);
-          }
+      if (j['itemCode'] == item) {
+        itemsPedidoLocal.remove(j);
+      }
     });
-
   }
 
-  void showAlertDialog(BuildContext context) {
-    // set up the buttons
-    Widget cancelButton = ElevatedButton(
-      child: Text("NO"),
-      onPressed: () {
-
-          borrar=0;
-
-
-        //Navigator.pop(context);
-
-        },
-
-    );
-    Widget continueButton = ElevatedButton(
-      child: Text("SI"),
-      onPressed: () {
-
-          borrar=1;
-
-
-        //Navigator.pop(context);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Atención"),
-      content: Text("Está seguro que desea borrar item?"),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
+  void showAlertDetailItems(BuildContext context, String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return alert;
+        return AlertDialog(
+          title: Text("Atención"),
+          content: Text(message),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                // Cierra el diálogo al presionar este botón
+                Navigator.pop(context);
+              },
+              child: Text("No"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  itemsPedidoLocal.clear();
+                  storage.remove('itemsPedido');
+                });
+                // Cierra el diálogo al presionar este botón
+                Navigator.pop(context);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePage()),
+                  (Route<dynamic> route) => false,
+                );
+              },
+              child: Text("Si"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showAlertDetailSingleItem(
+      BuildContext context, String itemCode, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Atención"),
+          content: Text(message),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                // Cierra el diálogo al presionar este botón
+                Navigator.pop(context);
+              },
+              child: Text("No"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  itemsPedidoLocal.forEach((j) {
+                    if (j['itemCode'] == itemCode) {
+                      itemsPedidoLocal.remove(j);
+                    }
+                  });
+                });
+                // Cierra el diálogo al presionar este botón
+                Navigator.pop(context);
+              },
+              child: Text("Si"),
+            ),
+          ],
+        );
       },
     );
   }
@@ -1054,77 +1243,306 @@ class _DetallePedidoState extends State<DetallePedido> {
       });
     }
 
-
     print("Listaitems: =======================");
     print(listaItems);
 
-
-    return
-
-    SafeArea(
-        child: listaItems.isEmpty   ?
-        Text("\n\n\n        Sin ítems") :
-        ListView.builder(
-          itemCount: listaItems.length,
-          itemBuilder: (context, index) {
-            subtotalDetalle=double.parse(listaItems[index]['price'])*double.parse(listaItems[index]['quantity']);
-            iva=(double.parse(listaItems[index]['iva'])*subtotalDetalle)/100;
-            String ivaTxt=numberFormat.format(iva);
-            ivaTxt=ivaTxt.substring(0,ivaTxt.length-3);
-            String subtotalDetalleTxt=numberFormat.format(subtotalDetalle);
-            subtotalDetalleTxt=subtotalDetalleTxt.substring(0,subtotalDetalleTxt.length-3);
-            totalDetalle=subtotalDetalle+iva;
-            String totalDetalleTxt=numberFormat.format(totalDetalle);
-            totalDetalleTxt=totalDetalleTxt.substring(0,totalDetalleTxt.length-3);
-            int  precio=int.parse(listaItems[index]['price']);
-            String precioTxt=numberFormat.format(precio);
-            precioTxt=precioTxt.substring(0,precioTxt.length-3);
-
-            return Card(
-              child: Padding(
-                padding: EdgeInsets.all(8),
-                child: ListTile(leading: GestureDetector(
-                  child: Icon( Icons.delete, color: Colors.grey,  ),
-                  onTap: () {
-                   // showAlertDialog(context);
-
-                      setState(() {
-                        borrarItemDetalle(listaItems[index]['itemCode']);
-                      });
-
-
-                  } ,
+    return SafeArea(
+      child: listaItems.isEmpty
+          ? Text("\n\n\n        Sin ítems")
+          : Column(
+              children: [
+                //SizedBox(height: 20.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment
+                      .center, // Alinea en el centro horizontal
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () {
+                        showAlertDetailItems(
+                            context, "¿Está seguro de borrar todos los ítems?");
+                      },
+                    ),
+                    Text(
+                      'Borrar todo',
+                      style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                    title: Text(
-                    listaItems[index]['itemName'] + '\n' + 'Código: ' +
-                        listaItems[index]['itemCode'] + '\n' +
-                        'Precio: ' + precioTxt+'\n' +
-                        'Cantidad: ' + listaItems[index]['quantity']+'\n' +
-                        'Subtotal: ' + subtotalDetalleTxt+'\n' +
-                        'Iva: ' + ivaTxt+'\n' +
-                        'Total: ' + totalDetalleTxt,
-                      style: TextStyle(fontWeight: FontWeight.bold)
-                  ),
-                  //subtitle: Text("Nit: "+listaItems[index]['nit']),
+                //SizedBox(height: 5.0),
+                Expanded(
+                    child: ListView.builder(
+                  itemCount: listaItems.length,
+                  itemBuilder: (context, index) {
+                    subtotalDetalle = double.parse(listaItems[index]['price']) *
+                        double.parse(listaItems[index]['quantity']);
 
-                ),
-              ),
-            );
-          },
-        )
+                    iva = (double.parse(listaItems[index]['iva']) *
+                            subtotalDetalle) /
+                        100;
+                    String ivaTxt = numberFormat.format(iva);
+                    ivaTxt = ivaTxt.substring(0, ivaTxt.length - 3);
+                    String subtotalDetalleTxt =
+                        numberFormat.format(subtotalDetalle);
+                    subtotalDetalleTxt = subtotalDetalleTxt.substring(
+                        0, subtotalDetalleTxt.length - 3);
+                    totalDetalle = subtotalDetalle + iva;
+                    String totalDetalleTxt = numberFormat.format(totalDetalle);
+                    totalDetalleTxt = totalDetalleTxt.substring(
+                        0, totalDetalleTxt.length - 3);
+                    int precio = int.parse(listaItems[index]['price']);
+                    String precioTxt = numberFormat.format(precio);
+                    precioTxt = precioTxt.substring(0, precioTxt.length - 3);
 
+                    return Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            // Columna de íconos en la izquierda
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.delete),
+                                  onPressed: () {
+                                    showAlertDetailSingleItem(
+                                        context,
+                                        listaItems[index]['itemCode'],
+                                        "¿Está seguro de borrar el ítem " +
+                                            listaItems[index]['itemCode'] +
+                                            "?");
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.add),
+                                  onPressed: () {
+                                    //////VERIFICAR STOCK
+                                    List _stockTemp = [];
+                                    List _inventario = [];
+                                    var zona = "";
+                                    if (GetStorage().read('zona') == null) {
+                                      zona = "01";
+                                    } else {
+                                      zona = GetStorage().read('zona');
+                                    }
 
+                                    if (GetStorage().read('stockFull') !=
+                                        null) {
+                                      _stockFull2 =
+                                          GetStorage().read('stockFull');
 
+                                      _stockFull2.forEach((j) {
+                                        if (listaItems[index]["itemCode"] ==
+                                            j["itemCode"]) {
+                                          _stockTemp.add(j);
+                                          print(
+                                              "encontrado item en stock local");
+                                        }
+                                      });
 
+                                      setState(() {
+                                        _stock2 = _stockTemp;
+                                      });
+                                    } else {
+                                      print("stockfull en 0");
+                                    }
+
+                                    if (_stock2.length > 0) {
+                                      _inventario =
+                                          _stock2[0]['stockWarehouses'];
+                                      fullStock = _stock2[0]['stockFull'];
+                                    } else {
+                                      print("_stock <= 0");
+                                    }
+
+                                    //print ("fullstock:  $fullStock");
+                                    num stockSuma = 0;
+                                    int mayor = 0;
+                                    print("Inventario: ++++++++++++++");
+                                    print(_inventario.toString());
+                                    for (var bodega in _inventario) {
+                                      if (bodega['quantity'] > 0 &&
+                                          bodega['whsCode'] == zona) {
+                                        stockItem = bodega['whsCode'];
+                                        fullStock = bodega['quantity'];
+                                      } else
+                                        stockItem =
+                                            listaItems[index]["whsCode"];
+
+                                      stockSuma =
+                                          stockSuma + bodega['quantity'];
+                                    }
+
+                                    ////FIN VERIFICAR STOCK
+                                    //int nuevaCantidad = int.tryParse(cantAdicional.text) ?? 0;
+                                    double cant1 = 0.0;
+                                    if (fullStock > 0 &&
+                                        fullStock >
+                                            double.parse(listaItems[index]
+                                                ['quantity'])) {
+                                      cant1 = double.parse(
+                                              listaItems[index]['quantity']) +
+                                          1;
+                                      listaItems[index]['quantity'] =
+                                          cant1.toInt().toString();
+                                    } else {
+                                      //////////////
+                                      showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text(
+                                                  "No hay stock disponible"),
+                                              actions: [
+                                                TextButton(
+                                                  child: Text("Aceptar"),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          }); //////
+                                    }
+
+                                    storage.write("cantidadItem", 0);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.remove),
+                                  onPressed: () {
+                                    List _stockTemp = [];
+                                    List _inventario = [];
+                                    var zona = "";
+                                    if (GetStorage().read('zona') == null) {
+                                      zona = "01";
+                                    } else {
+                                      zona = GetStorage().read('zona');
+                                    }
+
+                                    if (GetStorage().read('stockFull') !=
+                                        null) {
+                                      _stockFull2 =
+                                          GetStorage().read('stockFull');
+
+                                      _stockFull2.forEach((j) {
+                                        if (listaItems[index]["itemCode"] ==
+                                            j["itemCode"]) {
+                                          _stockTemp.add(j);
+                                          print(
+                                              "encontrado item en stock local");
+                                        }
+                                      });
+
+                                      setState(() {
+                                        _stock2 = _stockTemp;
+                                      });
+                                    } else {
+                                      print("stockfull en 0");
+                                    }
+
+                                    if (_stock2.length > 0) {
+                                      _inventario =
+                                          _stock2[0]['stockWarehouses'];
+                                      fullStock = _stock2[0]['stockFull'];
+                                    } else {
+                                      print("_stock <= 0");
+                                    }
+
+                                    //print ("fullstock:  $fullStock");
+                                    num stockSuma = 0;
+                                    int mayor = 0;
+                                    print("Inventario: ++++++++++++++");
+                                    print(_inventario.toString());
+                                    for (var bodega in _inventario) {
+                                      if (bodega['quantity'] > 0 &&
+                                          bodega['whsCode'] == zona) {
+                                        stockItem = bodega['whsCode'];
+                                        fullStock = bodega['quantity'];
+                                      } else
+                                        stockItem =
+                                            listaItems[index]["whsCode"];
+
+                                      stockSuma =
+                                          stockSuma + bodega['quantity'];
+                                    }
+
+                                    ////FIN VERIFICAR STOCK
+                                    double cant1 = 0.0;
+                                    cant1 = double.parse(
+                                        listaItems[index]['quantity']);
+                                    if (cant1 > 1) {
+                                      cant1 = cant1 - 1;
+                                      listaItems[index]['quantity'] =
+                                          cant1.toInt().toString();
+                                    } else {
+                                      //////////////
+                                      showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text(
+                                                  "La cantidad de ítems es menor a 1"),
+                                              actions: [
+                                                TextButton(
+                                                  child: Text("Aceptar"),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          }); //////
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            SizedBox(width: 16.0), // Espacio entre columnas
+                            // Columna de descripción en la derecha
+                            Expanded(
+                              child: Text(
+                                  listaItems[index]['itemName'] +
+                                      '\n' +
+                                      'Código: ' +
+                                      listaItems[index]['itemCode'] +
+                                      '\n' +
+                                      'Precio: ' +
+                                      precioTxt +
+                                      '\n' +
+                                      'Cantidad: ' +
+                                      listaItems[index]['quantity'] +
+                                      '\n' +
+                                      'Subtotal: ' +
+                                      subtotalDetalleTxt +
+                                      '\n' +
+                                      'Iva: ' +
+                                      ivaTxt +
+                                      '\n' +
+                                      'Total: ' +
+                                      totalDetalleTxt,
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                )),
+              ],
+            ),
     );
   }
 }
 
 class TotalPedido extends StatefulWidget {
-
   @override
   _TotalPedidoState createState() => new _TotalPedidoState();
-
 }
 
 class _TotalPedidoState extends State<TotalPedido> {
@@ -1133,29 +1551,32 @@ class _TotalPedidoState extends State<TotalPedido> {
   String empresa = GetStorage().read('empresa');
 
   bool btnPedidoActivo = true;
+  bool btnGuardadActivo = true;
+
   bool cargando = false;
   final numberFormat = new NumberFormat.simpleCurrency();
   Connectivity _connectivity = Connectivity();
 
-  Future<http.Response> _enviarPedido(BuildContext context,
-      Map<String, dynamic> pedidoFinal) {
-    final String url = 'http://wali.igbcolombia.com:8080/manager/res/app/create-order';
+  Future<http.Response> _enviarPedido(
+      BuildContext context, Map<String, dynamic> pedidoFinal) {
+    final String url =
+        'http://wali.igbcolombia.com:8080/manager/res/app/create-order';
     print("Pedido final: ///////////////////////////");
     print(GetStorage().read('pedido').toString());
     print(GetStorage().read('itemsPedido'));
     var dirEnvio = GetStorage().read('dirEnvio');
 
     DateTime now = DateTime.now();
-    String formatter = DateFormat('mmssSSS').format(now);
-    formatter=formatter.replaceAll(":", "");
+    String formatter = DateFormat('hhmm').format(now);
+    formatter = formatter.replaceAll(":", "");
     String fecha = DateFormat("yyyyMMdd").format(now);
-    String fechaPedido=fecha.toString() + pedidoFinal['cardCode'].toString() + formatter.toString();
+    String fechaPedido = fecha.toString() +
+        pedidoFinal['cardCode'].toString() +
+        formatter.toString();
 
     return http.post(
       Uri.parse(url),
-      headers: <String, String>{
-        'Content-Type': 'application/json'
-      },
+      headers: <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(<String, dynamic>{
         'cardCode': pedidoFinal['cardCode'],
         "comments": observacionesController.text,
@@ -1163,36 +1584,77 @@ class _TotalPedidoState extends State<TotalPedido> {
         "numAtCard": fechaPedido,
         "shipToCode": dirEnvio,
         "payToCode": pedidoFinal['payToCode'],
-        "slpCode": pedidoFinal['slpCode'].toString(),
+        "slpCode": pedidoFinal['slpCode'],
         "discountPercent": pedidoFinal['discountPercent'].toString(),
         "docTotal": pedidoFinal['docTotal'],
         "lineNum": pedidoFinal['lineNum'],
         "detailSalesOrder": GetStorage().read('itemsPedido'),
-
-      }
-      ),
+      }),
     );
   }
 
-  Future<http.Response> _enviarPedidoTemp(BuildContext context,      Map<String, dynamic> pedidoFinal) {
-    final String url = 'http://179.50.4.120:8580/igb/igb.php';
+  Future<http.Response> _enviarPedidoGuardado(
+      BuildContext context, Map<String, dynamic> pedidoFinal) {
+    final String url =
+        'http://wali.igbcolombia.com:8080/manager/res/app/save-order';
     print("Pedido final: ///////////////////////////");
     print(GetStorage().read('pedido').toString());
-    //DateFormat formatter = DateFormat('mmssSSS');
+    print("Items pedido guardado:**********************");
     print(GetStorage().read('itemsPedido'));
-    DateTime now = DateTime.now();
-    //String formatter = DateFormat.Hms().format(now);
-    String formatter = DateFormat('mmssSSS').format(now);
-    formatter=formatter.replaceAll(":", "");
-    String fecha = DateFormat("yyyyMMdd").format(now);
-    String fechaPedido=fecha.toString() + pedidoFinal['cardCode'].toString() + formatter.toString();
+    var dirEnvio = GetStorage().read('dirEnvio');
 
+    DateTime now = DateTime.now();
+    String formatter = DateFormat('hhmm').format(now);
+    formatter = formatter.replaceAll(":", "");
+    String fecha = DateFormat("yyyyMMdd").format(now);
+    String fechaPedido = fecha.toString() +
+        pedidoFinal['cardCode'].toString() +
+        formatter.toString();
+
+    print("pedido a enviar como guardado:");
+    print(pedidoFinal);
 
     return http.post(
       Uri.parse(url),
-      headers: <String, String>{
-        'Content-Type': 'application/json'
-      },
+      headers: <String, String>{'Content-Type': 'application/json'},
+      body: jsonEncode(<String, dynamic>{
+        "cardCode": pedidoFinal['cardCode'],
+        "comments": observacionesController.text,
+        "companyName": empresa,
+        "numAtCard": fechaPedido,
+        "status": "G",
+        "shipToCode": dirEnvio,
+        "payToCode": pedidoFinal['payToCode'],
+        "slpCode": pedidoFinal['slpCode'],
+        "discountPercent": pedidoFinal['discountPercent'].toString(),
+        "docTotal": pedidoFinal['docTotal'],
+        "assignedShipToCode": null,
+        "lineNum": pedidoFinal['lineNum'],
+        "cardName": pedidoFinal['cardName'],
+        "detailSalesOrderSave": GetStorage().read('itemsPedido'),
+      }),
+    );
+  }
+
+  Future<http.Response> _enviarPedidoTemp(
+      BuildContext context, Map<String, dynamic> pedidoFinal) {
+    final String url = 'http://179.50.4.120:8580/igb/igb.php';
+    print("Pedido final: ///////////////////////////");
+    print(GetStorage().read('pedido').toString());
+    //DateFormat formatter = DateFormat('hhmm');
+    print(GetStorage().read('itemsPedido'));
+    DateTime now = DateTime.now();
+    //String formatter = DateFormat.Hms().format(now);
+    String formatter = DateFormat('hhmm').format(now);
+    formatter = formatter.replaceAll(":", "");
+    String fecha = DateFormat("yyyyMMdd").format(now);
+    String fechaPedido = fecha.toString() +
+        pedidoFinal['cardCode'].toString() +
+        formatter.toString();
+
+    return http.post(
+      Uri.parse(url),
+      headers: <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(<String, dynamic>{
         'cardCode': pedidoFinal['cardCode'],
         "comments": observacionesController.text,
@@ -1200,30 +1662,23 @@ class _TotalPedidoState extends State<TotalPedido> {
         "numAtCard": fechaPedido,
         "shipToCode": pedidoFinal['shipToCode'],
         "payToCode": pedidoFinal['payToCode'],
-        "slpCode": pedidoFinal['slpCode'].toString(),
+        "slpCode": pedidoFinal['slpCode'],
         "discountPercent": pedidoFinal['discountPercent'].toString(),
         "docTotal": pedidoFinal['docTotal'],
         "lineNum": pedidoFinal['lineNum'],
         "detailSalesOrder": GetStorage().read('itemsPedido'),
-
-      }
-      ),
+      }),
     );
   }
 
-  int restarStock(String item, String bodegaB,int cantidad)
-  {
+  int restarStock(String item, String bodegaB, int cantidad) {
     if (GetStorage().read('stockFull') != null) {
       List _stockFull = GetStorage().read('stockFull');
-      for (var stock in _stockFull)
-      {
-        if (stock['itemCode']==item)
-        {
-          for (var bodega in stock['stockWarehouses'])
-          {
-            if (bodega['whsCode']==bodegaB)
-            {
-              bodega['quantity']=bodega['quantity']-cantidad;
+      for (var stock in _stockFull) {
+        if (stock['itemCode'] == item) {
+          for (var bodega in stock['stockWarehouses']) {
+            if (bodega['whsCode'] == bodegaB) {
+              bodega['quantity'] = bodega['quantity'] - cantidad;
             }
           }
         }
@@ -1233,8 +1688,9 @@ class _TotalPedidoState extends State<TotalPedido> {
       });
 
       return 1;
-    } else {return 0;}
-
+    } else {
+      return 0;
+    }
   }
 
   Future<bool> checkConnectivity() async {
@@ -1290,6 +1746,7 @@ class _TotalPedidoState extends State<TotalPedido> {
           actions: [
             ElevatedButton(
               onPressed: () {
+                btnGuardadActivo = true;
                 Navigator.of(context).pop();
               },
               child: Text('OK'),
@@ -1300,277 +1757,590 @@ class _TotalPedidoState extends State<TotalPedido> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-
-    if (GetStorage().read('pedido') != null)
-    {  Map<String, dynamic> pedidoFinal = GetStorage().read('pedido');
-    //var itemsPedidoLocal = <Map<String, String>>[];
-    List<dynamic> itemsPedidoLocal = [];
-    List itemsGuardados = [];
-    int cantidadItems = 0;
-    num subtotal = 0;
-    int cantidad = 0;
-
-    print("Pedido doctotal: .................................");
-    print(pedidoFinal['docTotal'].toString());
-
-    // if (pedidoFinal['docTotal'].toString().isEmpty || pedidoFinal['docTotal']=="" )
-    //   {setState(() {
-    //     btnPedidoActivo=false;
-    //   });
-    //   }
-    //String itemsGuardados=GetStorage().read('items');
-    if (GetStorage().read('itemsPedido') == null) {} else {
-      itemsPedidoLocal = GetStorage().read('itemsPedido');
-    }
-
-    if (GetStorage().read('items') == null) {} else {
-      /////BUSCAR itemCode en lista de items para hallar el precio
-      itemsGuardados = GetStorage().read('items');
-      itemsPedidoLocal.forEach((j) {
-        itemsGuardados.forEach((k) {
-          cantidad = int.parse(j['quantity']!);
-          //print (k['price']);
-          if (k['itemCode'] == j['itemCode']) {
-            subtotal = subtotal + k['price'] * cantidad;
-          }
-        });
-      });
-    }
-
-    if (GetStorage().read('itemsPedido') == null) {
-      cantidadItems = 0;
-    }
-    else {
-      itemsPedidoLocal = GetStorage().read('itemsPedido');
-      cantidadItems = itemsPedidoLocal.length;
-    }
-    double iva = 0.0;
-
-
-    itemsPedidoLocal.forEach((element) {
-      print(element["iva"].toString());
-      var subt = double.parse(element["price"])*double.parse(element["quantity"]);
-      var ivaTemp =(double.parse(element["iva"].toString())*subt.toDouble())/100;
-      iva=iva+ivaTemp;
-
-    });
-
-    String ivaTxt = numberFormat.format(iva);
-    double total = subtotal.toDouble() + iva;
-    String subtotalTxt = numberFormat.format(subtotal);
-    String totalTxt = numberFormat.format(total);
-
-    if (ivaTxt.contains('.')) {
-      int decimalIndex = ivaTxt.indexOf('.');
-      ivaTxt = ivaTxt.substring(0, decimalIndex);
-    }
-
-    if (subtotalTxt.contains('.')) {
-      int decimalIndex = subtotalTxt.indexOf('.');
-      subtotalTxt = subtotalTxt.substring(0, decimalIndex);
-    }
-    String textoObservaciones="";
-    if (pedidoFinal['comments'].toString()!=null)
-      {textoObservaciones=pedidoFinal['comments'].toString();
-      observacionesController.text=textoObservaciones;
-      }
-
-    // if (totalTxt.contains('.')) {
-    //   int decimalIndex = totalTxt.indexOf('.');
-    //   totalTxt = subtotalTxt.substring(0, decimalIndex);
-    // }
-
-    pedidoFinal['docTotal'] = total.toString();
-
-    return SingleChildScrollView(child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Card(
-          elevation: 10,
-          child: SizedBox(
-            width: 400,
-            child: Padding(
-                padding: EdgeInsets.all(8),
-
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(pedidoFinal['nit'] + ' - ' + pedidoFinal['cardName'],
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        height: 10,
-                      ),
-
-                      Text("Cantidad de items: " + cantidadItems.toString(),
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Text("Subtotal: " + subtotalTxt,
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Text("Descuento: " + pedidoFinal['discountPercent'],
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Text("Iva: " + ivaTxt,
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Text("Total: " + totalTxt,
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        height: 20,
-                      ),
-
-
-                    ]
-                )
-            ),
-          ),
-        ),
-
-        SizedBox(
-          height: 20,
-        ),
-        Padding(padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
-              "Observaciones:", style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        SizedBox(
-          height: 20,
-        ),
-        Padding(padding: EdgeInsets.symmetric(horizontal: 8),
-          child: SizedBox(
-            //height: 40,
-            width: 300,
-            child:
-            TextField(
-              onChanged: (text) {
-                pedidoFinal['comments']=text;
-
-              },
-              style: const TextStyle(color: Colors.black),
-              controller: observacionesController,
-              keyboardType: TextInputType.text,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                hintText: '',
-                //labelText: textoObservaciones,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                contentPadding: const EdgeInsets.all(15),
-                hintStyle: const TextStyle(color: Colors.black),
+  void showAlertPedidoEnviado(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.green,
               ),
+              SizedBox(width: 8),
+              Text('Muy bien'),
+            ],
+          ),
+          content: Text(message),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                storage.remove("pedido");
+                storage.remove("itemsPedido");
+                storage.remove("dirEnvio");
+                storage.remove("pedidoGuardado");
+                storage.write('estadoPedido', 'nuevo');
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
             ),
-          ),
-        ),
-
-        Padding(padding: EdgeInsets.symmetric(horizontal: 8),
-          child:
-          ElevatedButton(
-            style: ButtonStyle(backgroundColor: MaterialStateProperty.all(
-                Color.fromRGBO(30, 129, 235, 1))),
-
-            onPressed: btnPedidoActivo ? () async {
-              setState(() {
-                btnPedidoActivo=false;
-              });
-
-              print("Direenvio:  -------------------------------");
-              //print(GetStorage().read('dirEnvio'));
-              if (GetStorage().read('dirEnvio')==null || GetStorage().read('dirEnvio')=="")
-                {showAlertErrorDir(context,"Obligatorio seleccionar la dirección de destino");}
-              else {
-              bool isConnected = await checkConnectivity();
-              if (isConnected == true) {
-                pedidoFinal['comments'] = observacionesController.text;
-                storage.write('pedido', pedidoFinal);
-                setState(() {
-                  cargando = true;
-                });
-
-                http.Response response = await _enviarPedido(context, pedidoFinal);
-
-
-                print("Pedido enviado ***************************************");
-                print(response.statusCode);
-                print("\n");
-                Map<String, dynamic> resultado = jsonDecode(response.body);
-                print(response.body);
-                print(resultado['content']);
-                if (response.statusCode == 200 && resultado['content'] != "") {
-                  itemsPedidoLocal = GetStorage().read('itemsPedido');
-                  for (var item in itemsPedidoLocal) {
-                     restarStock(item['itemCode']!, item['whsCode']!, int.parse(item['quantity']!));
-                  }
-                  print(
-                      "Borrando pedido ==============================================================");
-                    storage.remove("pedido");
-                  storage.remove("itemsPedido");
-                  storage.remove("dirEnvio");
-                  btnPedidoActivo=true;
-
-                  setState(() {
-                    cargando = false;
-                  });
-                  await Future.delayed(Duration(seconds: 3));
-                  SnackBar(content: Text(
-                    "Pedido " + resultado['content'].toString() + " creado",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16.0, fontWeight:
-                    FontWeight.bold),),
-                    duration: Duration(seconds: 3),
-                    backgroundColor: Colors.red,
-                    behavior: SnackBarBehavior.floating,
-                    margin: EdgeInsets.only(bottom: 200.0),);
-
-                  await Future.delayed(Duration(seconds: 2));
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                  );
-                }
-                else {
-                  Get.snackbar('Error',
-                      'No se pudo crear el pedido',
-                      colorText: Colors.red,
-                      backgroundColor: Colors.white);
-                }
-              } else {
-
-                showAlertError(context,
-                    "No se pudo enviar el pedido, error de red, verifique conectividad por favor");
-              }
-            }
-            }: null,
-            child: Text('Enviar pedido'),
-          ),
-        ),
-
-        Container(
-          padding: const EdgeInsets.all(40),
-          margin: const EdgeInsets.all(40),
-          // color: Colors.blue[100],
-
-          child: Center(
-            child: !cargando
-                ? const Text("")
-                : const CircularProgressIndicator(),
-          ),
-        )
-      ],
-    ),
+          ],
+        );
+      },
     );
   }
-    else return Text("Sin ítems para pedido");
-}
+
+  Future<void> listarPedidos() async {
+    DatabaseHelper dbHelper = DatabaseHelper();
+    List<Pedido> pedidos = await dbHelper.getPedidos();
+
+    if (pedidos.isNotEmpty) {
+      print("Lista de Pedidos:");
+      for (Pedido pedido in pedidos) {
+        print("ID: ${pedido.id}");
+        print("Cardcode: ${pedido.cardCode}");
+        print("Nombre: ${pedido.cardName}");
+        // ... Mostrar los demás atributos del item ...
+        print("--------------------------");
+      }
+    } else {
+      print("No hay items en la base de datos.");
+    }
+  }
+
+  Future<bool> buscarClientePedido(String cardCode) async {
+    DatabaseHelper dbHelper = DatabaseHelper();
+    List<Pedido> pedidos = await dbHelper.getPedidos();
+
+    if (pedidos.isNotEmpty) {
+      for (Pedido pedido in pedidos) {
+        if (pedido.cardCode == cardCode) {
+          return true;
+        }
+      }
+    } else {
+      print("No hay items en la base de datos.");
+    }
+    return false;
+  }
+
+  Future<void> insertPedidoDb(Pedido pedidoFinal) async {
+    DatabaseHelper dbHelper = DatabaseHelper();
+    int insertedPedidoId = await dbHelper.insertPedido(pedidoFinal);
+
+    if (insertedPedidoId != null && insertedPedidoId > 0) {
+      print(
+          "El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
+    } else {
+      print("Error al insertar el pedido en la base de datos");
+    }
+    //idPedidoDb= insertedPedidoId;
+  }
+
+  Future<void> actualizarEstadoPed(int idP, int docNum, String status) async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/process-saved-order/' +
+            empresa +
+            '?id=' +
+            idP.toString() +
+            '&docNum=' +
+            docNum.toString() +
+            '&status=' +
+            status;
+    //print ("URL ACTUALIZARSERVICIO2: ");print (apiUrl);
+    final response = await http.get(Uri.parse(apiUrl));
+    //print ("Respuesta actualizarServicio2: ");print (response.body);
+    if (response.body == "true") {
+      print("Se cambió estado a " + status);
+    } else {
+      print("No se pudo cambiar el estado a " + status);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (GetStorage().read('pedido') != null) {
+      Map<String, dynamic> pedidoFinal = GetStorage().read('pedido');
+      if (GetStorage().read('pedidoGuardado') != null) {
+        Map<String, dynamic> pedidoFinalG = GetStorage().read('pedidoGuardado');
+        pedidoFinal['comments'] = pedidoFinalG['comments'] ?? '';
+      } else {
+        print("pedidoguarddo null");
+      }
+      //var itemsPedidoLocal = <Map<String, String>>[];
+      List<dynamic> itemsPedidoLocal = [];
+      List itemsGuardados = [];
+      int cantidadItems = 0;
+      num subtotal = 0;
+      int cantidad = 0;
+
+      //print ("pedido final desde pedidoGuardado");print (pedidoFinal);
+
+      if (GetStorage().read('itemsPedido') == null) {
+      } else {
+        itemsPedidoLocal = GetStorage().read('itemsPedido');
+      }
+
+      if (GetStorage().read('items') == null) {
+      } else {
+        /////BUSCAR itemCode en lista de items para hallar el precio
+        itemsGuardados = GetStorage().read('items');
+        itemsPedidoLocal.forEach((j) {
+          itemsGuardados.forEach((k) {
+            String cantQ = j['quantity'];
+            double cantidadQ = double.parse(cantQ);
+            //print (k['price']);
+            if (k['itemCode'] == j['itemCode']) {
+              subtotal = subtotal + k['price'] * cantidadQ;
+            }
+          });
+        });
+      }
+
+      if (GetStorage().read('itemsPedido') == null) {
+        cantidadItems = 0;
+      } else {
+        itemsPedidoLocal = GetStorage().read('itemsPedido');
+        cantidadItems = itemsPedidoLocal.length;
+      }
+      double iva = 0.0;
+
+      itemsPedidoLocal.forEach((element) {
+        print(element["iva"].toString());
+        var subt =
+            double.parse(element["price"]) * double.parse(element["quantity"]);
+        var ivaTemp =
+            (double.parse(element["iva"].toString()) * subt.toDouble()) / 100;
+        iva = iva + ivaTemp;
+      });
+
+      String ivaTxt = numberFormat.format(iva);
+      double total = subtotal.toDouble() + iva;
+      String subtotalTxt = numberFormat.format(subtotal);
+      String totalTxt = numberFormat.format(total);
+      String estadoPedido = "";
+      if (ivaTxt.contains('.')) {
+        int decimalIndex = ivaTxt.indexOf('.');
+        ivaTxt = ivaTxt.substring(0, decimalIndex);
+      }
+
+      if (subtotalTxt.contains('.')) {
+        int decimalIndex = subtotalTxt.indexOf('.');
+        subtotalTxt = subtotalTxt.substring(0, decimalIndex);
+      }
+      String textoObservaciones = "";
+      if (pedidoFinal['comments'].toString() != null) {
+        textoObservaciones = pedidoFinal['comments'];
+
+        if (GetStorage().read('estadoPedido') != null) {
+          estadoPedido = GetStorage().read('estadoPedido');
+        } else {
+          estadoPedido = "desconocido";
+        }
+
+        print("ESTADOPEDIDO: ");
+        print(estadoPedido);
+        if (estadoPedido != "nuevo") {
+          observacionesController.text = textoObservaciones;
+        } else {
+          //observacionesController.text="";
+        }
+      } else {
+        print("Pedido viene sin comentarios");
+      }
+
+      // if (totalTxt.contains('.')) {
+      //   int decimalIndex = totalTxt.indexOf('.');
+      //   totalTxt = subtotalTxt.substring(0, decimalIndex);
+      // }
+
+      pedidoFinal['docTotal'] = total.toString();
+
+      return SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Card(
+              elevation: 10,
+              child: SizedBox(
+                width: 400,
+                child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                              pedidoFinal['nit'] +
+                                  ' - ' +
+                                  pedidoFinal['cardName'],
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text("Cantidad de items: " + cantidadItems.toString(),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text("Subtotal: " + subtotalTxt,
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text("Descuento: " + pedidoFinal['discountPercent'],
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text("Iva: " + ivaTxt,
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text("Total: " + totalTxt,
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          SizedBox(
+                            height: 20,
+                          ),
+                        ])),
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Text("Observaciones:",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: SizedBox(
+                  //height: 40,
+                  width: 400,
+                  child: TextField(
+                    maxLines: 8,
+                    controller: observacionesController,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction
+                        .newline, // Cambiar la acción al presionar "Enter"
+                    onChanged: (text) {
+                      //pedidoFinal['comments'] = text;
+                      pedidoFinal['id'] = text;
+                    },
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      contentPadding: const EdgeInsets.all(15),
+                      hintStyle: const TextStyle(color: Colors.black),
+                    ),
+                  )),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Row(children: [
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(
+                            Color.fromRGBO(30, 129, 235, 1))),
+                    onPressed: btnPedidoActivo
+                        ? () async {
+                            setState(() {
+                              btnPedidoActivo = false;
+                            });
+
+                            if (GetStorage().read('dirEnvio') == null ||
+                                GetStorage().read('dirEnvio') == "" ||
+                                GetStorage().read('dirEnvio') ==
+                                    "Elija un destino") {
+                              showAlertErrorDir(context,
+                                  "Obligatorio seleccionar la dirección de destino");
+                            } else {
+                              bool isConnected = await checkConnectivity();
+                              if (isConnected == true) {
+                                pedidoFinal['comments'] =
+                                    observacionesController.text;
+                                storage.write('pedido', pedidoFinal);
+
+                                setState(() {
+                                  cargando = true;
+                                });
+
+                                http.Response response =
+                                    await _enviarPedido(context, pedidoFinal);
+
+                                print(response.statusCode);
+                                print("\n");
+                                Map<String, dynamic> resultado =
+                                    jsonDecode(response.body);
+                                print(response.body);
+                                print(resultado['content']);
+
+                                if (response.statusCode == 200 &&
+                                    resultado['content'] != "") {
+                                  setState(() {
+                                    showAlertPedidoEnviado(
+                                        context,
+                                        "Pedido: " +
+                                            resultado['content'].toString());
+                                  });
+
+                                  Map<String, dynamic>
+                                      actualizarPedidoGuardado = {};
+                                  if (GetStorage()
+                                          .read('actualizarPedidoGuardado') !=
+                                      null) {
+                                    actualizarPedidoGuardado = GetStorage()
+                                        .read('actualizarPedidoGuardado');
+
+                                    print('*********************');
+                                    print(actualizarPedidoGuardado);
+                                    print('*********************');
+
+                                    setState(() {
+                                      actualizarEstadoPed(
+                                          int.parse(
+                                              actualizarPedidoGuardado["id"]),
+                                          resultado['content'],
+                                          'F');
+                                    });
+                                  }
+/*
+                                  itemsPedidoLocal = GetStorage().read('itemsPedido');
+
+                                  for (var item in itemsPedidoLocal) {
+                                    restarStock(
+                                        item['itemCode']!,
+                                        item['whsCode']!,
+                                        int.parse(item['quantity']!));
+                                  }
+
+                                  Map<String, dynamic> actualizarPedidoGuardado = {};
+                                  if (GetStorage().read('actualizarPedidoGuardado') != null) {
+                                    actualizarPedidoGuardado = GetStorage().read('actualizarPedidoGuardado');
+                                  }
+
+                                  String idP = actualizarPedidoGuardado["id"];
+                                  String idLocal =
+                                      actualizarPedidoGuardado["docNum"] ?? 0;
+                                  final String apiUrl =
+                                      'http://wali.igbcolombia.com:8080/manager/res/app/process-saved-order/' +
+                                          empresa +
+                                          '?id=' +
+                                          idP +
+                                          '&docNum=' +
+                                          idP +
+                                          '&status=F';
+                                  print("URL ACTUALIZARSERVICIO1: ");
+                                  print(apiUrl);
+                                  final response =
+                                      await http.get(Uri.parse(apiUrl));
+                                  print("Respuesta actualizarServicio: ");
+                                  print(response.body);
+                                  if (response.body == "true") {
+                                    print("Se cambió estado a F");
+                                  } else {
+                                    print("No se pudo cambiar el estado a F");
+                                  }
+*/
+                                  /*setState(() {
+                                cargando = false;
+                              });*/
+
+                                  /*await Future.delayed(Duration(seconds: 5));
+                                  SnackBar(
+                                    content: Text(
+                                      "Pedido " +
+                                          resultado['content'].toString() +
+                                          " creado",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    duration: Duration(seconds: 3),
+                                    backgroundColor: Colors.red,
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: EdgeInsets.only(bottom: 200.0),
+                                  );*/
+
+                                  storage.remove("pedido");
+                                  storage.remove("itemsPedido");
+                                  storage.remove("dirEnvio");
+                                  storage.remove("pedidoGuardado");
+                                  storage.write('estadoPedido', 'nuevo');
+                                  btnPedidoActivo = true;
+
+                                  setState(() {
+                                    cargando = true;
+                                  });
+
+                                  //await Future.delayed(Duration(seconds: 50));
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => HomePage()),
+                                  );
+                                } else {
+                                  Get.snackbar(
+                                      'Error', 'No se pudo crear el pedido',
+                                      colorText: Colors.red,
+                                      backgroundColor: Colors.white);
+                                }
+                              } else {
+                                showAlertError(context,
+                                    "No se pudo enviar el pedido, error de red, verifique conectividad por favor");
+                              }
+                            }
+                          }
+                        : null,
+                    child: Text('Enviar Pedido'),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: ElevatedButton(
+                    onPressed: btnGuardadActivo
+                        ? () async {
+                            String responseMessage = '';
+                            int responseCode = 0;
+                            btnGuardadActivo = false;
+
+                            if (GetStorage().read('dirEnvio') == null ||
+                                GetStorage().read('dirEnvio') == "" ||
+                                GetStorage().read('dirEnvio') ==
+                                    "Elija un destino") {
+                              showAlertErrorDir(context,
+                                  "Obligatorio seleccionar la dirección de destino");
+                            } else {
+                              String codigo = pedidoFinal["slpCode"];
+                              int slpInt = int.parse(codigo);
+                              String descS = pedidoFinal["discountPercent"];
+                              double descD = double.parse(descS);
+                              String totS = pedidoFinal["docTotal"];
+                              double totD = double.parse(totS);
+                              /////// guardar
+                              Pedido pedidoF = Pedido(
+                                cardCode: pedidoFinal["cardCode"],
+                                cardName: pedidoFinal["cardName"],
+                                comments: pedidoFinal["comments"],
+                                companyName: pedidoFinal["companyName"],
+                                numAtCard: pedidoFinal["numAtCard"],
+                                shipToCode: pedidoFinal["shipToCode"],
+                                payToCode: pedidoFinal["payToCode"],
+                                slpCode: slpInt,
+                                discountPercent: descD,
+                                docTotal: totD,
+                                lineNum: pedidoFinal["lineNum"],
+                                detailSalesOrder: "Detalle del pedido",
+                              );
+                              //observacionesController.text='';
+                              // if (buscarClientePedido(pedidoFinal["cardName"])==false)
+                              // {print ("No esta el pedido, insertando...");insertPedidoDb(pedidoF);}
+                              // else {print ("Ya está el pedido, actualizando ...");}
+                              insertPedidoDb(pedidoF);
+                              listarPedidos();
+
+                              setState(() {
+                                cargando = true;
+                              });
+
+                              try {
+                                http.Response response =
+                                    await _enviarPedidoGuardado(
+                                        context, pedidoFinal);
+                                Map<String, dynamic> resultado =
+                                    jsonDecode(response.body);
+
+                                if (response.statusCode == 200 &&
+                                    resultado['content'] != "") {
+                                  print("pedido guardado enviado a IGB");
+                                  print(response.body);
+                                  //modificar el estado del pedido editado a cerrado
+                                  setState(() {
+                                    actualizarEstadoPed(
+                                        GetStorage()
+                                            .read('pedidoGuardado')['id'],
+                                        0,
+                                        'C');
+                                  });
+                                } else {
+                                  showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: Text(
+                                              "No se pudo enviar el pedido guardado"),
+                                          actions: [
+                                            TextButton(
+                                              child: Text("Aceptar"),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      });
+                                }
+                              } catch (e) {
+                                setState(() {
+                                  responseMessage = 'Error: $e';
+                                  print(
+                                      "El servicio no responde, contacte al administrador");
+                                  Get.snackbar('Error',
+                                      'El servicio no responde, contacte al administrador',
+                                      colorText: Colors.red,
+                                      backgroundColor: Colors.white);
+                                });
+                              }
+                              storage.remove("pedido");
+                              storage.remove("itemsPedido");
+                              storage.remove("dirEnvio");
+                              storage.remove("pedidoGuardado");
+                              storage.write('estadoPedido', 'nuevo');
+                              //await Future.delayed(Duration(seconds: 5));
+                              btnGuardadActivo = true;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => HomePage()),
+                              );
+                            }
+                          }
+                        : null,
+                    child: Text('Guardar Pedido'),
+                  ),
+                ),
+              ),
+            ]),
+            Container(
+              padding: const EdgeInsets.all(40),
+              margin: const EdgeInsets.all(40),
+              // color: Colors.blue[100],
+              child: Center(
+                child: !cargando
+                    ? const Text("")
+                    : const CircularProgressIndicator(),
+              ),
+            )
+          ],
+        ),
+      );
+    } else
+      return Text("Sin ítems para pedido");
+  }
 }

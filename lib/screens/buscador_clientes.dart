@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
@@ -18,12 +17,16 @@ class CustomSearchDelegate extends SearchDelegate {
   List<String> searchResult = [];
   List _clientesBusqueda = [];
   List _clientesBusqueda2 = [];
-  String codigo=GetStorage().read('slpCode');
+  String codigo = GetStorage().read('slpCode');
   GetStorage storage = GetStorage();
-  String empresa=GetStorage().read('empresa');
+  String empresa = GetStorage().read('empresa');
 
   Future<void> _fetchData() async {
-    final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/customers/'+codigo+'/'+empresa;
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
+            codigo +
+            '/' +
+            empresa;
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
@@ -31,17 +34,16 @@ class CustomSearchDelegate extends SearchDelegate {
     final data = resp["content"];
     //print(data.toString());
 
-      _clientesBusqueda = data;
-      /// GUARDAR EN LOCAL STORAGE
-      _guardarDatos();
+    _clientesBusqueda = data;
 
+    /// GUARDAR EN LOCAL STORAGE
+    _guardarDatos();
   }
 
   Future<void> _guardarDatos() async {
-
     storage.write('datosClientes', _clientesBusqueda);
-
   }
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
@@ -49,7 +51,6 @@ class CustomSearchDelegate extends SearchDelegate {
         icon: Icon(Icons.clear),
         onPressed: () {
           query = '';
-
         },
       ),
     ];
@@ -67,62 +68,68 @@ class CustomSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-
-    if (GetStorage().read('datosClientes')==null)
-    { print ("allnames VACIO :  *******__________________________________");}
-    else
-    {_clientesBusqueda.clear();
-      clientesGuardados=GetStorage().read('datosClientes');
+    if (GetStorage().read('datosClientes') == null) {
+      print("allnames VACIO :  *******__________________________________");
+    } else {
+      _clientesBusqueda.clear();
+      clientesGuardados = GetStorage().read('datosClientes');
       clientesGuardados.forEach((k) {
         allNames.add(k['cardName'].toString().toLowerCase());
-        if(k['cardName'].toLowerCase().contains(query.trim().toLowerCase()) ||
-        k['cardCode'].toLowerCase().contains(query.trim().toLowerCase())
-        ){
+        if (k['cardName'].toLowerCase().contains(query.trim().toLowerCase()) ||
+            k['cardCode'].toLowerCase().contains(query.trim().toLowerCase())) {
           _clientesBusqueda.add(k);
         }
       });
 
-       print ("allnames buscador:  __________________________________///");print (allNames);
+      print("allnames buscador:  __________________________________///");
+      print(allNames);
     }
     searchResult.clear();
 
-    searchResult =   allNames.where((element) => element.toLowerCase().contains(query.trim().toLowerCase())).toList();
-    print ("searchResult:  ))))))))))))))))");print (searchResult);
-    return  ListView.builder(
-          itemCount: _clientesBusqueda.length,
-          itemBuilder: (context, index) {
-            return Card(
-              child: Padding(
-                padding: EdgeInsets.all(8),
-                child: ListTile(
-                  title: Text(_clientesBusqueda[index]['cardCode']+' - '+
-                      _clientesBusqueda[index]['cardName'],
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
-                  //subtitle: Text("Nit: "+_clientesBusqueda[index]['nit']),
-
-                  trailing: TextButton.icon(
-                    onPressed: () {
-                      storage.write('nit',_clientesBusqueda[index]["nit"]);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const PedidosPage()),
-                      );
-                    },
-
-                    label: const Text(
-                      '',
-                    ), icon: const Icon(Icons.add),
-                  ),
+    searchResult = allNames
+        .where((element) =>
+            element.toLowerCase().contains(query.trim().toLowerCase()))
+        .toList();
+    print("searchResult:  ))))))))))))))))");
+    print(searchResult);
+    return ListView.builder(
+      itemCount: _clientesBusqueda.length,
+      itemBuilder: (context, index) {
+        return Card(
+          child: Padding(
+            padding: EdgeInsets.all(8),
+            child: ListTile(
+              title: Text(
+                _clientesBusqueda[index]['cardCode'] +
+                    ' - ' +
+                    _clientesBusqueda[index]['cardName'],
+                style: TextStyle(
+                  fontSize: 15,
                 ),
               ),
-            );
-          },
+              //subtitle: Text("Nit: "+_clientesBusqueda[index]['nit']),
+
+              trailing: TextButton.icon(
+                onPressed: () {
+                  storage.remove('itemsPedido');
+                  storage.remove('pedidoGuardado');
+                  storage.write('nit', _clientesBusqueda[index]["nit"]);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const PedidosPage()),
+                  );
+                },
+                label: const Text(
+                  '',
+                ),
+                icon: const Icon(Icons.add),
+              ),
+            ),
+          ),
         );
-
-
+      },
+    );
   }
 
   @override
@@ -130,63 +137,59 @@ class CustomSearchDelegate extends SearchDelegate {
     searchResult.clear();
     _clientesBusqueda2.clear();
 
-    if (GetStorage().read('datosClientes')==null)
-    { print ("allnames VACIO :  *******__________________________________");}
-    else
-    {
-      clientesGuardados=GetStorage().read('datosClientes');
+    if (GetStorage().read('datosClientes') == null) {
+      print("allnames VACIO :  *******__________________________________");
+    } else {
+      clientesGuardados = GetStorage().read('datosClientes');
       clientesGuardados.forEach((k) {
         allNames2.add(k['cardName'].toString().toLowerCase());
-        if(k['cardName'].toLowerCase().contains(query.trim().toLowerCase()) ||
-            k['cardCode'].toLowerCase().contains(query.trim().toLowerCase())
-        ){
+        if (k['cardName'].toLowerCase().contains(query.trim().toLowerCase()) ||
+            k['cardCode'].toLowerCase().contains(query.trim().toLowerCase())) {
           _clientesBusqueda2.add(k);
         }
       });
-
     }
-
 
 // This method is called everytime the search term changes.
 // If you want to add search suggestions as the user enters their search term, this is the place to do that.
     final suggestionList = query.isEmpty
         ? suggestion
         : allNames2.where((element) => element.contains(query)).toList();
-    if (query==""){_clientesBusqueda2=[];}
+    if (query == "") {
+      _clientesBusqueda2 = [];
+    }
 
+    return ListView.builder(
+      itemBuilder: (context, index) => ListTile(
+        onTap: () {
+          if (query.isEmpty) {
+            query = suggestion[index];
+          }
+        },
+        leading: Icon(query.isEmpty ? Icons.history : Icons.search),
+        trailing: TextButton.icon(
+          onPressed: () {
+            storage.remove('itemsPedido');
+            storage.remove('pedidoGuardado');
 
-    return
-      ListView.builder(
-        itemBuilder: (context, index) => ListTile(
-
-          onTap: () {
-            if (query.isEmpty) {
-
-              query = suggestion[index];
-            }
+            storage.write('nit', _clientesBusqueda2[index]["nit"]);
+            storage.write('cardCode', _clientesBusqueda2[index]["cardCode"]);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PedidosPage()),
+            );
           },
-          leading: Icon(query.isEmpty ? Icons.history : Icons.search),
-          trailing: TextButton.icon(
-            onPressed: () {
-              storage.write('nit',_clientesBusqueda2[index]["nit"]);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PedidosPage()),
-              );
-            },
-
-            label: const Text(
-              '',
-            ), icon: const Icon(Icons.add),
-          ),
-          title: RichText(
-              text: TextSpan(
-                  text: _clientesBusqueda2[index]["cardName"],
-                  style:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold,fontSize: 20),
-                  )),
+          label: const Text(''),
+          icon: const Icon(Icons.add),
         ),
-        itemCount: _clientesBusqueda2.length,
-      );
+        title: RichText(
+            text: TextSpan(
+          text: _clientesBusqueda2[index]["cardName"],
+          style: TextStyle(
+              color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
+        )),
+      ),
+      itemCount: _clientesBusqueda2.length,
+    );
   }
 }

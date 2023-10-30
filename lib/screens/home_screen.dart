@@ -8,7 +8,6 @@ import 'package:productos_app/screens/login_screen.dart';
 import 'package:productos_app/screens/sincronizar.dart';
 import '../controllers/home_controller.dart';
 
-
 import 'package:get_storage/get_storage.dart';
 import 'dart:async';
 
@@ -20,7 +19,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   HomeController con = Get.put(HomeController());
   GetStorage storage = GetStorage();
-  String? usuario=GetStorage().read('usuario');
+  String? usuario = GetStorage().read('usuario');
   int _selectedScreenIndex = 0;
   Timer? _timer;
   // Map<String, double> dataMap = {
@@ -42,6 +41,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _startTimer();
   }
+
   void _selectScreen(int index) {
     setState(() {
       _selectedScreenIndex = index;
@@ -51,19 +51,18 @@ class _HomePageState extends State<HomePage> {
   void _startTimer() {
     const duration = Duration(hours: 24);
     _timer = Timer(duration, () {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => LoginScreen()));
     });
   }
 
-  Future mostrarMenu(){
-    return  showMenu<String>(
+  Future mostrarMenu() {
+    return showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(1000.0, 1000.0, 0.0, 0.0),
       items: <PopupMenuItem<String>>[
-        new PopupMenuItem<String>(
-            child: const Text('test1'), value: 'test1'),
-        new PopupMenuItem<String>(
-            child: const Text('test2'), value: 'test2'),
+        new PopupMenuItem<String>(child: const Text('test1'), value: 'test1'),
+        new PopupMenuItem<String>(child: const Text('test2'), value: 'test2'),
       ],
       elevation: 8.0,
     );
@@ -71,51 +70,49 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    //storage.remove('itemsPedido');
-    //storage.remove('items');
-    //storage.remove('pedido');
-    //print ("usuario: ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
-    //print(usuario);
-
-  return WillPopScope(
-        child: Scaffold(
+    return WillPopScope(
+      child: Scaffold(
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: _selectedScreenIndex,
           onTap: _selectScreen,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.data_saver_off_outlined), label: "Dashboard"),
-            BottomNavigationBarItem(icon: Icon(Icons.person_pin_circle_rounded), label: 'Clientes'),
-            BottomNavigationBarItem(icon: Icon(Icons.sync), label: 'Sincronizar'),
-            BottomNavigationBarItem(icon: Icon(Icons.store_outlined), label: 'Pedidos'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.data_saver_off_outlined), label: "Dashboard"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.person_pin_circle_rounded), label: 'Clientes'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.sync), label: 'Sincronizar'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.store_outlined), label: 'Pedidos'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil')
-
           ],
         ),
         body: _screens[_selectedScreenIndex]["screen"],
-
-        ),
-    onWillPop: () async {
-      showAlertDialog(context);
-      return false;
-    },
-  );
+      ),
+      onWillPop: () async {
+        showAlertDialog(context);
+        return false;
+      },
+    );
   }
 
   showAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
-      onPressed:  () { Navigator.pop(context);},
+      onPressed: () {
+        Navigator.pop(context);
+      },
     );
     Widget continueButton = ElevatedButton(
       child: Text("SI"),
-      onPressed:  () {print ("ok");
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
+      onPressed: () {
+        print("ok");
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
       },
     );
 
@@ -146,12 +143,12 @@ class _HomePageState extends State<HomePage> {
           child: BottomNavigationBar(
             showUnselectedLabels: true,
             showSelectedLabels: true,
-            onTap:   (value) {
-        // if (value == 0) Navigator.of(context).push(MaterialPageRoute(builder: (context) => DashboardPage()));
-        // if (value == 1) Navigator.of(context).push(MaterialPageRoute(builder: (context) => ClientesPage()));
-        // if (value == 2) mostrarMenu();
-        // if (value == 3) Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfilePage()));
-        },
+            onTap: (value) {
+              // if (value == 0) Navigator.of(context).push(MaterialPageRoute(builder: (context) => DashboardPage()));
+              // if (value == 1) Navigator.of(context).push(MaterialPageRoute(builder: (context) => ClientesPage()));
+              // if (value == 2) mostrarMenu();
+              // if (value == 3) Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfilePage()));
+            },
             currentIndex: con.tabIndex.value,
             backgroundColor: Colors.blue,
             unselectedItemColor: Colors.white.withOpacity(0.5),

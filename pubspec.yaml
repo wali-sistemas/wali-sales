@@ -35,6 +35,12 @@ dependencies:
   cached_network_image: ^3.2.3
   connectivity: ^3.0.3
   table_calendar: ^3.0.8
+  permission_handler: ^10.4.3
+  path_provider: ^2.0.5
+  url_launcher: ^6.0.10
+  font_awesome_flutter: ^10.4.0
+  flutter_downloader: ^1.8.1
+
 
 dev_dependencies:
   flutter_test:

@@ -2,12 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:productos_app/screens/dashboard_screen.dart';
 import 'package:productos_app/screens/profile_screen.dart';
 import 'package:provider/provider.dart';
-
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:productos_app/screens/screens.dart';
 import 'package:productos_app/services/services.dart';
 
  
-void main() => runApp(AppState());
+//void main() => runApp(AppState());
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await FlutterDownloader.initialize(debug: true, ignoreSsl: true);
+
+  runApp(AppState());
+}
+
+const debugPrintGestureArenaDiagnostics = false;
 
 class AppState extends StatelessWidget {
 
