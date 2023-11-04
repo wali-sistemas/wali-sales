@@ -1,5 +1,5 @@
 import 'dart:ffi';
-import 'dart:html';
+//import 'dart:html';
 
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -14,6 +14,8 @@ import 'buscador.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:productos_app/models/DatabaseHelper.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class PedidosPage extends StatefulWidget {
   const PedidosPage({Key? key}) : super(key: key);
@@ -1858,6 +1860,34 @@ class _TotalPedidoState extends State<TotalPedido> {
     }
   }
 
+  void _clearCache() {
+    // Eliminamos todos los archivos de caché.
+    for (final file in Directory('cache').listSync()) {
+      file.delete();
+    }
+  }
+
+  Future<void> requestStoragePermission() async {
+    final status = await Permission.storage.request();
+    if (status.isGranted) {
+      // Permiso otorgado, puedes borrar la caché aquí
+      await DefaultCacheManager().emptyCache();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Caché borrada con éxito'),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se otorgó permiso para borrar la caché'),
+        ),
+      );
+    }
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     if (GetStorage().read('pedido') != null) {
@@ -2336,7 +2366,14 @@ class _TotalPedidoState extends State<TotalPedido> {
                     ? const Text("")
                     : const CircularProgressIndicator(),
               ),
+            ),
+            ElevatedButton(
+              onPressed: ()  {
+                requestStoragePermission();
+              },
+              child: Text('Borrar Cache'),
             )
+
           ],
         ),
       );

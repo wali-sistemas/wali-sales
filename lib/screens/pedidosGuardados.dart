@@ -175,10 +175,10 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     final response = await http.get(Uri.parse(apiUrl));
     data = jsonDecode(response.body);
 
-    setState(() {
-      if (!mounted) return;
-      ordenesGuardadasServidor = data;
-    });
+    // setState(() {
+    //   if (!mounted) return;
+    //   ordenesGuardadasServidor = data;
+    // });
 
     //ordenesGuardadasServidor.add(data[0]);
 
