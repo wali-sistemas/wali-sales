@@ -34,7 +34,6 @@ class _DashboardPageState extends State<DashboardPage> {
     const Color(0xff6c5ce7),
   ];
   GetStorage storage = GetStorage();
-
   String? usuario = GetStorage().read('usuario');
   String? empresa = GetStorage().read('empresa');
   DateTime now = new DateTime.now();
@@ -56,11 +55,10 @@ class _DashboardPageState extends State<DashboardPage> {
             now.year.toString() +
             '&month=' +
             now.month.toString();
-    //final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/budget-sales/'+empresa!+'?slpcode='+usuario!+'+&year='+now.year.toString()+'&month=04';
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    print("REspuesta Dashboard: --------------------");
-    print(resp.toString());
+    //print("REspuesta Dashboard: --------------------");
+    //print(resp.toString());
     Map<String, dynamic> data = {};
     if (!resp["content"].toString().contains("Ocurrio un error")) {
       return resp;
@@ -103,8 +101,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp1 = jsonDecode(response.body);
-    print("REspuesta Barras: --------------------");
-    print(resp1.toString());
+    //print("REspuesta Barras: --------------------");
+    //print(resp1.toString());
     Map<String, dynamic> data = {};
     if (!resp1["content"].toString().contains("Ocurrio un error") ||
         !resp1["content"].toString().contains("No se encontraron")) {
@@ -188,8 +186,8 @@ class _DashboardPageState extends State<DashboardPage> {
       final savedFile = File('$downloadDirectory/nuevaversion.apk');
 
       final response = await http.head(Uri.parse(apkUrl));
-      print("Directorio: ");
-      print(appDirectory);
+      //print("Directorio: ");
+      //print(appDirectory);
       if (response.statusCode == 200) {
         final contentLength = response.headers['content-length'];
         final remoteFileSize = int.tryParse(contentLength ?? '0') ?? 0;
@@ -250,9 +248,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 future: _datosDashboard2(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    // print("datos ---------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>--------------------");
-                    // print (snapshot.data!["content"][0]["ventas"]);
-                    // print (snapshot.data!["content"][0]["slpName"]);
+                    //print("datos ---------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>--------------------");
+                    //print (snapshot.data!["content"][0]["ventas"]);
+                    //print (snapshot.data!["content"][0]["slpName"]);
                     double ventasPendientes = 0.0;
                     double presupuestoPendiente = 0.0;
                     ventasT = snapshot.data!["content"][0]["ventas"];
@@ -382,11 +380,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 future: _datosBarras(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    print(
-                        "datos ---------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>--------------------");
-                    print(snapshot.data!["content"].toString());
-                    // print (snapshot.data!["content"][0]["ventas"]);
-                    // print (snapshot.data!["content"][0]["slpName"]);
+                    //print("datos ---------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>--------------------");
+                    //print(snapshot.data!["content"].toString());
+                    //print (snapshot.data!["content"][0]["ventas"]);
+                    //print (snapshot.data!["content"][0]["slpName"]);
                     if (snapshot.data!["content"]
                             .toString()
                             .contains("Ocurrio un error") ||

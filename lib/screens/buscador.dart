@@ -22,12 +22,17 @@ class CustomSearchDelegate extends SearchDelegate {
   TextEditingController cantidadController = TextEditingController();
   TextEditingController observacionesController = TextEditingController();
   GetStorage storage = GetStorage();
-  List _itemsBuscador=[];
-  List _itemsBuscador2=[];
-  String empresa=GetStorage().read('empresa');
+  List _itemsBuscador = [];
+  List _itemsBuscador2 = [];
+  String empresa = GetStorage().read('empresa');
 
-  Future<void> _listarStock( String item) async {
-    final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/'+empresa+'?itemcode='+item+'&whscode=0';
+  Future<void> _listarStock(String item) async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
+            empresa +
+            '?itemcode=' +
+            item +
+            '&whscode=0';
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
@@ -37,7 +42,7 @@ class CustomSearchDelegate extends SearchDelegate {
     //print(data.toString());
     //if (!mounted) return;
     //setState(() {
-      _stockB = data;
+    _stockB = data;
     //});
   }
 
@@ -69,56 +74,64 @@ class CustomSearchDelegate extends SearchDelegate {
     var itemsPedidoLocal = <Map<String, String>>[];
     var itemsPedido = <Map<String, String>>[];
 
-    if (GetStorage().read('items')==null)
-    { print ("allnames VACIO :  *******__________________________________");}else
-    {
+    if (GetStorage().read('items') == null) {
+      //print("allnames VACIO :  *******__________________________________");
+    } else {
       _itemsBuscador.clear();
-      itemsGuardados=GetStorage().read('items');
+      itemsGuardados = GetStorage().read('items');
       itemsGuardados.forEach((k) {
         allNames.add(k['itemName'].toString().toLowerCase());
         List<String> palabras = query.split(' ');
         //print ("PALABRAS: **********______________________///");print (palabras);
-        if (palabras.isEmpty)
-          palabras.add(query);
-        int n=0;
+        if (palabras.isEmpty) palabras.add(query);
+        int n = 0;
         palabras.forEach((element) {
-
-        if(k['itemName'].toLowerCase().contains(element.trim().toLowerCase())
-        || k['itemCode'].toLowerCase().contains(element.trim().toLowerCase())
-        ){
-          n++;
-        }
+          if (k['itemName']
+                  .toLowerCase()
+                  .contains(element.trim().toLowerCase()) ||
+              k['itemCode']
+                  .toLowerCase()
+                  .contains(element.trim().toLowerCase())) {
+            n++;
+          }
         });
-        if (n==palabras.length)
-          _itemsBuscador.add(k);
+        if (n == palabras.length) _itemsBuscador.add(k);
       });
 
-       print ("allnames:  __________________________________///");print (allNames);
+      //print("allnames:  __________________________________///");
+      //print(allNames);
     }
     searchResult.clear();
 
-    searchResult =   allNames.where((element) => element.toLowerCase().contains(query.trim().toLowerCase())).toList();
-    print ("searchResult:  ");print (searchResult);
+    searchResult = allNames
+        .where((element) =>
+            element.toLowerCase().contains(query.trim().toLowerCase()))
+        .toList();
+    //print("searchResult:  ");
+    //print(searchResult);
     return Container(
       margin: EdgeInsets.all(20),
       child: ListView.builder(
         itemCount: _itemsBuscador.length,
         itemBuilder: (context, indexB) {
           //_listarStock(_itemsBuscador[index]["itemCode"]);
-          if ( _stockB.length>0) {
+          if (_stockB.length > 0) {
             _inventario = _stockB[0]['stockWarehouses'];
           }
-          final itemTemp={
+          final itemTemp = {
             "quantity": "",
             "itemCode": "",
             "itemName": "",
             "whsCode": ""
           };
-          var _bodegas1=[];
+          var _bodegas1 = [];
 
-          var listaBodegas=['Elija una Bodega'];
+          var listaBodegas = ['Elija una Bodega'];
           for (var bodega in _inventario) {
-            listaBodegas.add('Bodega: '+bodega['whsCode'].toString()+': '+bodega['quantity'].toString());
+            listaBodegas.add('Bodega: ' +
+                bodega['whsCode'].toString() +
+                ': ' +
+                bodega['quantity'].toString());
           }
           return Card(
             child: Padding(
@@ -130,19 +143,15 @@ class CustomSearchDelegate extends SearchDelegate {
                     fontSize: 15,
                   ),
                 ),
-                subtitle: Text("Código: "+_itemsBuscador[indexB]['itemCode']),
-                leading:  GestureDetector(
+                subtitle: Text("Código: " + _itemsBuscador[indexB]['itemCode']),
+                leading: GestureDetector(
                   onTap: () {
-
                     Navigator.push(context, MaterialPageRoute(builder: (_) {
                       return DetailScreen(_itemsBuscador[indexB]['pictureUrl']);
                     }));
-
-
-
                   }, // Image tapped
                   child: //Image.network(_items[index]['pictureUrl'], width: 40,height: 40),
-                  CachedNetworkImage(
+                      CachedNetworkImage(
                     imageUrl: _itemsBuscador[indexB]['pictureUrl'],
                     placeholder: (context, url) => CircularProgressIndicator(),
                     errorWidget: (context, url, error) => Icon(Icons.error),
@@ -152,30 +161,34 @@ class CustomSearchDelegate extends SearchDelegate {
                 trailing: TextButton.icon(
                   onPressed: () {
                     ///BUSCAR ITEM SELLECCIONADO
-                    int i=0;
-                    int indexSeleccionado=0;
+                    int i = 0;
+                    int indexSeleccionado = 0;
                     itemsGuardados.forEach((item) {
-                      if (_itemsBuscador[indexB]['itemCode']==item['itemCode'])
-                        {indexSeleccionado=i;}
+                      if (_itemsBuscador[indexB]['itemCode'] ==
+                          item['itemCode']) {
+                        indexSeleccionado = i;
+                      }
                       i++;
                     });
+
                     ///
 
-                    print("index buscador: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%");print (indexSeleccionado);
+                    //print("index buscador: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+                    //print(indexSeleccionado);
 
                     storage.write("index", indexSeleccionado);
-                    print(GetStorage().read('index'));
+                    //print(GetStorage().read('index'));
                     //String dropdownvalue = 'Elija una Bodega';
-                    showDialog(context: context,
+                    showDialog(
+                        context: context,
                         builder: (_) {
-
                           return MyDialog();
                         });
                   },
-
                   label: const Text(
                     '',
-                  ), icon: const Icon(Icons.add),
+                  ),
+                  icon: const Icon(Icons.add),
                 ),
               ),
             ),
@@ -187,100 +200,97 @@ class CustomSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-
-
-    if (GetStorage().read('items')==null)
-    { print ("allnames VACIO :  *******__________________________________");}else
-    {
-         _itemsBuscador2.clear();
+    if (GetStorage().read('items') == null) {
+      //print("allnames VACIO :  *******__________________________________");
+    } else {
+      _itemsBuscador2.clear();
       allNames2.clear();
 
-      itemsGuardados=GetStorage().read('items');
+      itemsGuardados = GetStorage().read('items');
       itemsGuardados.forEach((k) {
         allNames2.add(k['itemName'].toString().toLowerCase());
 
         List<String> palabras2 = query.split(' ');
-       // print ("PALABRAS: **********______________________///");print (palabras2);
-        if (palabras2.isEmpty)
-          palabras2.add(query);
+        //print ("PALABRAS: **********______________________///");print (palabras2);
+        if (palabras2.isEmpty) palabras2.add(query);
 
-        int m=0;
+        int m = 0;
         palabras2.forEach((element2) {
-
-         if(element2.length>1) {
-           if (k['itemName'].toLowerCase().contains(
-               element2.toLowerCase())
-           // || k['itemCode'].toLowerCase().contains(element2.trim().toLowerCase())
-           ) {
-
-             m++;
-           }
-         }
+          if (element2.length > 1) {
+            if (k['itemName'].toLowerCase().contains(element2.toLowerCase())
+                // || k['itemCode'].toLowerCase().contains(element2.trim().toLowerCase())
+                ) {
+              m++;
+            }
+          }
         });
-  if (m==palabras2.length)
-    {_itemsBuscador2.add(k);
-    print("agregando item");}
-      palabras2.clear();
+        if (m == palabras2.length) {
+          _itemsBuscador2.add(k);
+          //print("agregando item");
+        }
+        palabras2.clear();
       });
 
-      print ("itemsBuscador2:  __________________________________///");print (_itemsBuscador2);
+      //print("itemsBuscador2:  __________________________________///");
+      //print(_itemsBuscador2);
     }
-
 
 // This method is called everytime the search term changes.
 // If you want to add search suggestions as the user enters their search term, this is the place to do that.
 //     final suggestionList = query.isEmpty
 //         ? suggestion
 //         : allNames2.where((element) => element.contains(query)).toList();
-    if (query=="" || query==" "){_itemsBuscador2.clear();}
-    return
-      ListView.builder(
-        itemBuilder: (context, index) => ListTile(
+    if (query == "" || query == " ") {
+      _itemsBuscador2.clear();
+    }
+    return ListView.builder(
+      itemBuilder: (context, index) => ListTile(
+        onTap: () {
+          if (query.isEmpty) {
+            query = suggestion[index];
+          }
+        },
+        leading: Icon(query.isEmpty ? Icons.history : Icons.search),
+        trailing: TextButton.icon(
+          onPressed: () {
+            ///BUSCAR ITEM SELLECCIONADO
+            int i = 0;
+            int indexSeleccionado = 0;
+            itemsGuardados.forEach((item) {
+              if (_itemsBuscador2[index]['itemCode'] == item['itemCode']) {
+                indexSeleccionado = i;
+              }
+              i++;
+            });
 
-          onTap: () {
-            if (query.isEmpty) {
+            ///
 
-              query = suggestion[index];
-            }
+            //print("index buscador: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%");print (indexSeleccionado);
 
+            storage.write("index", indexSeleccionado);
+            //print(GetStorage().read('index'));
+            //String dropdownvalue = 'Elija una Bodega';
+            showDialog(
+                context: context,
+                builder: (_) {
+                  return MyDialog();
+                });
           },
-          leading: Icon(query.isEmpty ? Icons.history : Icons.search),
-          trailing: TextButton.icon(
-            onPressed: () {
-              ///BUSCAR ITEM SELLECCIONADO
-              int i=0;
-              int indexSeleccionado=0;
-              itemsGuardados.forEach((item) {
-                if (_itemsBuscador2[index]['itemCode']==item['itemCode'])
-                {indexSeleccionado=i;}
-                i++;
-              });
-              ///
-
-              print("index buscador: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%");print (indexSeleccionado);
-
-              storage.write("index", indexSeleccionado);
-              print(GetStorage().read('index'));
-              //String dropdownvalue = 'Elija una Bodega';
-              showDialog(context: context,
-                  builder: (_) {
-
-                    return MyDialog();
-                  });
-            },
-
-            label: const Text(
-              '',
-            ), icon: const Icon(Icons.add),
+          label: const Text(
+            '',
           ),
-          title: RichText(
-              text: TextSpan(
-                text: _itemsBuscador2[index]["itemName"]+'\n'+_itemsBuscador2[index]["itemCode"],
-                style:
-                TextStyle(color: Colors.black, fontWeight: FontWeight.bold,fontSize: 20),
-              )),
+          icon: const Icon(Icons.add),
         ),
-        itemCount: _itemsBuscador2.length,
-      );
+        title: RichText(
+            text: TextSpan(
+          text: _itemsBuscador2[index]["itemName"] +
+              '\n' +
+              _itemsBuscador2[index]["itemCode"],
+          style: TextStyle(
+              color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
+        )),
+      ),
+      itemCount: _itemsBuscador2.length,
+    );
   }
 }

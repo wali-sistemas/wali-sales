@@ -11,21 +11,19 @@ class SincronizarPage extends StatefulWidget {
 }
 
 class _SincronizarPageState extends State<SincronizarPage> {
-  String codigo=GetStorage().read('slpCode');
-  String usuario=GetStorage().read('usuario');
+  String codigo = GetStorage().read('slpCode');
+  String usuario = GetStorage().read('usuario');
   List _clientes = [];
   GetStorage storage = GetStorage();
-  String isSinc="";
-  String isSincItems="";
-  String isSincStock="";
-  String isSincVentas="";
-  String empresa=GetStorage().read('empresa');
+  String isSinc = "";
+  String isSincItems = "";
+  String isSincStock = "";
+  String isSincVentas = "";
+  String empresa = GetStorage().read('empresa');
   List _items = [];
-  List _stockFull=[];
-  List _ventas=[];
+  List _stockFull = [];
+  List _ventas = [];
   Connectivity _connectivity = Connectivity();
-
-
   DateTime now = new DateTime.now();
 
   Future<bool> checkConnectivity() async {
@@ -34,27 +32,32 @@ class _SincronizarPageState extends State<SincronizarPage> {
   }
 
   Future<void> sincronizarVentas() async {
-
-    final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/list-order/'+empresa!+'?slpcode='+usuario!+'&year='+now.year.toString()+'&month='+now.month.toString()+'&day='+now.day.toString();
-
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/list-order/' +
+            empresa! +
+            '?slpcode=' +
+            usuario! +
+            '&year=' +
+            now.year.toString() +
+            '&month=' +
+            now.month.toString() +
+            '&day=' +
+            now.day.toString();
     bool isConnected = await checkConnectivity();
-    if(isConnected==false)
-    {isSincVentas="Error de red";}
-    else {
+    if (isConnected == false) {
+      isSincVentas = "Error de red";
+    } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
       final codigoError = resp["code"];
       if (codigoError == -1) {
-        print("codigoError: $codigoError");
         isSincVentas = "Error";
       } else {
         final data = resp["content"];
-        //print(data.toString());
         if (!mounted) return;
         setState(() {
           _ventas = data;
-          print("ventas: ????????????????????????????");
-          print(_ventas);
+
           /// GUARDAR
           storage.write('ventas', _ventas);
         });
@@ -64,24 +67,20 @@ class _SincronizarPageState extends State<SincronizarPage> {
   }
 
   Future<void> sincronizarStock() async {
-    //Map<String, String> stockTemp = {"id","valor"};
-
-    final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/IGB?itemcode=0&whscode=0&slpcode='+usuario;
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/IGB?itemcode=0&whscode=0&slpcode=' +
+            usuario;
     bool isConnected = await checkConnectivity();
-    if(isConnected==false)
-    {isSincStock="Error de red";}
-    else {
+    if (isConnected == false) {
+      isSincStock = "Error de red";
+    } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      //print ("REspuesta stock: --------------------");
-      //print(resp.toString());
       final codigoError = resp["code"];
       if (codigoError == -1) {
-        print("codigoError: $codigoError");
         isSincStock = "Error";
       } else {
         final data = resp["content"];
-        //print(data.toString());
         if (!mounted) return;
         setState(() {
           _stockFull = data;
@@ -95,68 +94,66 @@ class _SincronizarPageState extends State<SincronizarPage> {
   }
 
   Future<void> sincronizarItems() async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
+    bool isConnected = await checkConnectivity();
+    if (isConnected == false) {
+      isSincItems = "Error de red";
+    } else {
+      final response = await http.get(Uri.parse(apiUrl));
+      Map<String, dynamic> resp = jsonDecode(response.body);
+      final codigoError = resp["code"];
+      if (codigoError == -1) {
+        isSincItems = "Error";
+      } else {
+        final data = resp["content"];
+        if (!mounted) return;
+        setState(() {
+          _items = data;
 
-      final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/items/'+empresa;
-      bool isConnected = await checkConnectivity();
-      if(isConnected==false)
-      {isSincItems="Error de red";}
-      else {
-        final response = await http.get(Uri.parse(apiUrl));
-        Map<String, dynamic> resp = jsonDecode(response.body);
-        //print ("Respuesta: --------------------");
-        //print(resp.toString());
-        final codigoError = resp["code"];
-        if (codigoError == -1) {
-          print("codigoError: $codigoError");
-          isSincItems = "Error";
-        } else {
-          final data = resp["content"];
-          //print(data.toString());
-          if (!mounted) return;
-          setState(() {
-            _items = data;
-
-            /// GUARDAR
-            storage.write('items', _items);
-          });
-          isSincItems = "Ok";
-        }
+          /// GUARDAR
+          storage.write('items', _items);
+        });
+        isSincItems = "Ok";
       }
+    }
   }
 
   Future<void> sincClientes() async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
+            codigo +
+            '/' +
+            empresa;
+    bool isConnected = await checkConnectivity();
+    if (isConnected == false) {
+      isSinc = "Error de red";
+    } else {
+      final response = await http.get(Uri.parse(apiUrl));
+      Map<String, dynamic> resp = jsonDecode(response.body);
+      String texto = "No se encontraron clientes para usuario " +
+          codigo +
+          " y empresa " +
+          empresa;
 
-      final String apiUrl = 'http://wali.igbcolombia.com:8080/manager/res/app/customers/'+codigo+'/'+empresa;
-      bool isConnected = await checkConnectivity();
-      if(isConnected==false)
-        {isSinc="Error de red";}
-      else {
-        final response = await http.get(Uri.parse(apiUrl));
-        Map<String, dynamic> resp = jsonDecode(response.body);
-        String texto = "No se encontraron clientes para usuario " + codigo +
-            " y empresa " + empresa;
+      final codigoError = resp["code"];
+      if (codigoError == -1 ||
+          response.statusCode != 200 ||
+          isConnected == false) {
+        isSinc = "Error";
+      } else {
+        final data = resp["content"];
+        if (!mounted) return;
+        setState(() {
+          _clientes = data;
 
-        final codigoError = resp["code"];
-        if (codigoError == -1 || response.statusCode != 200 ||
-            isConnected == false) {
-          print("codigoError: $codigoError");
-          isSinc = "Error";
-        } else {
-          final data = resp["content"];
-          //print(data.toString());
-          if (!mounted) return;
-          setState(() {
-            _clientes = data;
-
-            /// GUARDAR EN LOCAL STORAGE
-            storage.write('datosClientes', _clientes);
-          });
-          isSinc = "Ok";
-        }
+          /// GUARDAR EN LOCAL STORAGE
+          storage.write('datosClientes', _clientes);
+        });
+        isSinc = "Ok";
       }
+    }
   }
-
-
 
   void showAlert(BuildContext context, String message) {
     showDialog(
@@ -186,6 +183,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
       },
     );
   }
+
   void showAlertError(BuildContext context, String message) {
     showDialog(
       context: context,
@@ -215,110 +213,120 @@ class _SincronizarPageState extends State<SincronizarPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-
-    return Scaffold(backgroundColor: Colors.white,
-      appBar: AppBar(backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
         actions: [
           CarritoPedido(),
         ],
         title: Text('Sincronizar'),
       ),
-      body: Center( child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-        SizedBox(
-        height: 50,
+      body: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 50,
+            ),
+            SizedBox(
+              width: 150, // <-- Your width
+              height: 30,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
+                child: Text("Clientes"),
+                onPressed: () async {
+                  await sincClientes();
+                  String errorREd = "";
+                  if (isSinc == "Ok") {
+                    showAlert(context, "Clientes sincronizados");
+                  } else {
+                    if (isSinc == "Error de red")
+                      errorREd = ", error de red, verifique conectividad";
+                    showAlertError(
+                        context, "No se pudo sincronizar clientes" + errorREd);
+                  }
+                },
+              ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            SizedBox(
+              width: 150, // <-- Your width
+              height: 30,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
+                child: Text("Items"),
+                onPressed: () async {
+                  await sincronizarItems();
+                  String errorREd = "";
+                  if (isSincItems == "Ok") {
+                    showAlert(context, "Items sincronizados");
+                  } else {
+                    if (isSincItems == "Error de red")
+                      errorREd = ", error de red, verifique conectividad";
+                    showAlertError(
+                        context, "No se pudo sincronizar Items" + errorREd);
+                  }
+                },
+              ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            SizedBox(
+              width: 150, // <-- Your width
+              height: 30,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
+                child: Text("Stock"),
+                onPressed: () async {
+                  await sincronizarStock();
+                  String errorREd = "";
+                  if (isSincStock == "Ok") {
+                    showAlert(context, "Stock sincronizado");
+                  } else {
+                    if (isSincStock == "Error de red")
+                      errorREd = ", error de red, verifique conectividad";
+                    showAlertError(
+                        context, "No se pudo sincronizar Stock" + errorREd);
+                  }
+                },
+              ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            SizedBox(
+              width: 150, // <-- Your width
+              height: 30,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
+                child: Text("Ventas"),
+                onPressed: () async {
+                  await sincronizarVentas();
+                  String errorREd = "";
+                  if (isSincVentas == "Ok") {
+                    showAlert(context, "Ventas sincronizadas");
+                  } else {
+                    if (isSincVentas == "Error de red")
+                      errorREd = ", error de red, verifique conectividad";
+                    showAlertError(
+                        context, "No se pudo sincronizar Ventas" + errorREd);
+                  }
+                },
+              ),
+            ),
+          ],
         ),
-          SizedBox(
-            width: 150, // <-- Your width
-            height: 30,
-            child:ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor:Color.fromRGBO(30, 129, 235, 1)),
-              child: Text("Clientes"),
-        onPressed:  () async {   await sincClientes();
-                        String errorREd="";
-                        if(isSinc=="Ok"){
-                          showAlert(context, "Clientes sincronizados");
-                              print("Clientes sincronizados");
-                            } else {print ("No se pudo sincronizar clientes");
-                          if (isSinc=="Error de red")errorREd=", error de red, verifique conectividad";
-                        showAlertError(context, "No se pudo sincronizar clientes"+errorREd);
-                        }
-                      },
-      ),),
-          SizedBox(
-            height: 30,
-          ),
-          SizedBox(
-            width: 150, // <-- Your width
-            height: 30,
-            child:ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor:Color.fromRGBO(30, 129, 235, 1)),
-            child: Text("Items"),
-            onPressed:  () async { await sincronizarItems();
-            String errorREd="";
-              if(isSincItems=="Ok"){
-                showAlert(context, "Items sincronizados");
-                    print("Items sincronizados");
-            } else {  print ("No se pudo sincronizar Items");
-              if (isSincItems=="Error de red")errorREd=", error de red, verifique conectividad";
-              showAlertError(context, "No se pudo sincronizar Items"+errorREd);
-              }
-            },
-          ),
       ),
-          SizedBox(
-            height: 30,
-          ),
-          SizedBox(
-            width: 150, // <-- Your width
-            height: 30,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor:Color.fromRGBO(30, 129, 235, 1)),
-            child: Text("Stock"),
-            onPressed:  () async { await sincronizarStock();
-            String errorREd="";
-            if(isSincStock=="Ok"){
-              showAlert(context, "Stock sincronizado");
-              print("Stock sincronizado");
-            } else {print ("No se pudo sincronizar stock");
-            if (isSincStock=="Error de red")errorREd=", error de red, verifique conectividad";
-            showAlertError(context, "No se pudo sincronizar Stock"+errorREd);
-            }
-            },
-          ),
-      ),
-          SizedBox(
-            height: 30,
-          ),
-          SizedBox(
-            width: 150, // <-- Your width
-            height: 30,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor:Color.fromRGBO(30, 129, 235, 1)),
-            child: Text("Ventas"),
-            onPressed:  () async {
-              await sincronizarVentas();
-              String errorREd="";
-              if(isSincVentas=="Ok"){
-                showAlert(context, "Ventas sincronizadas");
-                print("Ventas sincronizadas");
-              } else {print ("No se pudo sincronizar ventas");
-              if (isSincVentas=="Error de red")errorREd=", error de red, verifique conectividad";
-              showAlertError(context, "No se pudo sincronizar Ventas"+errorREd);
-              }
-
-
-            },
-          ),
-      ),
-        ],
-      ),),
     );
   }
 }
-
-

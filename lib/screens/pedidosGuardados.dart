@@ -21,7 +21,6 @@ class PedidosGuardadosPage extends StatefulWidget {
 
 class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
   List _ventas = [];
-
   String codigo = GetStorage().read('slpCode');
   GetStorage storage = GetStorage();
   String usuario = GetStorage().read('usuario');
@@ -75,7 +74,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
       dia = selectedDay.day.toString();
       mes = selectedDay.month.toString();
       year = selectedDay.year.toString();
-      print("Dia seleccionado: $diaSel");
+      //print("Dia seleccionado: $diaSel");
       _showCalendar =
           false; // Oculta el calendario después de seleccionar un día
       // if(GetStorage().read('ventas')!=null)
@@ -97,9 +96,9 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     final response = await http.get(Uri.parse(apiUrl));
     //print ("Respuesta actualizarServicio2: ");print (response.body);
     if (response.body == "true") {
-      print("Se cambió estado a C");
+      //print("Se cambió estado a C");
     } else {
-      print("No se pudo cambiar el estado a C");
+      //print("No se pudo cambiar el estado a C");
     }
   }
 
@@ -175,10 +174,10 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     final response = await http.get(Uri.parse(apiUrl));
     data = jsonDecode(response.body);
 
-    setState(() {
-      if (!mounted) return;
-      ordenesGuardadasServidor = data;
-    });
+    // setState(() {
+    //   if (!mounted) return;
+    //   ordenesGuardadasServidor = data;
+    // });
 
     //ordenesGuardadasServidor.add(data[0]);
 
@@ -196,8 +195,6 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     else
       return [];
   }
-
-  ///
 
   void _mostrarPedidos() {
     setState(() {

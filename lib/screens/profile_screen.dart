@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:productos_app/screens/login_screen.dart';
@@ -20,13 +19,11 @@ class ProfilePage extends StatelessWidget {
 
     if (response.statusCode == 200) {
       final Uint8List pdfBytes = response.bodyBytes;
-
       final directory = await Directory.systemTemp.createTemp();
       final pdfFile = File('/storage/emulated/0/Download/instructivo1.pdf');
       await pdfFile.writeAsBytes(pdfBytes);
-      print("Archivo descargado");
-      print('/storage/emulated/0/Download/instructivo.pdf');
-
+      //print("Archivo descargado");
+      //print('/storage/emulated/0/Download/instructivo.pdf');
       // Lógica adicional para mostrar una notificación o manejar el archivo descargado
     } else {
       throw Exception('Error al descargar el archivo');
@@ -60,10 +57,6 @@ class ProfilePage extends StatelessWidget {
     String? usuario = GetStorage().read('usuario');
     String? nombreAsesor = GetStorage().read('nombreAsesor');
     String? emailAsesor = GetStorage().read('emailAsesor');
-
-    print(
-        "Nombre Asesor: ----------------- ---------------->>>>>>>>>>>>>>>>>>>");
-    print(nombreAsesor);
     return Scaffold(
         body: AuthBackgroundProfile(
       child: SingleChildScrollView(
@@ -134,7 +127,7 @@ class ProfilePage extends StatelessWidget {
                       SizedBox(height: 15),
                       Image.asset("./assets/wali.jpg", width: 100, height: 100),
                       SizedBox(height: 10),
-                      Text("Versión 10.0"),
+                      Text("Versión 10.1"),
                       Text("WALI COLMBIA SAS"),
                       Text("\n"),
                       Text("Todos los derechos reservados"),
