@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:productos_app/providers/login_form_provider.dart';
 import 'package:productos_app/services/services.dart';
@@ -83,11 +82,7 @@ class _LoginFormState extends State<_LoginForm> {
     // storage.remove('dirEnvio');
     // storage.remove('presupuesto');
 
-    var items = [
-      'Elija una empresa',
-      'IGB',
-      'MOTOZONE',
-    ];
+    var items = ['Elija una empresa', 'IGB', 'MOTOZONE', 'REDPLAS'];
     final loginForm = Provider.of<LoginFormProvider>(context);
     /*if (usuario != null) {
       loginForm.email = usuario!;
@@ -174,8 +169,8 @@ class _LoginFormState extends State<_LoginForm> {
                       }).toList(),
                       onChanged: (newValue) {
                         setState(() {
-                          print("Seleccionado: ");
-                          print(newValue);
+                          //print("Seleccionado: ");
+                          //print(newValue);
                           if (newValue == "MOTOZONE") {
                             storage.write("empresa", "VARROC");
                           } else {
@@ -219,10 +214,10 @@ class _LoginFormState extends State<_LoginForm> {
                           loginForm.isLoading = true;
                           // if (usuario!.isNotEmpty || usuario!=null) loginForm.email!=usuario;
                           // if (clave!.isNotEmpty || clave!=null) loginForm.password!=clave;
-                          print("usuario2");
-                          print(loginForm.email);
-                          print("clave2");
-                          print(loginForm.password);
+                          //print("usuario2");
+                          //print(loginForm.email);
+                          //print("clave2");
+                          //print(loginForm.password);
                           final String? errorMessage = await authService.login2(
                               loginForm.email, loginForm.password);
                           //si errorMessage = null el usuario ingresó usuario y clave ok
@@ -232,7 +227,7 @@ class _LoginFormState extends State<_LoginForm> {
 
                             Navigator.pushReplacementNamed(context, 'home');
                           } else {
-                            // print( errorMessage );
+                            //print( errorMessage );
                             NotificationsService.showSnackbar(errorMessage);
                             loginForm.isLoading = false;
                           }

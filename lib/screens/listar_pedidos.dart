@@ -22,7 +22,7 @@ class ListarPedidosPage extends StatefulWidget {
 
 class _ListarPedidosPageState extends State<ListarPedidosPage> {
   List _ventas = [];
-
+  List<Pedido> pedidosG = [];
   String codigo = GetStorage().read('slpCode');
   GetStorage storage = GetStorage();
   String usuario = GetStorage().read('usuario');
@@ -60,14 +60,14 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
       dia = selectedDay.day.toString();
       mes = selectedDay.month.toString();
       year = selectedDay.year.toString();
-      print("Dia seleccionado: $diaSel");
+      //print("Dia seleccionado: $diaSel");
       _showCalendar =
           false; // Oculta el calendario después de seleccionar un día
-      if (GetStorage().read('ventas') != null)
-        print(GetStorage().read('ventas'));
-      //storage.remove("ventas");
+      if (GetStorage().read('ventas') != null) {
+        //print(GetStorage().read('ventas'));
+        //storage.remove("ventas");
+      }
     });
-
     //_fetchData("2023", mesSel, diaSel);
   }
 
@@ -75,8 +75,6 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
     var connectivityResult = await _connectivity.checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
   }
-
-  List<Pedido> pedidosG = [];
 
   Future<void> listarPedidosGuardados() async {
     List<Pedido> pedidos = [];
@@ -106,13 +104,12 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
               mes +
               '&day=' +
               dia;
-      // print(apiUrl);
+      //print(apiUrl);
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
       final codigoError = resp["code"];
       if (codigoError == -1) {
         //print("codigoError: $codigoError");
-
         _ventas = [];
       } else {
         final data = resp["content"];
@@ -237,7 +234,6 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
   Widget pedidos(BuildContext context) {
     // if (_ventas.isNotEmpty)
     _fetchData(year, mes, dia);
-
     return Expanded(
       child: ListView.builder(
         itemCount: _ventas.length,

@@ -69,7 +69,7 @@ class CustomSearchDelegate extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     if (GetStorage().read('datosClientes') == null) {
-      print("allnames VACIO :  *******__________________________________");
+      //print("allnames VACIO :  *******__________________________________");
     } else {
       _clientesBusqueda.clear();
       clientesGuardados = GetStorage().read('datosClientes');
@@ -81,8 +81,8 @@ class CustomSearchDelegate extends SearchDelegate {
         }
       });
 
-      print("allnames buscador:  __________________________________///");
-      print(allNames);
+      //print("allnames buscador:  __________________________________///");
+      //print(allNames);
     }
     searchResult.clear();
 
@@ -90,8 +90,8 @@ class CustomSearchDelegate extends SearchDelegate {
         .where((element) =>
             element.toLowerCase().contains(query.trim().toLowerCase()))
         .toList();
-    print("searchResult:  ))))))))))))))))");
-    print(searchResult);
+    //print("searchResult:  ))))))))))))))))");
+    //print(searchResult);
     return ListView.builder(
       itemCount: _clientesBusqueda.length,
       itemBuilder: (context, index) {
@@ -138,7 +138,7 @@ class CustomSearchDelegate extends SearchDelegate {
     _clientesBusqueda2.clear();
 
     if (GetStorage().read('datosClientes') == null) {
-      print("allnames VACIO :  *******__________________________________");
+      //print("allnames VACIO :  *******__________________________________");
     } else {
       clientesGuardados = GetStorage().read('datosClientes');
       clientesGuardados.forEach((k) {

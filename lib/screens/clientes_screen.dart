@@ -18,10 +18,8 @@ class ClientesPage extends StatefulWidget {
 
 class _ClientesPageState extends State<ClientesPage> {
   List _clientes = [];
-
   String codigo = GetStorage().read('slpCode');
   GetStorage storage = GetStorage();
-
   String empresa = GetStorage().read('empresa');
   String usuario = GetStorage().read('usuario');
   Connectivity _connectivity = Connectivity();
@@ -49,7 +47,7 @@ class _ClientesPageState extends State<ClientesPage> {
             empresa;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
-      print("Error de red");
+      //print("Error de red");
     } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
@@ -62,7 +60,7 @@ class _ClientesPageState extends State<ClientesPage> {
       if (codigoError == -1 ||
           response.statusCode != 200 ||
           isConnected == false) {
-        print("codigoError: $codigoError");
+        //print("codigoError: $codigoError");
       } else {
         final data = resp["content"];
         //print(data.toString());
@@ -79,7 +77,6 @@ class _ClientesPageState extends State<ClientesPage> {
 
   Future<void> sincronizarStock() async {
     //Map<String, String> stockTemp = {"id","valor"};
-
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
             empresa +
@@ -87,7 +84,7 @@ class _ClientesPageState extends State<ClientesPage> {
             usuario;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
-      print("Error de red");
+      //print("Error de red");
     } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
@@ -95,7 +92,7 @@ class _ClientesPageState extends State<ClientesPage> {
       //print(resp.toString());
       final codigoError = resp["code"];
       if (codigoError == -1) {
-        print("codigoError: $codigoError");
+        //print("codigoError: $codigoError");
       } else {
         final data = resp["content"];
         //print(data.toString());

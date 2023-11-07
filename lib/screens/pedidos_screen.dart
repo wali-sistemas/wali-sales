@@ -1,6 +1,4 @@
 import 'dart:ffi';
-//import 'dart:html';
-
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -16,6 +14,7 @@ import 'package:connectivity/connectivity.dart';
 import 'package:productos_app/models/DatabaseHelper.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:path_provider/path_provider.dart';
 
 class PedidosPage extends StatefulWidget {
   const PedidosPage({Key? key}) : super(key: key);
@@ -28,21 +27,17 @@ class _PedidosPageState extends State<PedidosPage>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
-
   List<dynamic> datosClientesArr = [];
   final _formKey = GlobalKey<FormState>();
   List _items = [];
   List _stock = [];
   List listaItems = [];
   String empresa = GetStorage().read('empresa');
-
   TextEditingController cantidadController = TextEditingController();
   TextEditingController observacionesController = TextEditingController();
   GetStorage storage = GetStorage();
   List clientesGuardados = [];
-
   String dropdownvalue2 = 'Elija un destino';
-
   String nit = "";
   String urlImagenItem = "";
 
@@ -95,7 +90,6 @@ class _PedidosPageState extends State<PedidosPage>
 
   Future<void> _leerDatosold() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    //Map json = jsonDecode(jsonString);
     var userPref = pref.getString('datosClientes');
     if (userPref != null) {
       List<dynamic> clientesMap = jsonDecode(userPref);
@@ -103,15 +97,12 @@ class _PedidosPageState extends State<PedidosPage>
       setState(() {
         datosClientesArr = clientesMap;
       });
-    } else {
-      print("userPref es null");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
     return MaterialApp(
         home: DefaultTabController(
             length: 4,
@@ -160,13 +151,9 @@ class _PedidosPageState extends State<PedidosPage>
     if (GetStorage().read('items') == null) {
       final String apiUrl =
           'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
-
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      //print ("Respuesta: --------------------");
-      //print(resp.toString());
       final data = resp["content"];
-      //print(data.toString());
       if (!mounted) return;
       setState(() {
         _items = data;
@@ -191,10 +178,7 @@ class _PedidosPageState extends State<PedidosPage>
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    //print ("REspuesta stock: --------------------");
-    //print(resp.toString());
     final data = resp["content"];
-    //print(data.toString());
     if (!mounted) return;
     setState(() {
       _stock = data;
@@ -213,8 +197,6 @@ class _PedidosPageState extends State<PedidosPage>
         currentDate = pickedDate;
       });
   }
-
-  ///
 
   int findItemIndex(List<dynamic> list, dynamic item) {
     for (int i = 0; i < list.length; i++) {
@@ -263,12 +245,12 @@ class _PedidosPageState extends State<PedidosPage>
         nit = "no exite nit";
 
       clientesGuardados.forEach((k) {
-        print("NIT2: ");
-        print(k['cardCode']);
-        print("NIT2: ");
-        print(nit);
+        //print("NIT2: ");
+        //print(k['cardCode']);
+        //print("NIT2: ");
+        //print(nit);
         if (nit == k['cardCode']) {
-          print("Nitencontrado: ");
+          //print("Nitencontrado: ");
           direccionesTemp = k['addresses'];
         }
       });
@@ -295,7 +277,6 @@ class _PedidosPageState extends State<PedidosPage>
       if (cliente['cardCode'] == GetStorage().read('cardCode')) {
         indice = i;
       }
-
       i++;
     }
     _direcciones = datosClientesArr[indice]['addresses'];
@@ -440,7 +421,6 @@ class _PedidosPageState extends State<PedidosPage>
     var itemsPedido = <Map<String, String>>[];
     bool isDropDownVisible = false;
 
-    //_listarStock("D0023");
     _listarItems();
     return SafeArea(
       child: ListView.builder(
@@ -510,13 +490,10 @@ class _PedidosPageState extends State<PedidosPage>
   }
 
   void showAlertDialog(BuildContext context, String pedido) {
-    // set up the button
     Widget okButton = TextButton(
       child: Text("OK"),
       onPressed: () {},
     );
-
-    // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text("Pedido creado"),
       content: Text(pedido),
@@ -524,8 +501,6 @@ class _PedidosPageState extends State<PedidosPage>
         okButton,
       ],
     );
-
-    // show the dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -545,7 +520,6 @@ class MyDialog extends StatefulWidget {
   _MyDialogState createState() => new _MyDialogState();
 }
 
-////////////////////////&/
 class DetailScreen extends StatelessWidget {
   final String image;
   const DetailScreen(this.image, {Key? key}) : super(key: key);
@@ -555,7 +529,6 @@ class DetailScreen extends StatelessWidget {
       body: GestureDetector(
         onTap: () {
           Navigator.pop(context);
-          // Navigator.pop(context);
         },
         child: Center(
           child: Hero(
@@ -569,8 +542,6 @@ class DetailScreen extends StatelessWidget {
     );
   }
 }
-
-///////
 
 class _MyDialogState extends State<MyDialog> {
   int index = 0;
@@ -587,7 +558,6 @@ class _MyDialogState extends State<MyDialog> {
   // var itemsPedido = <Map<String, String>>[];
   List<dynamic> itemsPedidoLocal = [];
   List<dynamic> itemsPedido = [];
-
   String dropdownvalue = 'Elija una Bodega';
   String empresa = GetStorage().read('empresa');
   String mensaje = "";
@@ -624,7 +594,6 @@ class _MyDialogState extends State<MyDialog> {
   Future<void> _listarItems() async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
-
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
     final data = resp["content"];
@@ -641,8 +610,6 @@ class _MyDialogState extends State<MyDialog> {
   }
 
   Future<void> sincronizarStock() async {
-    //Map<String, String> stockTemp = {"id","valor"};
-
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
             empresa +
@@ -650,7 +617,6 @@ class _MyDialogState extends State<MyDialog> {
             usuario;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
-      print("Error de red, cambiando a modo local");
       if (GetStorage().read('stockFull') != null) {
         List _stockFullLocal = GetStorage().read('stockFull');
         setState(() {
@@ -660,16 +626,12 @@ class _MyDialogState extends State<MyDialog> {
     } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      // print ("REspuesta stock: --------------------");
-      // print(resp.toString());
       final codigoError = resp["code"];
       if (codigoError == -1) {
-        print("codigoError: $codigoError");
-        print("Error de red");
+        //print("codigoError: $codigoError");
+        //print("Error de red");
       } else {
         final data = resp["content"];
-        //print("Stockfull a guardar");
-        //print(data.toString());
         if (!mounted) return;
         setState(() {
           _stockFull = data;
@@ -732,21 +694,19 @@ class _MyDialogState extends State<MyDialog> {
         return false;
       }
     }
-
     return true;
   }
 
   Future<void> insertItemDb(Item newItem) async {
     // Supongamos que tienes un objeto de tipo Item que quieres insertar en la base de datos
-
     // Insertar el nuevo item en la base de datos
     DatabaseHelper dbHelper = DatabaseHelper();
     int insertedItemId = await dbHelper.insertItem(newItem);
     idLocal = insertedItemId;
     if (insertedItemId != null && insertedItemId > 0) {
-      print("El item ha sido insertado con éxito con el ID: $insertedItemId");
+      //print("El item ha sido insertado con éxito con el ID: $insertedItemId");
     } else {
-      print("Error al insertar el item en la base de datos");
+      //print("Error al insertar el item en la base de datos");
     }
   }
 
@@ -755,16 +715,14 @@ class _MyDialogState extends State<MyDialog> {
     List<Item> items = await dbHelper.getItems();
 
     if (items.isNotEmpty) {
-      print("Lista de items:");
       for (Item item in items) {
         // print("ID: ${item.id}");
         // print("ID Pedido: ${item.idPedido}");
         // print("Quantity: ${item.quantity}");
-        // // ... Mostrar los demás atributos del item ...
         // print("--------------------------");
       }
     } else {
-      print("No hay items en la base de datos.");
+      //print("No hay items en la base de datos.");
     }
   }
 
@@ -773,16 +731,15 @@ class _MyDialogState extends State<MyDialog> {
     List<Pedido> pedidos = await dbHelper.getPedidos();
 
     if (pedidos.isNotEmpty) {
-      print("Lista de Pedidos:");
       for (Pedido pedido in pedidos) {
-        print("ID: ${pedido.id}");
-        print("Cardcode: ${pedido.cardCode}");
-        print("Nombre: ${pedido.cardName}");
+        //print("ID: ${pedido.id}");
+        //print("Cardcode: ${pedido.cardCode}");
+        //print("Nombre: ${pedido.cardName}");
         // ... Mostrar los demás atributos del item ...
-        print("--------------------------");
+        //print("--------------------------");
       }
     } else {
-      print("No hay items en la base de datos.");
+      //print("No hay items en la base de datos.");
     }
   }
 
@@ -807,10 +764,9 @@ class _MyDialogState extends State<MyDialog> {
     int insertedPedidoId = await dbHelper.insertPedido(newPedido);
 
     if (insertedPedidoId != null && insertedPedidoId > 0) {
-      print(
-          "El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
+      //print("El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
     } else {
-      print("Error al insertar el pedido en la base de datos");
+      //print("Error al insertar el pedido en la base de datos");
     }
     idPedidoDb = insertedPedidoId;
   }
@@ -827,7 +783,6 @@ class _MyDialogState extends State<MyDialog> {
     } else {
       itemsGuardados = GetStorage().read('items');
     }
-
     if (GetStorage().read('zona') == null) {
       zona = "01";
     } else {
@@ -843,42 +798,33 @@ class _MyDialogState extends State<MyDialog> {
 
     if (itemsGuardados.length > 0) {
       List _stockTemp = [];
-
-      // _listarStock(itemsGuardados[index]["itemCode"]);
-
-      print("itemcode index");
-      print(itemsGuardados[index]["itemCode"]);
+      //print("itemcode index");
+      //print(itemsGuardados[index]["itemCode"]);
       if (GetStorage().read('stockFull') != null) {
         _stockFull = GetStorage().read('stockFull');
-        print("stockFULL: ");
-        print(_stockFull);
+        //print("stockFULL: ");
+        //print(_stockFull);
         _stockFull.forEach((j) {
           if (itemsGuardados[index]["itemCode"] == j["itemCode"]) {
             _stockTemp.add(j);
-            print("encontrado item en stock local");
+            //print("encontrado item en stock local");
           } //else {print("no ENCONTRADO");}
         });
-
         setState(() {
           _stock = _stockTemp;
         });
-      } else {
-        print("stockfull en 0");
       }
     }
 
     if (_stock.length > 0) {
       _inventario = _stock[0]['stockWarehouses'];
       fullStock = _stock[0]['stockFull'];
-    } else {
-      print("_stock <= 0");
     }
 
-    //print ("fullstock:  $fullStock");
     num stockSuma = 0;
     int mayor = 0;
-    print("Inventario: ++++++++++++++");
-    print(_inventario.toString());
+    //print("Inventario: ++++++++++++++");
+    //print(_inventario.toString());
     for (var bodega in _inventario) {
       if (bodega['quantity'] > 0 && bodega['whsCode'] == zona) {
         stockItem = bodega['whsCode'];
@@ -913,7 +859,6 @@ class _MyDialogState extends State<MyDialog> {
                     btnAgregarActivo = false;
                   });
                 }
-
                 if (text.isEmpty) {
                   btnAgregarActivo = false;
                 } else {
@@ -930,8 +875,8 @@ class _MyDialogState extends State<MyDialog> {
                             "Cantidad ingresada es mayor al stock disponible";
                         textoVisible = true;
                         btnAgregarActivo = false;
-                        print("mensaje:");
-                        print(mensaje);
+                        //print("mensaje:");
+                        //print(mensaje);
                       });
                     } else {
                       if (int.parse(text) < 1) {
@@ -974,12 +919,9 @@ class _MyDialogState extends State<MyDialog> {
                 hintStyle: const TextStyle(color: Colors.black, fontSize: 10),
               ),
             )),
-
         SizedBox(
           height: 10,
         ),
-
-////
         Divider(),
         Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -1006,11 +948,12 @@ class _MyDialogState extends State<MyDialog> {
                           itemTemp["itemName"] =
                               itemsGuardados[index]["itemName"];
                           itemTemp["group"] = itemsGuardados[index]["grupo"];
-                          if (itemsGuardados[index]["presentation"] != null)
+                          if (itemsGuardados[index]["presentation"] != null) {
                             itemTemp["presentation"] =
                                 itemsGuardados[index]["presentation"];
-                          else
+                          } else {
                             itemTemp["presentation"] = "";
+                          }
                           itemTemp["price"] =
                               itemsGuardados[index]["price"].toString();
                           itemTemp["discountItem"] =
@@ -1021,11 +964,6 @@ class _MyDialogState extends State<MyDialog> {
                           itemTemp["iva"] =
                               itemsGuardados[index]["iva"].toString();
                           itemsPedido.add(itemTemp);
-                          print(
-                              "Item a guardar clase Mydialog: ///////////////////////////");
-                          print(itemsPedido);
-///// INSERTAR EN SQLITE
-                          //listarPedidos();
 
                           int precioI = itemsGuardados[index]["price"];
                           double precioD = precioI.toDouble();
@@ -1036,7 +974,6 @@ class _MyDialogState extends State<MyDialog> {
                           double discountItemD = discountItemI.toDouble();
                           int ivaI = itemsGuardados[index]["iva"];
                           double ivaD = ivaI.toDouble();
-
                           Item newItem = Item(
                             idPedido: idPedidoDb,
                             quantity: int.parse(cantidadController.text),
@@ -1050,24 +987,16 @@ class _MyDialogState extends State<MyDialog> {
                             discountPorc: discountD,
                             iva: ivaD,
                           );
-
                           // Insertar el nuevo item en la base de datos
                           insertItemDb(newItem);
 
                           ///guardar id en map
-
                           // actualizarPedidoGuardado["docNum"]=idLocal.toString();
                           // storage.write('actualizarPedidoGuardado', actualizarPedidoGuardado);
-                          ////// LISTAR ITEMS DE SQLITE
                           listarItemDb();
-
-                          ////
-
                           if (GetStorage().read('itemsPedido') == null) {
                             storage.write('itemsPedido', itemsPedido);
                           } else {
-                            print("itemsPedido en STORAGE:  ");
-                            print(GetStorage().read('itemsPedido'));
                             itemsPedidoLocal = GetStorage().read('itemsPedido');
                             //// VALIDAR SI EL ITME SELECCIONADO YA ESTÁ,ENTONCES SE SUMA LA CANTIDAD
                             int repetido = 0;
@@ -1085,13 +1014,8 @@ class _MyDialogState extends State<MyDialog> {
                             }
                             storage.write('itemsPedido', itemsPedidoLocal);
                           }
-
-                          print(
-                              "Items guardados clase Mydialog: //////************//////////////");
-                          print(GetStorage().read('itemsPedido'));
                           storage.write('index', index);
                         });
-
                         Navigator.pop(context);
                       }
                     : null,
@@ -1169,7 +1093,6 @@ class _DetallePedidoState extends State<DetallePedido> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                // Cierra el diálogo al presionar este botón
                 Navigator.pop(context);
               },
               child: Text("No"),
@@ -1180,7 +1103,6 @@ class _DetallePedidoState extends State<DetallePedido> {
                   itemsPedidoLocal.clear();
                   storage.remove('itemsPedido');
                 });
-                // Cierra el diálogo al presionar este botón
                 Navigator.pop(context);
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -1207,7 +1129,6 @@ class _DetallePedidoState extends State<DetallePedido> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                // Cierra el diálogo al presionar este botón
                 Navigator.pop(context);
               },
               child: Text("No"),
@@ -1221,7 +1142,6 @@ class _DetallePedidoState extends State<DetallePedido> {
                     }
                   });
                 });
-                // Cierra el diálogo al presionar este botón
                 Navigator.pop(context);
               },
               child: Text("Si"),
@@ -1235,19 +1155,15 @@ class _DetallePedidoState extends State<DetallePedido> {
   @override
   Widget build(BuildContext context) {
     if (GetStorage().read('itemsPedido') == null) {
-      print("No hay items ");
+      //print("No hay items ");
     } else {
       itemsPedidoLocal = GetStorage().read('itemsPedido');
-      print("si hay items ");
+      //print("si hay items ");
       listaItems = [];
       itemsPedidoLocal.forEach((j) {
         listaItems.add(j);
       });
     }
-
-    print("Listaitems: =======================");
-    print(listaItems);
-
     return SafeArea(
       child: listaItems.isEmpty
           ? Text("\n\n\n        Sin ítems")
@@ -1281,7 +1197,6 @@ class _DetallePedidoState extends State<DetallePedido> {
                   itemBuilder: (context, index) {
                     subtotalDetalle = double.parse(listaItems[index]['price']) *
                         double.parse(listaItems[index]['quantity']);
-
                     iva = (double.parse(listaItems[index]['iva']) *
                             subtotalDetalle) /
                         100;
@@ -1331,41 +1246,28 @@ class _DetallePedidoState extends State<DetallePedido> {
                                     } else {
                                       zona = GetStorage().read('zona');
                                     }
-
                                     if (GetStorage().read('stockFull') !=
                                         null) {
                                       _stockFull2 =
                                           GetStorage().read('stockFull');
-
                                       _stockFull2.forEach((j) {
                                         if (listaItems[index]["itemCode"] ==
                                             j["itemCode"]) {
                                           _stockTemp.add(j);
-                                          print(
-                                              "encontrado item en stock local");
                                         }
                                       });
-
                                       setState(() {
                                         _stock2 = _stockTemp;
                                       });
-                                    } else {
-                                      print("stockfull en 0");
                                     }
-
                                     if (_stock2.length > 0) {
                                       _inventario =
                                           _stock2[0]['stockWarehouses'];
                                       fullStock = _stock2[0]['stockFull'];
-                                    } else {
-                                      print("_stock <= 0");
                                     }
-
-                                    //print ("fullstock:  $fullStock");
                                     num stockSuma = 0;
                                     int mayor = 0;
-                                    print("Inventario: ++++++++++++++");
-                                    print(_inventario.toString());
+
                                     for (var bodega in _inventario) {
                                       if (bodega['quantity'] > 0 &&
                                           bodega['whsCode'] == zona) {
@@ -1374,7 +1276,6 @@ class _DetallePedidoState extends State<DetallePedido> {
                                       } else
                                         stockItem =
                                             listaItems[index]["whsCode"];
-
                                       stockSuma =
                                           stockSuma + bodega['quantity'];
                                     }
@@ -1410,7 +1311,6 @@ class _DetallePedidoState extends State<DetallePedido> {
                                             );
                                           }); //////
                                     }
-
                                     storage.write("cantidadItem", 0);
                                   },
                                 ),
@@ -1425,52 +1325,40 @@ class _DetallePedidoState extends State<DetallePedido> {
                                     } else {
                                       zona = GetStorage().read('zona');
                                     }
-
                                     if (GetStorage().read('stockFull') !=
                                         null) {
                                       _stockFull2 =
                                           GetStorage().read('stockFull');
-
                                       _stockFull2.forEach((j) {
                                         if (listaItems[index]["itemCode"] ==
                                             j["itemCode"]) {
                                           _stockTemp.add(j);
-                                          print(
-                                              "encontrado item en stock local");
                                         }
                                       });
-
                                       setState(() {
                                         _stock2 = _stockTemp;
                                       });
-                                    } else {
-                                      print("stockfull en 0");
                                     }
-
                                     if (_stock2.length > 0) {
                                       _inventario =
                                           _stock2[0]['stockWarehouses'];
                                       fullStock = _stock2[0]['stockFull'];
-                                    } else {
-                                      print("_stock <= 0");
                                     }
 
-                                    //print ("fullstock:  $fullStock");
                                     num stockSuma = 0;
                                     int mayor = 0;
-                                    print("Inventario: ++++++++++++++");
-                                    print(_inventario.toString());
+
                                     for (var bodega in _inventario) {
                                       if (bodega['quantity'] > 0 &&
                                           bodega['whsCode'] == zona) {
                                         stockItem = bodega['whsCode'];
                                         fullStock = bodega['quantity'];
-                                      } else
+                                      } else {
                                         stockItem =
                                             listaItems[index]["whsCode"];
-
-                                      stockSuma =
-                                          stockSuma + bodega['quantity'];
+                                        stockSuma =
+                                            stockSuma + bodega['quantity'];
+                                      }
                                     }
 
                                     ////FIN VERIFICAR STOCK
@@ -1482,7 +1370,6 @@ class _DetallePedidoState extends State<DetallePedido> {
                                       listaItems[index]['quantity'] =
                                           cant1.toInt().toString();
                                     } else {
-                                      //////////////
                                       showDialog(
                                           context: context,
                                           builder: (BuildContext context) {
@@ -1498,14 +1385,13 @@ class _DetallePedidoState extends State<DetallePedido> {
                                                 ),
                                               ],
                                             );
-                                          }); //////
+                                          });
                                     }
                                   },
                                 ),
                               ],
                             ),
                             SizedBox(width: 16.0), // Espacio entre columnas
-                            // Columna de descripción en la derecha
                             Expanded(
                               child: Text(
                                   listaItems[index]['itemName'] +
@@ -1563,9 +1449,6 @@ class _TotalPedidoState extends State<TotalPedido> {
       BuildContext context, Map<String, dynamic> pedidoFinal) {
     final String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/create-order';
-    print("Pedido final: ///////////////////////////");
-    print(GetStorage().read('pedido').toString());
-    print(GetStorage().read('itemsPedido'));
     var dirEnvio = GetStorage().read('dirEnvio');
 
     DateTime now = DateTime.now();
@@ -1575,7 +1458,6 @@ class _TotalPedidoState extends State<TotalPedido> {
     String fechaPedido = fecha.toString() +
         pedidoFinal['cardCode'].toString() +
         formatter.toString();
-
     return http.post(
       Uri.parse(url),
       headers: <String, String>{'Content-Type': 'application/json'},
@@ -1599,10 +1481,6 @@ class _TotalPedidoState extends State<TotalPedido> {
       BuildContext context, Map<String, dynamic> pedidoFinal) {
     final String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/save-order';
-    print("Pedido final: ///////////////////////////");
-    print(GetStorage().read('pedido').toString());
-    print("Items pedido guardado:**********************");
-    print(GetStorage().read('itemsPedido'));
     var dirEnvio = GetStorage().read('dirEnvio');
 
     DateTime now = DateTime.now();
@@ -1612,10 +1490,6 @@ class _TotalPedidoState extends State<TotalPedido> {
     String fechaPedido = fecha.toString() +
         pedidoFinal['cardCode'].toString() +
         formatter.toString();
-
-    print("pedido a enviar como guardado:");
-    print(pedidoFinal);
-
     return http.post(
       Uri.parse(url),
       headers: <String, String>{'Content-Type': 'application/json'},
@@ -1641,10 +1515,7 @@ class _TotalPedidoState extends State<TotalPedido> {
   Future<http.Response> _enviarPedidoTemp(
       BuildContext context, Map<String, dynamic> pedidoFinal) {
     final String url = 'http://179.50.4.120:8580/igb/igb.php';
-    print("Pedido final: ///////////////////////////");
-    print(GetStorage().read('pedido').toString());
     //DateFormat formatter = DateFormat('hhmm');
-    print(GetStorage().read('itemsPedido'));
     DateTime now = DateTime.now();
     //String formatter = DateFormat.Hms().format(now);
     String formatter = DateFormat('hhmm').format(now);
@@ -1653,7 +1524,6 @@ class _TotalPedidoState extends State<TotalPedido> {
     String fechaPedido = fecha.toString() +
         pedidoFinal['cardCode'].toString() +
         formatter.toString();
-
     return http.post(
       Uri.parse(url),
       headers: <String, String>{'Content-Type': 'application/json'},
@@ -1688,7 +1558,6 @@ class _TotalPedidoState extends State<TotalPedido> {
       setState(() {
         storage.write("stockFull", _stockFull);
       });
-
       return 1;
     } else {
       return 0;
@@ -1798,16 +1667,13 @@ class _TotalPedidoState extends State<TotalPedido> {
     List<Pedido> pedidos = await dbHelper.getPedidos();
 
     if (pedidos.isNotEmpty) {
-      print("Lista de Pedidos:");
       for (Pedido pedido in pedidos) {
-        print("ID: ${pedido.id}");
-        print("Cardcode: ${pedido.cardCode}");
-        print("Nombre: ${pedido.cardName}");
+        //print("ID: ${pedido.id}");
+        //print("Cardcode: ${pedido.cardCode}");
+        //print("Nombre: ${pedido.cardName}");
         // ... Mostrar los demás atributos del item ...
-        print("--------------------------");
+        //print("--------------------------");
       }
-    } else {
-      print("No hay items en la base de datos.");
     }
   }
 
@@ -1821,8 +1687,6 @@ class _TotalPedidoState extends State<TotalPedido> {
           return true;
         }
       }
-    } else {
-      print("No hay items en la base de datos.");
     }
     return false;
   }
@@ -1832,10 +1696,9 @@ class _TotalPedidoState extends State<TotalPedido> {
     int insertedPedidoId = await dbHelper.insertPedido(pedidoFinal);
 
     if (insertedPedidoId != null && insertedPedidoId > 0) {
-      print(
-          "El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
+      //print("El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
     } else {
-      print("Error al insertar el pedido en la base de datos");
+      //print("Error al insertar el pedido en la base de datos");
     }
     //idPedidoDb= insertedPedidoId;
   }
@@ -1850,13 +1713,12 @@ class _TotalPedidoState extends State<TotalPedido> {
             docNum.toString() +
             '&status=' +
             status;
-    //print ("URL ACTUALIZARSERVICIO2: ");print (apiUrl);
     final response = await http.get(Uri.parse(apiUrl));
-    //print ("Respuesta actualizarServicio2: ");print (response.body);
+
     if (response.body == "true") {
-      print("Se cambió estado a " + status);
+      //print("Se cambió estado a " + status);
     } else {
-      print("No se pudo cambiar el estado a " + status);
+      //print("No se pudo cambiar el estado a " + status);
     }
   }
 
@@ -1870,7 +1732,6 @@ class _TotalPedidoState extends State<TotalPedido> {
   Future<void> requestStoragePermission() async {
     final status = await Permission.storage.request();
     if (status.isGranted) {
-      // Permiso otorgado, puedes borrar la caché aquí
       await DefaultCacheManager().emptyCache();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1886,7 +1747,28 @@ class _TotalPedidoState extends State<TotalPedido> {
     }
   }
 
-
+  Future<void> deleteAppData() async {
+    try {
+      final directory = await getApplicationSupportDirectory();
+      final dir = Directory(directory.path);
+      if (dir.existsSync()) {
+        dir.deleteSync(recursive: true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Datos borrados con éxito'),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No se encontraron datos para eliminar.'),
+          ),
+        );
+      }
+    } catch (e) {
+      //print('Error al eliminar los datos de la aplicación: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1895,8 +1777,6 @@ class _TotalPedidoState extends State<TotalPedido> {
       if (GetStorage().read('pedidoGuardado') != null) {
         Map<String, dynamic> pedidoFinalG = GetStorage().read('pedidoGuardado');
         pedidoFinal['comments'] = pedidoFinalG['comments'] ?? '';
-      } else {
-        print("pedidoguarddo null");
       }
       //var itemsPedidoLocal = <Map<String, String>>[];
       List<dynamic> itemsPedidoLocal = [];
@@ -1911,7 +1791,6 @@ class _TotalPedidoState extends State<TotalPedido> {
       } else {
         itemsPedidoLocal = GetStorage().read('itemsPedido');
       }
-
       if (GetStorage().read('items') == null) {
       } else {
         /////BUSCAR itemCode en lista de items para hallar el precio
@@ -1920,14 +1799,12 @@ class _TotalPedidoState extends State<TotalPedido> {
           itemsGuardados.forEach((k) {
             String cantQ = j['quantity'];
             double cantidadQ = double.parse(cantQ);
-            //print (k['price']);
             if (k['itemCode'] == j['itemCode']) {
               subtotal = subtotal + k['price'] * cantidadQ;
             }
           });
         });
       }
-
       if (GetStorage().read('itemsPedido') == null) {
         cantidadItems = 0;
       } else {
@@ -1937,7 +1814,7 @@ class _TotalPedidoState extends State<TotalPedido> {
       double iva = 0.0;
 
       itemsPedidoLocal.forEach((element) {
-        print(element["iva"].toString());
+        //print(element["iva"].toString());
         var subt =
             double.parse(element["price"]) * double.parse(element["quantity"]);
         var ivaTemp =
@@ -1954,7 +1831,6 @@ class _TotalPedidoState extends State<TotalPedido> {
         int decimalIndex = ivaTxt.indexOf('.');
         ivaTxt = ivaTxt.substring(0, decimalIndex);
       }
-
       if (subtotalTxt.contains('.')) {
         int decimalIndex = subtotalTxt.indexOf('.');
         subtotalTxt = subtotalTxt.substring(0, decimalIndex);
@@ -1962,22 +1838,16 @@ class _TotalPedidoState extends State<TotalPedido> {
       String textoObservaciones = "";
       if (pedidoFinal['comments'].toString() != null) {
         textoObservaciones = pedidoFinal['comments'];
-
         if (GetStorage().read('estadoPedido') != null) {
           estadoPedido = GetStorage().read('estadoPedido');
         } else {
           estadoPedido = "desconocido";
         }
-
-        print("ESTADOPEDIDO: ");
-        print(estadoPedido);
         if (estadoPedido != "nuevo") {
           observacionesController.text = textoObservaciones;
         } else {
           //observacionesController.text="";
         }
-      } else {
-        print("Pedido viene sin comentarios");
       }
 
       // if (totalTxt.contains('.')) {
@@ -2090,7 +1960,6 @@ class _TotalPedidoState extends State<TotalPedido> {
                             setState(() {
                               btnPedidoActivo = false;
                             });
-
                             if (GetStorage().read('dirEnvio') == null ||
                                 GetStorage().read('dirEnvio') == "" ||
                                 GetStorage().read('dirEnvio') ==
@@ -2103,20 +1972,13 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 pedidoFinal['comments'] =
                                     observacionesController.text;
                                 storage.write('pedido', pedidoFinal);
-
                                 setState(() {
                                   cargando = true;
                                 });
-
                                 http.Response response =
                                     await _enviarPedido(context, pedidoFinal);
-
-                                print(response.statusCode);
-                                print("\n");
                                 Map<String, dynamic> resultado =
                                     jsonDecode(response.body);
-                                print(response.body);
-                                print(resultado['content']);
 
                                 if (response.statusCode == 200 &&
                                     resultado['content'] != "") {
@@ -2134,11 +1996,6 @@ class _TotalPedidoState extends State<TotalPedido> {
                                       null) {
                                     actualizarPedidoGuardado = GetStorage()
                                         .read('actualizarPedidoGuardado');
-
-                                    print('*********************');
-                                    print(actualizarPedidoGuardado);
-                                    print('*********************');
-
                                     setState(() {
                                       actualizarEstadoPed(
                                           int.parse(
@@ -2298,8 +2155,6 @@ class _TotalPedidoState extends State<TotalPedido> {
 
                                 if (response.statusCode == 200 &&
                                     resultado['content'] != "") {
-                                  print("pedido guardado enviado a IGB");
-                                  print(response.body);
                                   //modificar el estado del pedido editado a cerrado
                                   setState(() {
                                     actualizarEstadoPed(
@@ -2329,8 +2184,6 @@ class _TotalPedidoState extends State<TotalPedido> {
                               } catch (e) {
                                 setState(() {
                                   responseMessage = 'Error: $e';
-                                  print(
-                                      "El servicio no responde, contacte al administrador");
                                   Get.snackbar('Error',
                                       'El servicio no responde, contacte al administrador',
                                       colorText: Colors.red,
@@ -2356,24 +2209,19 @@ class _TotalPedidoState extends State<TotalPedido> {
                   ),
                 ),
               ),
+              /*Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      requestStoragePermission();
+                      deleteAppData();
+                    },
+                    child: Text('Borrar Cache'),
+                  ),
+                ),
+              ),*/
             ]),
-            Container(
-              padding: const EdgeInsets.all(40),
-              margin: const EdgeInsets.all(40),
-              // color: Colors.blue[100],
-              child: Center(
-                child: !cargando
-                    ? const Text("")
-                    : const CircularProgressIndicator(),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: ()  {
-                requestStoragePermission();
-              },
-              child: Text('Borrar Cache'),
-            )
-
           ],
         ),
       );

@@ -7,7 +7,6 @@ import 'package:productos_app/screens/profile_screen.dart';
 import 'package:productos_app/screens/login_screen.dart';
 import 'package:productos_app/screens/sincronizar.dart';
 import '../controllers/home_controller.dart';
-
 import 'package:get_storage/get_storage.dart';
 import 'dart:async';
 
@@ -22,11 +21,6 @@ class _HomePageState extends State<HomePage> {
   String? usuario = GetStorage().read('usuario');
   int _selectedScreenIndex = 0;
   Timer? _timer;
-  // Map<String, double> dataMap = {
-  //   "Presupuesto": 6.7616000,
-  //   "Presupuesto pendiente": 2.4699044,
-  //
-  // };
 
   final List _screens = [
     {"screen": const DashboardPage(), "title": "Dashboard"},
@@ -98,7 +92,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   showAlertDialog(BuildContext context) {
-    // set up the buttons
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
       onPressed: () {
@@ -108,15 +101,12 @@ class _HomePageState extends State<HomePage> {
     Widget continueButton = ElevatedButton(
       child: Text("SI"),
       onPressed: () {
-        print("ok");
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => LoginScreen()),
         );
       },
     );
-
-    // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text("Atención"),
       content: Text("Está seguro que desea salir de la aplicación?"),
@@ -125,8 +115,6 @@ class _HomePageState extends State<HomePage> {
         continueButton,
       ],
     );
-
-    // show the dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
