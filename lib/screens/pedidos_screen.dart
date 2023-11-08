@@ -1730,8 +1730,24 @@ class _TotalPedidoState extends State<TotalPedido> {
   }
 
   Future<void> requestStoragePermission() async {
-    final status = await Permission.storage.request();
-    if (status.isGranted) {
+    try {
+      await DefaultCacheManager().emptyCache();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Caché borrada con éxito'),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al borrar la caché: $e'),
+        ),
+      );
+      print('Error al borrar la caché: $e');
+    }
+
+    //final status = await Permission.storage.request();
+    /*if (status.isGranted) {
       await DefaultCacheManager().emptyCache();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1744,7 +1760,7 @@ class _TotalPedidoState extends State<TotalPedido> {
           content: Text('No se otorgó permiso para borrar la caché'),
         ),
       );
-    }
+    }*/
   }
 
   Future<void> deleteAppData() async {
@@ -2030,16 +2046,16 @@ class _TotalPedidoState extends State<TotalPedido> {
                                           '&docNum=' +
                                           idP +
                                           '&status=F';
-                                  print("URL ACTUALIZARSERVICIO1: ");
-                                  print(apiUrl);
+                                  //print("URL ACTUALIZARSERVICIO1: ");
+                                  //print(apiUrl);
                                   final response =
                                       await http.get(Uri.parse(apiUrl));
-                                  print("Respuesta actualizarServicio: ");
-                                  print(response.body);
+                                  //print("Respuesta actualizarServicio: ");
+                                  //print(response.body);
                                   if (response.body == "true") {
-                                    print("Se cambió estado a F");
+                                    //print("Se cambió estado a F");
                                   } else {
-                                    print("No se pudo cambiar el estado a F");
+                                    //print("No se pudo cambiar el estado a F");
                                   }
 */
                                   /*setState(() {
@@ -2209,18 +2225,18 @@ class _TotalPedidoState extends State<TotalPedido> {
                   ),
                 ),
               ),
-              /*Expanded(
+              Expanded(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
                   child: ElevatedButton(
                     onPressed: () {
                       requestStoragePermission();
-                      deleteAppData();
+                      //deleteAppData();
                     },
                     child: Text('Borrar Cache'),
                   ),
                 ),
-              ),*/
+              ),
             ]),
           ],
         ),
