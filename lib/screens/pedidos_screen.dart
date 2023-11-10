@@ -697,6 +697,8 @@ class _MyDialogState extends State<MyDialog> {
     return true;
   }
 
+
+
   Future<void> insertItemDb(Item newItem) async {
     // Supongamos que tienes un objeto de tipo Item que quieres insertar en la base de datos
     // Insertar el nuevo item en la base de datos
@@ -1444,6 +1446,7 @@ class _TotalPedidoState extends State<TotalPedido> {
   bool cargando = false;
   final numberFormat = new NumberFormat.simpleCurrency();
   Connectivity _connectivity = Connectivity();
+  String textoObservaciones = "";
 
   Future<http.Response> _enviarPedido(
       BuildContext context, Map<String, dynamic> pedidoFinal) {
@@ -1458,6 +1461,9 @@ class _TotalPedidoState extends State<TotalPedido> {
     String fechaPedido = fecha.toString() +
         pedidoFinal['cardCode'].toString() +
         formatter.toString();
+    DatabaseHelper dbHelper = DatabaseHelper();
+    dbHelper.deleteAllItems();
+
     return http.post(
       Uri.parse(url),
       headers: <String, String>{'Content-Type': 'application/json'},
@@ -1524,6 +1530,8 @@ class _TotalPedidoState extends State<TotalPedido> {
     String fechaPedido = fecha.toString() +
         pedidoFinal['cardCode'].toString() +
         formatter.toString();
+    DatabaseHelper dbHelper = DatabaseHelper();
+    dbHelper.deleteAllItems();
     return http.post(
       Uri.parse(url),
       headers: <String, String>{'Content-Type': 'application/json'},
@@ -1851,7 +1859,7 @@ class _TotalPedidoState extends State<TotalPedido> {
         int decimalIndex = subtotalTxt.indexOf('.');
         subtotalTxt = subtotalTxt.substring(0, decimalIndex);
       }
-      String textoObservaciones = "";
+
       if (pedidoFinal['comments'].toString() != null) {
         textoObservaciones = pedidoFinal['comments'];
         if (GetStorage().read('estadoPedido') != null) {

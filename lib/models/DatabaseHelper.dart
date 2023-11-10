@@ -141,6 +141,11 @@ class DatabaseHelper {
     return await dbClient!.delete('items', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<int> deleteAllItems() async {
+    final dbClient = await db;
+    return await dbClient!.delete('pedido');
+  }
+
   Future<int> getItemCount() async {
     final dbClient = await db;
     final List<Map<String, dynamic>> articles = await dbClient!.query('items');
