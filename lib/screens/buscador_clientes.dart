@@ -111,8 +111,10 @@ class CustomSearchDelegate extends SearchDelegate {
 
               trailing: TextButton.icon(
                 onPressed: () {
-                  storage.remove('itemsPedido');
-                  storage.remove('pedidoGuardado');
+                  if (GetStorage().read('itemsPedido') == null) {
+                    storage.remove('itemsPedido');
+                    storage.remove('pedidoGuardado');
+                  }
                   storage.write('nit', _clientesBusqueda[index]["nit"]);
                   Navigator.push(
                     context,
@@ -120,9 +122,7 @@ class CustomSearchDelegate extends SearchDelegate {
                         builder: (context) => const PedidosPage()),
                   );
                 },
-                label: const Text(
-                  '',
-                ),
+                label: const Text(''),
                 icon: const Icon(Icons.add),
               ),
             ),
@@ -169,9 +169,10 @@ class CustomSearchDelegate extends SearchDelegate {
         leading: Icon(query.isEmpty ? Icons.history : Icons.search),
         trailing: TextButton.icon(
           onPressed: () {
-            storage.remove('itemsPedido');
-            storage.remove('pedidoGuardado');
-
+            if (GetStorage().read('itemsPedido') == null) {
+              storage.remove('itemsPedido');
+              storage.remove('pedidoGuardado');
+            }
             storage.write('nit', _clientesBusqueda2[index]["nit"]);
             storage.write('cardCode', _clientesBusqueda2[index]["cardCode"]);
             Navigator.push(
