@@ -1462,6 +1462,7 @@ class _TotalPedidoState extends State<TotalPedido> {
         pedidoFinal['cardCode'].toString() +
         formatter.toString();
     DatabaseHelper dbHelper = DatabaseHelper();
+    dbHelper.deleteAllItemsP();
     dbHelper.deleteAllItems();
 
     return http.post(
@@ -1953,7 +1954,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                     textInputAction: TextInputAction
                         .newline, // Cambiar la acción al presionar "Enter"
                     onChanged: (text) {
-                      //pedidoFinal['comments'] = text;
+                      pedidoFinal['comments'] = observacionesController.text;
                       pedidoFinal['id'] = text;
                     },
                     style: const TextStyle(color: Colors.black),
@@ -2238,6 +2239,9 @@ class _TotalPedidoState extends State<TotalPedido> {
                   padding: EdgeInsets.symmetric(horizontal: 8),
                   child: ElevatedButton(
                     onPressed: () {
+                      DatabaseHelper dbHelper = DatabaseHelper();
+                      dbHelper.deleteAllItemsP();
+                      dbHelper.deleteAllItems();
                       requestStoragePermission();
                       //deleteAppData();
                     },

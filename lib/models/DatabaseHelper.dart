@@ -141,9 +141,13 @@ class DatabaseHelper {
     return await dbClient!.delete('items', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<int> deleteAllItems() async {
+  Future<int> deleteAllItemsP() async {
     final dbClient = await db;
     return await dbClient!.delete('pedido');
+  }
+  Future<int> deleteAllItems() async {
+    final dbClient = await db;
+    return await dbClient!.delete('items');
   }
 
   Future<int> getItemCount() async {
