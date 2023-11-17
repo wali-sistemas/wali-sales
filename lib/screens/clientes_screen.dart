@@ -193,51 +193,55 @@ class _ClientesPageState extends State<ClientesPage> {
       itemCount: _clientes.length,
       itemBuilder: (context, index) {
         return Card(
-          child: Padding(
-            padding: EdgeInsets.all(8),
-            child: ListTile(
-              title: Text(
-                _clientes[index]['cardCode'] +
-                    ' - ' +
-                    _clientes[index]['cardName'],
-                style: TextStyle(
-                  fontSize: 15,
+          child: Container(
+            color: Colors.white,
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: ListTile(
+                title: Text(
+                  _clientes[index]['cardCode'] +
+                      ' - ' +
+                      _clientes[index]['cardName'],
+                  style: TextStyle(
+                    fontSize: 15,
+                  ),
                 ),
-              ),
-              //subtitle: Text("Nit: "+_clientes[index]['nit']),
+                //subtitle: Text("Nit: "+_clientes[index]['nit']),
 
-              trailing: TextButton.icon(
-                onPressed: () {
-                  storage.remove('dirEnvio');
+                trailing: TextButton.icon(
+                  onPressed: () {
+                    storage.remove('dirEnvio');
 
-                  if (GetStorage().read('itemsPedido') != null) {
-                    itemsPedidoLocal = GetStorage().read('itemsPedido');
-                    pedidoLocal = GetStorage().read('pedido');
-                  }
+                    if (GetStorage().read('itemsPedido') != null) {
+                      itemsPedidoLocal = GetStorage().read('itemsPedido');
+                      pedidoLocal = GetStorage().read('pedido');
+                    }
 
-                  if (pedidoLocal["cardCode"] != _clientes[index]['cardCode'] &&
-                      itemsPedidoLocal.length > 0) {
-                    Map<String, dynamic> pedidoInicial = {};
-                    //storage.remove('pedido');
-                    setState(() {
-                      storage.write("pedido", pedidoInicial);
-                      storage.remove('itemsPedido');
-                      storage.remove('pedidoGuardado');
+                    if (pedidoLocal["cardCode"] !=
+                            _clientes[index]['cardCode'] &&
+                        itemsPedidoLocal.length > 0) {
+                      Map<String, dynamic> pedidoInicial = {};
+                      //storage.remove('pedido');
+                      setState(() {
+                        storage.write("pedido", pedidoInicial);
+                        storage.remove('itemsPedido');
+                        storage.remove('pedidoGuardado');
 
-                      ///estadoPedido puede ser nuevo o guardado
-                    });
-                  }
-                  storage.write('estadoPedido', 'nuevo');
-                  storage.write('nit', _clientes[index]["nit"]);
-                  storage.write('cardCode', _clientes[index]["cardCode"]);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const PedidosPage()),
-                  );
-                },
-                label: const Text(''),
-                icon: const Icon(Icons.add),
+                        ///estadoPedido puede ser nuevo o guardado
+                      });
+                    }
+                    storage.write('estadoPedido', 'nuevo');
+                    storage.write('nit', _clientes[index]["nit"]);
+                    storage.write('cardCode', _clientes[index]["cardCode"]);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const PedidosPage()),
+                    );
+                  },
+                  label: const Text(''),
+                  icon: const Icon(Icons.add),
+                ),
               ),
             ),
           ),

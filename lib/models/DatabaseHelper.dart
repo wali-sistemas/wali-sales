@@ -1,7 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper.internal();
   factory DatabaseHelper() => _instance;
@@ -132,8 +131,8 @@ class DatabaseHelper {
 
   Future<int> updateItem(Item item) async {
     final dbClient = await db;
-    return await dbClient!.update('items', item.toMap(),
-        where: 'id = ?', whereArgs: [item.id]);
+    return await dbClient!
+        .update('items', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
   Future<int> deleteItem(int id) async {
@@ -145,6 +144,7 @@ class DatabaseHelper {
     final dbClient = await db;
     return await dbClient!.delete('pedido');
   }
+
   Future<int> deleteAllItems() async {
     final dbClient = await db;
     return await dbClient!.delete('items');
@@ -155,15 +155,9 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> articles = await dbClient!.query('items');
     return articles.length;
   }
-
-
-
 }
 
 // Métodos toMap y fromMap para convertir objetos a Map y viceversa
-
-
-
 class Pedido {
   int? id;
   String? cardCode;
@@ -295,4 +289,3 @@ class Item {
     );
   }
 }
-

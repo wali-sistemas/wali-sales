@@ -186,14 +186,14 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                                 '\n' +
                                 pedidosG[index].cardName.toString() +
                                 '\n' +
-                                'Número pedido: ' +
+                                'Orden: ' +
                                 pedidosG[index].id.toString(),
                             style: TextStyle(
                               fontSize: 15,
                             ),
                           ),
                           subtitle: Text(
-                            "TOTAL: " + pedidosG[index].docTotal.toString(),
+                            "Total: " + pedidosG[index].docTotal.toString(),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           trailing: TextButton.icon(
@@ -244,26 +244,29 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
             total = total.substring(0, decimalIndex);
           }
           return Card(
-            child: Padding(
-              padding: EdgeInsets.all(8),
-              child: ListTile(
-                title: Text(
-                  'Fecha: ' +
-                      _ventas[index]["docDate"].toString() +
-                      ' - Nit: ' +
-                      _ventas[index]["cardCode"].toString() +
-                      '\n' +
-                      _ventas[index]["cardName"].toString() +
-                      '\n' +
-                      'Número pedido: ' +
-                      _ventas[index]["docNum"].toString(),
-                  style: TextStyle(
-                    fontSize: 15,
+            child: Container(
+              color: Colors.white,
+              child: Padding(
+                padding: EdgeInsets.all(8),
+                child: ListTile(
+                  title: Text(
+                    'Fecha: ' +
+                        _ventas[index]["docDate"].toString() +
+                        ' - Nit: ' +
+                        _ventas[index]["cardCode"].toString() +
+                        '\n' +
+                        _ventas[index]["cardName"].toString() +
+                        '\n' +
+                        'Orden: ' +
+                        _ventas[index]["docNum"].toString(),
+                    style: TextStyle(
+                      fontSize: 15,
+                    ),
                   ),
-                ),
-                subtitle: Text(
-                  "TOTAL: " + total,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  subtitle: Text(
+                    "Total: " + total,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),
