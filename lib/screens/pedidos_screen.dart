@@ -1471,6 +1471,14 @@ class _TotalPedidoState extends State<TotalPedido> {
   final numberFormat = new NumberFormat.simpleCurrency();
   Connectivity _connectivity = Connectivity();
   String textoObservaciones = "";
+  //
+  // @override
+  // void dispose() {
+  //   Map<String, dynamic> pedidoFinal = GetStorage().read('pedido');
+  //   var obs = GetStorage().read('observaciones');
+  //   pedidoFinal['comments'] = obs;
+  //   super.dispose();
+  // }
 
   Future<http.Response> _enviarPedido(
       BuildContext context, Map<String, dynamic> pedidoFinal) {
@@ -2067,6 +2075,9 @@ class _TotalPedidoState extends State<TotalPedido> {
       num subtotal = 0;
       int cantidad = 0;
 
+      var obs = GetStorage().read('observaciones');
+      // observacionesController.text = textoObservaciones;
+      observacionesController.text = obs;
       //print ("pedido final desde pedidoGuardado");print (pedidoFinal);
 
       if (GetStorage().read('itemsPedido') == null) {
@@ -2126,7 +2137,9 @@ class _TotalPedidoState extends State<TotalPedido> {
           estadoPedido = "desconocido";
         }
         if (estadoPedido != "nuevo") {
-          observacionesController.text = textoObservaciones;
+          var obs = GetStorage().read('observaciones');
+          // observacionesController.text = textoObservaciones;
+          observacionesController.text = obs;
         }
       }
 
@@ -2216,6 +2229,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                     onChanged: (text) {
                       pedidoFinal['comments'] = observacionesController.text;
                       pedidoFinal['id'] = text;
+                      storage.write("observaciones", observacionesController.text);
                     },
                     style: const TextStyle(color: Colors.black),
                     decoration: InputDecoration(
