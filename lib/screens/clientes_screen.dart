@@ -221,13 +221,11 @@ class _ClientesPageState extends State<ClientesPage> {
                             _clientes[index]['cardCode'] &&
                         itemsPedidoLocal.length > 0) {
                       Map<String, dynamic> pedidoInicial = {};
-                      //storage.remove('pedido');
                       setState(() {
                         storage.write("pedido", pedidoInicial);
                         storage.remove('itemsPedido');
                         storage.remove('pedidoGuardado');
-
-                        ///estadoPedido puede ser nuevo o guardado
+                        storage.remove('observaciones');
                       });
                     }
                     storage.write('estadoPedido', 'nuevo');

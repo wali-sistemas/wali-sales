@@ -2075,7 +2075,15 @@ class _TotalPedidoState extends State<TotalPedido> {
       num subtotal = 0;
       int cantidad = 0;
 
-      var obs = GetStorage().read('observaciones');
+      //print("********************");
+      //print(GetStorage().read('observaciones'));
+      //print("********************");
+
+      String obs = "";
+      if (GetStorage().read('observaciones') != null) {
+        obs = GetStorage().read('observaciones');
+      }
+
       // observacionesController.text = textoObservaciones;
       observacionesController.text = obs;
       //print ("pedido final desde pedidoGuardado");print (pedidoFinal);
@@ -2229,7 +2237,8 @@ class _TotalPedidoState extends State<TotalPedido> {
                     onChanged: (text) {
                       pedidoFinal['comments'] = observacionesController.text;
                       pedidoFinal['id'] = text;
-                      storage.write("observaciones", observacionesController.text);
+                      storage.write(
+                          "observaciones", observacionesController.text);
                     },
                     style: const TextStyle(color: Colors.black),
                     decoration: InputDecoration(
