@@ -2075,17 +2075,13 @@ class _TotalPedidoState extends State<TotalPedido> {
       num subtotal = 0;
       int cantidad = 0;
 
-      //print("********************");
-      //print(GetStorage().read('observaciones'));
-      //print("********************");
-
       String obs = "";
       if (GetStorage().read('observaciones') != null) {
         obs = GetStorage().read('observaciones');
+        observacionesController.text = obs;
       }
 
       // observacionesController.text = textoObservaciones;
-      observacionesController.text = obs;
       //print ("pedido final desde pedidoGuardado");print (pedidoFinal);
 
       if (GetStorage().read('itemsPedido') == null) {
@@ -2145,7 +2141,7 @@ class _TotalPedidoState extends State<TotalPedido> {
           estadoPedido = "desconocido";
         }
         if (estadoPedido != "nuevo") {
-          var obs = GetStorage().read('observaciones');
+          String obs = textoObservaciones;
           // observacionesController.text = textoObservaciones;
           observacionesController.text = obs;
         }
