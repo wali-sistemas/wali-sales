@@ -6,6 +6,7 @@ import 'package:productos_app/screens/listar_pedidos.dart';
 import 'package:productos_app/screens/profile_screen.dart';
 import 'package:productos_app/screens/login_screen.dart';
 import 'package:productos_app/screens/sincronizar.dart';
+import 'package:productos_app/screens/cartera.dart';
 import '../controllers/home_controller.dart';
 import 'package:get_storage/get_storage.dart';
 import 'dart:async';
@@ -27,7 +28,9 @@ class _HomePageState extends State<HomePage> {
     {"screen": const ClientesPage(), "title": "Clientes"},
     {"screen": SincronizarPage(), "title": "Sincronizar"},
     {"screen": ListarPedidosPage(), "title": "Pedidos"},
-    {"screen": ProfilePage(), "title": "Perfil"}
+    {"screen": CarteraPage(), "title": "Cartera"},
+    {"screen": ProfilePage(), "title": "Perfil"},
+
   ];
 
   @override
@@ -79,7 +82,9 @@ class _HomePageState extends State<HomePage> {
                 icon: Icon(Icons.sync), label: 'Sincronizar'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.store_outlined), label: 'Pedidos'),
+            BottomNavigationBarItem(icon: Icon(Icons.account_box), label: 'Cartera'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil')
+
           ],
         ),
         body: _screens[_selectedScreenIndex]["screen"],
@@ -172,11 +177,20 @@ class _HomePageState extends State<HomePage> {
                   backgroundColor: Colors.yellow),
               BottomNavigationBarItem(
                   icon: Icon(
+                    Icons.account_box,
+                    size: 30,
+                  ),
+                  label: 'Cartera',
+                  backgroundColor: Colors.yellow),
+
+              BottomNavigationBarItem(
+                  icon: Icon(
                     Icons.person_pin_rounded,
                     size: 30,
                   ),
                   label: 'Perfil',
                   backgroundColor: Colors.yellow)
+
             ],
           ),
         )));
