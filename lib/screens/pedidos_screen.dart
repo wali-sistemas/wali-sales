@@ -837,8 +837,6 @@ class _MyDialogState extends State<MyDialog> {
 
     num stockSuma = 0;
     int mayor = 0;
-    //print("Inventario: ++++++++++++++");
-    //print(_inventario.toString());
     for (var bodega in _inventario) {
       if (bodega['quantity'] > 0 && bodega['whsCode'] == zona) {
         stockItem = bodega['whsCode'];
@@ -1691,6 +1689,7 @@ class _TotalPedidoState extends State<TotalPedido> {
           actions: [
             ElevatedButton(
               onPressed: () {
+                storage.remove('observaciones');
                 storage.remove("pedido");
                 storage.remove("itemsPedido");
                 storage.remove("dirEnvio");

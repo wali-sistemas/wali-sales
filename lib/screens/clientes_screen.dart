@@ -216,26 +216,21 @@ class _ClientesPageState extends State<ClientesPage> {
                       itemsPedidoLocal = GetStorage().read('itemsPedido');
                       pedidoLocal = GetStorage().read('pedido');
                     }
-
                     if (pedidoLocal["cardCode"] !=
                             _clientes[index]['cardCode'] &&
                         itemsPedidoLocal.length > 0) {
-                      Map<String, dynamic> pedidoInicial = {};
-                      setState(() {
-                        storage.write("pedido", pedidoInicial);
-                        storage.remove('itemsPedido');
-                        storage.remove('pedidoGuardado');
-                        storage.remove('observaciones');
-                      });
+                      showAlertDialogItemsInShoppingCart(
+                          context, pedidoLocal["cardCode"]);
+                    } else {
+                      storage.write('estadoPedido', 'nuevo');
+                      storage.write('nit', _clientes[index]["nit"]);
+                      storage.write('cardCode', _clientes[index]["cardCode"]);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const PedidosPage()),
+                      );
                     }
-                    storage.write('estadoPedido', 'nuevo');
-                    storage.write('nit', _clientes[index]["nit"]);
-                    storage.write('cardCode', _clientes[index]["cardCode"]);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const PedidosPage()),
-                    );
                   },
                   label: const Text(''),
                   icon: const Icon(Icons.add),
@@ -248,8 +243,7 @@ class _ClientesPageState extends State<ClientesPage> {
     ));
   }
 
-  showAlertDialog(BuildContext context, String nit) {
-    // set up the buttons
+  showAlertDialogItemsInShoppingCart(BuildContext context, String nit) {
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
       onPressed: () {
@@ -260,6 +254,7 @@ class _ClientesPageState extends State<ClientesPage> {
     Widget continueButton = ElevatedButton(
       child: Text("SI"),
       onPressed: () {
+        storage.remove('observaciones');
         storage.remove('pedido');
         storage.remove('itemsPedido');
         storage.write('nit', nit);
@@ -269,8 +264,6 @@ class _ClientesPageState extends State<ClientesPage> {
         );
       },
     );
-
-    // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text("Atención"),
       content: Text(
@@ -280,10 +273,9 @@ class _ClientesPageState extends State<ClientesPage> {
         continueButton,
       ],
     );
-
-    // show the dialog
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return alert;
       },
