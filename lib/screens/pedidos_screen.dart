@@ -33,6 +33,7 @@ class _PedidosPageState extends State<PedidosPage>
   List _stock = [];
   List listaItems = [];
   String empresa = GetStorage().read('empresa');
+  String usuario = GetStorage().read('usuario');
   TextEditingController cantidadController = TextEditingController();
   TextEditingController observacionesController = TextEditingController();
   GetStorage storage = GetStorage();
@@ -158,7 +159,10 @@ class _PedidosPageState extends State<PedidosPage>
   Future<void> _listarItems() async {
     if (GetStorage().read('items') == null) {
       final String apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
+          'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
+              empresa +
+              '?slpcode=' +
+              usuario;
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
       final data = resp["content"];
@@ -182,8 +186,8 @@ class _PedidosPageState extends State<PedidosPage>
             empresa +
             '?itemcode=' +
             item +
-            '&whscode=0';
-
+            '&whscode=0&slpcode=' +
+            usuario;
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
     final data = resp["content"];

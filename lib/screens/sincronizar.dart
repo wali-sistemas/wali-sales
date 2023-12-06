@@ -99,7 +99,10 @@ class _SincronizarPageState extends State<SincronizarPage> {
 
   Future<void> sincronizarItems() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
+        'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
+            empresa +
+            "?slpcode=" +
+            usuario;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
       isSincItems = "Error de red";
