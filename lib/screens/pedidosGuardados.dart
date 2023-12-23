@@ -122,6 +122,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
   void showConfirmOrderSave(BuildContext context, int idOrder, String message) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Atención"),

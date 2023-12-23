@@ -82,7 +82,9 @@ class _CarritoPedidoState extends State<CarritoPedido> {
         children: [
           IconButton(
             icon: Icon(Icons.shopping_cart),
+            color: Colors.white,
             onPressed: () {
+              storage.remove("dirEnvio");
               if (GetStorage().read('estadoPedido') != null) {
                 if (GetStorage().read('estadoPedido') == "guardado") {
                   //print("estadoPedido:");

@@ -238,7 +238,10 @@ class _DashboardPageState extends State<DashboardPage> {
           actions: [
             CarritoPedido(),
           ],
-          title: const Text('Dashboard'),
+          title: const Text(
+            'Dashboard',
+            style: TextStyle(color: Colors.white),
+          ),
         ),
         body: SingleChildScrollView(
           child: Column(children: [

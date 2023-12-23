@@ -88,7 +88,7 @@ class CustomSearchDelegate extends SearchDelegate {
 
     searchResult = allNames
         .where((element) =>
-            element.toLowerCase().contains(query.trim().toLowerCase()))
+        element.toLowerCase().contains(query.trim().toLowerCase()))
         .toList();
     //print("searchResult:  ))))))))))))))))");
     //print(searchResult);
@@ -185,10 +185,10 @@ class CustomSearchDelegate extends SearchDelegate {
         ),
         title: RichText(
             text: TextSpan(
-          text: _clientesBusqueda2[index]["cardName"],
-          style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
-        )),
+              text: _clientesBusqueda2[index]["cardName"],
+              style: TextStyle(
+                  color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
+            )),
       ),
       itemCount: _clientesBusqueda2.length,
     );

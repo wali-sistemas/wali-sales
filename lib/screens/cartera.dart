@@ -4,20 +4,20 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
-import 'buscador_clientes.dart';
+import 'buscador_cartera.dart';
 import 'package:productos_app/screens/home_screen.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:connectivity/connectivity.dart';
 
-class ClientesPage extends StatefulWidget {
-  const ClientesPage({Key? key}) : super(key: key);
+class CarteraPage extends StatefulWidget {
+  const CarteraPage({Key? key}) : super(key: key);
 
   @override
-  State<ClientesPage> createState() => _ClientesPageState();
+  State<CarteraPage> createState() => _carteraPageState();
 }
 
-class _ClientesPageState extends State<ClientesPage> {
-  List _clientes = [];
+class _carteraPageState extends State<CarteraPage> {
+  List _cartera = [];
   String codigo = GetStorage().read('slpCode');
   GetStorage storage = GetStorage();
   String empresa = GetStorage().read('empresa');
@@ -26,11 +26,12 @@ class _ClientesPageState extends State<ClientesPage> {
   List _stockFull = [];
   Map<String, dynamic> pedidoLocal = {};
   List<dynamic> itemsPedidoLocal = [];
+  Map<String, dynamic> detalleCartera = {};
 
   @override
   void initState() {
     super.initState();
-    sincClientes();
+    sincCartera();
     sincronizarStock();
   }
 
@@ -39,19 +40,20 @@ class _ClientesPageState extends State<ClientesPage> {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  Future<void> sincClientes() async {
-    final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
-            codigo +
-            '/' +
-            empresa;
+  Future<void> sincCartera() async {
+    final String apiUrl ='http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/'+empresa+'?slpcode='+codigo;
+    // final String apiUrl =
+    //     'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
+    //         codigo +
+    //         '/' +
+    //         empresa;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
       //print("Error de red");
     } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      String texto = "No se encontraron clientes para usuario " +
+      String texto = "No se encontraron Cartera para usuario " +
           codigo +
           " y empresa " +
           empresa;
@@ -66,10 +68,10 @@ class _ClientesPageState extends State<ClientesPage> {
         //print(data.toString());
         if (!mounted) return;
         setState(() {
-          _clientes = data;
+          _cartera = data;
 
           /// GUARDAR EN LOCAL STORAGE
-          storage.write('datosClientes', _clientes);
+          storage.write('datosCartera', _cartera);
         });
       }
     }
@@ -108,21 +110,18 @@ class _ClientesPageState extends State<ClientesPage> {
   }
 
   Future<void> _fetchData() async {
-    if (GetStorage().read('datosClientes') == null) {
-      final String apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
-              codigo +
-              '/' +
-              empresa;
+    if (GetStorage().read('datosCartera') == null) {
+      final String apiUrl ='http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/'+empresa+'?slpcode='+codigo;
+
 
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      String texto = "No se encontraron clientes para usuario " +
+      String texto = "No se encontraron Cartera para usuario " +
           codigo +
           " y empresa " +
           empresa;
 
-      final codigoError = resp["code"];
+      final codigoError = resp["content"];
       if (codigoError == -1) {
         var snackBar = SnackBar(
           content: Text(texto),
@@ -131,25 +130,25 @@ class _ClientesPageState extends State<ClientesPage> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
       final data = resp["content"];
-      //print(data.toString());
+      print ("Cartera: ");print(data.toString());
       if (!mounted) return;
       setState(() {
-        _clientes = data;
+        _cartera = data;
 
         /// GUARDAR EN LOCAL STORAGE
         _guardarDatos();
       });
     } else {
-      _clientes = GetStorage().read('datosClientes');
+      _cartera = GetStorage().read('datosCartera');
     }
   }
 
   Future<void> _guardarDatos() async {
     // SharedPreferences pref = await SharedPreferences.getInstance();
     // //Map json = jsonDecode(jsonString);
-    // String user = jsonEncode(_clientes);
-    // pref.setString('datosClientes', user);
-    storage.write('datosClientes', _clientes);
+    // String user = jsonEncode(_cartera);
+    // pref.setString('datosCartera', user);
+    storage.write('datosCartera', _cartera);
   }
 
   @override
@@ -182,72 +181,123 @@ class _ClientesPageState extends State<ClientesPage> {
           title: Text('Buscar', style: TextStyle(color: Colors.white)),
         ),
       ),
-      body: clientes(context),
+      body:Center(
+        //height: 120.0, // Altura ajustada según los datos
+
+    child:
+
+      Column(
+          //direction: Axis.horizontal,
+
+        children: [
+          Container(height: 80,
+              //padding: EdgeInsets.all(10.0),
+            child:
+                Flex(
+                    direction: Axis.horizontal,
+                children: [ Expanded(child: tituloCartera(context))
+        ]
+                ),
+          ),
+          Container(child:
+               Expanded(child:cartera(context)),
+          )
+
+      ]),),
     );
   }
 
-  Widget clientes(BuildContext context) {
-    _fetchData();
-    return SafeArea(
-        child: ListView.builder(
-      itemCount: _clientes.length,
-      itemBuilder: (context, index) {
-        return Card(
-          child: Container(
-            color: Colors.white,
-            child: Padding(
-              padding: EdgeInsets.all(8),
-              child: ListTile(
-                title: Text(
-                  _clientes[index]['cardCode'] +
-                      ' - ' +
-                      _clientes[index]['cardName'],
+  Widget tituloCartera(BuildContext context)
+  {
+    return
+      Card(
+      child:
+            Container(height: 60,
+              child:
+
+               ListTile(
+                title:
+                Center(child:
+                Text(
+
+                       'Clientes:     '+_cartera.length.toString()
+                      +'\n' +'Total:    \$50.000.000\n'
+
+                  ,
                   style: TextStyle(
                     fontSize: 15,
                   ),
                 ),
-                //subtitle: Text("Nit: "+_clientes[index]['nit']),
+               )
 
-                trailing: TextButton.icon(
-                  onPressed: () {
-                    storage.remove('dirEnvio');
-
-                    if (GetStorage().read('itemsPedido') != null) {
-                      itemsPedidoLocal = GetStorage().read('itemsPedido');
-                      pedidoLocal = GetStorage().read('pedido');
-                    }
-
-                    if (pedidoLocal["cardCode"] !=
-                            _clientes[index]['cardCode'] &&
-                        itemsPedidoLocal.length > 0) {
-                      Map<String, dynamic> pedidoInicial = {};
-                      //storage.remove('pedido');
-                      setState(() {
-                        storage.write("pedido", pedidoInicial);
-                        storage.remove('itemsPedido');
-                        storage.remove('pedidoGuardado');
-
-                        ///estadoPedido puede ser nuevo o guardado
-                      });
-                    }
-                    storage.write('estadoPedido', 'nuevo');
-                    storage.write('nit', _clientes[index]["nit"]);
-                    storage.write('cardCode', _clientes[index]["cardCode"]);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const PedidosPage()),
-                    );
-                  },
-                  label: const Text(''),
-                  icon: const Icon(Icons.add),
-                ),
               ),
-            ),
-          ),
-        );
-      },
-    ));
+
+      ),
+
+    );
+
+  }
+
+  Widget cartera(BuildContext context) {
+    _fetchData();
+    print ("_cartera: ");print (_cartera.toString());
+    return SafeArea(
+        child: ListView.builder(
+          itemCount: _cartera.length,
+          itemBuilder: (context, index) {
+            detalleCartera=_cartera[index]["detailPortfolio"][0];
+            return Card(
+
+                child:
+
+                   Container(child:
+                       Column(
+                         children:[
+                    ListTile(
+                      title:  Center(child:
+                      Text(
+                        _cartera[index]["cardName"].toString() +
+                            '\n' +
+                            _cartera[index]["cardCode"].toString()+'- '+_cartera[index]["payCondition"].toString()+'\n'+_cartera[index]["cupo"].toString()
+                        +'\n\n'+'Sin vencer    \$0\n'
+                        +'1 - 30 días    \$0\n'
+                            +'31 - 60 días    \$0\n'
+                        +'61 - 90 días    \$0\n'
+                            +'91 - 120 días    \$0\n'
+                            +'+ 120 días    \$0\n'
+                            + 'Total  \$25.000.000'
+                        ,
+                        style: TextStyle(
+                          fontSize: 15,
+                        ),
+                      ),
+            )
+                      //subtitle: Text("Nit: "+_cartera[index]['nit']),
+
+                    ),
+                           Row (mainAxisAlignment: MainAxisAlignment.end,
+
+                               children: [
+                             IconButton(
+                               icon: Icon(Icons.wallet_outlined),
+                               onPressed: () {},
+                             ),
+                             IconButton(
+                                 icon: Icon(Icons.mail_outline),
+                                 onPressed: () {}
+                             )
+                           ]
+                           )
+                     ]
+
+                       )
+                  )
+            );
+
+
+
+          },
+        ));
   }
 
   showAlertDialog(BuildContext context, String nit) {
@@ -255,16 +305,14 @@ class _ClientesPageState extends State<ClientesPage> {
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
       onPressed: () {
-        storage.write('nit', nit);
+
         Navigator.pop(context);
       },
     );
     Widget continueButton = ElevatedButton(
       child: Text("SI"),
       onPressed: () {
-        storage.remove('pedido');
-        storage.remove('itemsPedido');
-        storage.write('nit', nit);
+
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const PedidosPage()),

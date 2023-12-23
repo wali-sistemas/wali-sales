@@ -34,9 +34,9 @@ class _SincronizarPageState extends State<SincronizarPage> {
   Future<void> sincronizarVentas() async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/list-order/' +
-            empresa! +
+            empresa +
             '?slpcode=' +
-            usuario! +
+            usuario +
             '&year=' +
             now.year.toString() +
             '&month=' +
@@ -222,7 +222,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
         actions: [
           CarritoPedido(),
         ],
-        title: Text('Sincronizar'),
+        title: Text('Sincronizar', style: TextStyle(color: Colors.white)),
       ),
       body: Center(
         child: Column(
@@ -237,7 +237,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Clientes"),
+                child: Text("Clientes", style: TextStyle(color: Colors.white)),
                 onPressed: () async {
                   await sincClientes();
                   String errorREd = "";
@@ -261,7 +261,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Items"),
+                child: Text("Items", style: TextStyle(color: Colors.white)),
                 onPressed: () async {
                   await sincronizarItems();
                   String errorREd = "";
@@ -285,7 +285,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Stock"),
+                child: Text("Stock", style: TextStyle(color: Colors.white)),
                 onPressed: () async {
                   await sincronizarStock();
                   String errorREd = "";
@@ -309,7 +309,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Ventas"),
+                child: Text("Ventas", style: TextStyle(color: Colors.white)),
                 onPressed: () async {
                   await sincronizarVentas();
                   String errorREd = "";
