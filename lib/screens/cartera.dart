@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
 import 'buscador_cartera.dart';
@@ -26,13 +27,16 @@ class _carteraPageState extends State<CarteraPage> {
   List _stockFull = [];
   Map<String, dynamic> pedidoLocal = {};
   List<dynamic> itemsPedidoLocal = [];
-  Map<String, dynamic> detalleCartera = {};
+  List<Map<String, dynamic>> detalleCartera = [];
+  var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
 
   @override
   void initState() {
     super.initState();
     sincCartera();
     sincronizarStock();
+    _fetchData();
+    fetchDataCartera();
   }
 
   Future<bool> checkConnectivity() async {
@@ -151,6 +155,48 @@ class _carteraPageState extends State<CarteraPage> {
     storage.write('datosCartera', _cartera);
   }
 
+
+  Map<String, dynamic>? findElementByCardCode(List<Map<String, dynamic>> list, String cardCode) {
+    for (Map<String, dynamic> element in list) {
+      if (element['cardCode'] == cardCode) {
+        return element;
+      }
+    }
+    return null;
+  }
+
+
+  Future<void> fetchDataCartera() async {
+    final String endpoint = 'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/'+empresa+'?slpcode='+codigo;
+
+    final response = await http.get(Uri.parse(endpoint));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+    String texto = "No se encontraron datos de Cartera para usuario " +
+        codigo +
+        " y empresa " +
+        empresa;
+
+    final codigoError = resp["content"];
+    if (codigoError == -1) {
+      var snackBar = SnackBar(
+        content: Text(texto),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
+    final data = resp["content"];
+    print ("Cartera: ");print(data.toString());
+    if (!mounted) return;
+    setState(() {
+      List<Map<String, dynamic>> contentMapList = data.cast<Map<String, dynamic>>();
+               detalleCartera= contentMapList;
+         });
+
+    print ("detalleCartera: ");print(detalleCartera);
+  }
+  ///////////////////////-----
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -239,15 +285,69 @@ class _carteraPageState extends State<CarteraPage> {
   }
 
   Widget cartera(BuildContext context) {
-    _fetchData();
-    print ("_cartera: ");print (_cartera.toString());
+
+
+
     return SafeArea(
         child: ListView.builder(
           itemCount: _cartera.length,
           itemBuilder: (context, index) {
-            detalleCartera=_cartera[index]["detailPortfolio"][0];
-            return Card(
+            Map<String, dynamic>? resultado =findElementByCardCode(detalleCartera, _cartera[index]["cardCode"].toString());
+            print ("RESULTADO BUSQUEDA: "); print(resultado);
+            String ageSinVencer="0";
+            String age0a30="0";
+            String age30a60="0";
+            String ageo1a90="0";
+            String age91a120="0";
+            String ageMas120="0";
 
+            if (resultado!=null) {
+               ageSinVencer = numberFormat.format(
+                  resultado!["ageSinVencer"]);
+              if (ageSinVencer.contains('.')) {
+                int decimalIndex = ageSinVencer.indexOf('.');
+                ageSinVencer = "\$" + ageSinVencer.substring(0, decimalIndex);
+                ageSinVencer = ageSinVencer.replaceAll("-", "");
+              }
+
+               age0a30 = numberFormat.format(resultado!["age0a30"]);
+              if (age0a30.contains('.')) {
+                int decimalIndex = age0a30.indexOf('.');
+                age0a30 = "\$" + age0a30.substring(0, decimalIndex);
+                age0a30 = age0a30.replaceAll("-", "");
+              }
+
+               age30a60 = numberFormat.format(resultado!["age30a60"]);
+              if (age30a60.contains('.')) {
+                int decimalIndex = age30a60.indexOf('.');
+                age30a60 = "\$" + age30a60.substring(0, decimalIndex);
+                age30a60 = age30a60.replaceAll("-", "");
+              }
+
+               ageo1a90 = numberFormat.format(resultado!["age61a90"]);
+              if (ageo1a90.contains('.')) {
+                int decimalIndex = ageo1a90.indexOf('.');
+                ageo1a90 = "\$" + ageo1a90.substring(0, decimalIndex);
+                ageo1a90 = ageo1a90.replaceAll("-", "");
+              }
+
+               age91a120 = numberFormat.format(resultado!["age91a120"]);
+              if (age91a120.contains('.')) {
+                int decimalIndex = age91a120.indexOf('.');
+                age91a120 = "\$" + age91a120.substring(0, decimalIndex);
+                age91a120 = age91a120.replaceAll("-", "");
+              }
+
+               ageMas120 = numberFormat.format(resultado!["ageMas120"]);
+              if (ageMas120.contains('.')) {
+                int decimalIndex = ageMas120.indexOf('.');
+                ageMas120 = "\$" + ageMas120.substring(0, decimalIndex);
+                ageMas120 = ageMas120.replaceAll("-", "");
+              }
+            }
+
+
+            return Card(
                 child:
 
                    Container(child:
@@ -259,12 +359,12 @@ class _carteraPageState extends State<CarteraPage> {
                         _cartera[index]["cardName"].toString() +
                             '\n' +
                             _cartera[index]["cardCode"].toString()+'- '+_cartera[index]["payCondition"].toString()+'\n'+_cartera[index]["cupo"].toString()
-                        +'\n\n'+'Sin vencer    \$0\n'
-                        +'1 - 30 días    \$0\n'
-                            +'31 - 60 días    \$0\n'
-                        +'61 - 90 días    \$0\n'
-                            +'91 - 120 días    \$0\n'
-                            +'+ 120 días    \$0\n'
+                        +'\n\n'+'Sin vencer    '+ageSinVencer.toString()+'\n'
+                        +'1 - 30 días  '+age0a30.toString()+'  \n'
+                            +'31 - 60 días    '+age30a60.toString()+'\n'
+                        +'61 - 90 días    '+ageo1a90.toString()+'\n'
+                            +'91 - 120 días    '+age91a120.toString()+'\n'
+                            +'+ 120 días    '+ageMas120.toString()+'\n'
                             + 'Total  \$25.000.000'
                         ,
                         style: TextStyle(
