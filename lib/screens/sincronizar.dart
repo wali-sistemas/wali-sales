@@ -25,6 +25,10 @@ class _SincronizarPageState extends State<SincronizarPage> {
   List _ventas = [];
   Connectivity _connectivity = Connectivity();
   DateTime now = new DateTime.now();
+  bool btnClientEnable = true;
+  bool btnItemEnable = true;
+  bool btnStockEnable = true;
+  bool btnVentaEnable = true;
 
   Future<bool> checkConnectivity() async {
     var connectivityResult = await _connectivity.checkConnectivity();
@@ -34,9 +38,9 @@ class _SincronizarPageState extends State<SincronizarPage> {
   Future<void> sincronizarVentas() async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/list-order/' +
-            empresa! +
+            empresa +
             '?slpcode=' +
-            usuario! +
+            usuario +
             '&year=' +
             now.year.toString() +
             '&month=' +
@@ -95,7 +99,10 @@ class _SincronizarPageState extends State<SincronizarPage> {
 
   Future<void> sincronizarItems() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
+        'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
+            empresa +
+            "?slpcode=" +
+            usuario;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
       isSincItems = "Error de red";
@@ -155,9 +162,10 @@ class _SincronizarPageState extends State<SincronizarPage> {
     }
   }
 
-  void showAlert(BuildContext context, String message) {
+  void showAlert(BuildContext context, String message, String typeBtn) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Row(
@@ -174,6 +182,23 @@ class _SincronizarPageState extends State<SincronizarPage> {
           actions: [
             ElevatedButton(
               onPressed: () {
+                if (typeBtn == "Clientes") {
+                  setState(() {
+                    btnClientEnable = true;
+                  });
+                } else if (typeBtn == "Items") {
+                  setState(() {
+                    btnItemEnable = true;
+                  });
+                } else if (typeBtn == "Stock") {
+                  setState(() {
+                    btnStockEnable = true;
+                  });
+                } else if (typeBtn == "Ventas") {
+                  setState(() {
+                    btnStockEnable = true;
+                  });
+                }
                 Navigator.of(context).pop();
               },
               child: Text('OK'),
@@ -187,6 +212,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
   void showAlertError(BuildContext context, String message) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Row(
@@ -222,7 +248,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
         actions: [
           CarritoPedido(),
         ],
-        title: Text('Sincronizar'),
+        title: Text('Sincronizar', style: TextStyle(color: Colors.white)),
       ),
       body: Center(
         child: Column(
@@ -237,19 +263,25 @@ class _SincronizarPageState extends State<SincronizarPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Clientes"),
-                onPressed: () async {
-                  await sincClientes();
-                  String errorREd = "";
-                  if (isSinc == "Ok") {
-                    showAlert(context, "Clientes sincronizados");
-                  } else {
-                    if (isSinc == "Error de red")
-                      errorREd = ", error de red, verifique conectividad";
-                    showAlertError(
-                        context, "No se pudo sincronizar clientes" + errorREd);
-                  }
-                },
+                child: Text("Clientes", style: TextStyle(color: Colors.white)),
+                onPressed: btnClientEnable
+                    ? () async {
+                        setState(() {
+                          btnClientEnable = false;
+                        });
+                        await sincClientes();
+                        String errorREd = "";
+                        if (isSinc == "Ok") {
+                          showAlert(
+                              context, "Clientes sincronizados", "Clientes");
+                        } else {
+                          if (isSinc == "Error de red")
+                            errorREd = ", error de red, verifique conectividad";
+                          showAlertError(context,
+                              "No se pudo sincronizar clientes" + errorREd);
+                        }
+                      }
+                    : null,
               ),
             ),
             SizedBox(
@@ -261,19 +293,24 @@ class _SincronizarPageState extends State<SincronizarPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Items"),
-                onPressed: () async {
-                  await sincronizarItems();
-                  String errorREd = "";
-                  if (isSincItems == "Ok") {
-                    showAlert(context, "Items sincronizados");
-                  } else {
-                    if (isSincItems == "Error de red")
-                      errorREd = ", error de red, verifique conectividad";
-                    showAlertError(
-                        context, "No se pudo sincronizar Items" + errorREd);
-                  }
-                },
+                child: Text("Items", style: TextStyle(color: Colors.white)),
+                onPressed: btnItemEnable
+                    ? () async {
+                        setState(() {
+                          btnItemEnable = false;
+                        });
+                        await sincronizarItems();
+                        String errorREd = "";
+                        if (isSincItems == "Ok") {
+                          showAlert(context, "Items sincronizados", "Items");
+                        } else {
+                          if (isSincItems == "Error de red")
+                            errorREd = ", error de red, verifique conectividad";
+                          showAlertError(context,
+                              "No se pudo sincronizar Items" + errorREd);
+                        }
+                      }
+                    : null,
               ),
             ),
             SizedBox(
@@ -285,19 +322,24 @@ class _SincronizarPageState extends State<SincronizarPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Stock"),
-                onPressed: () async {
-                  await sincronizarStock();
-                  String errorREd = "";
-                  if (isSincStock == "Ok") {
-                    showAlert(context, "Stock sincronizado");
-                  } else {
-                    if (isSincStock == "Error de red")
-                      errorREd = ", error de red, verifique conectividad";
-                    showAlertError(
-                        context, "No se pudo sincronizar Stock" + errorREd);
-                  }
-                },
+                child: Text("Stock", style: TextStyle(color: Colors.white)),
+                onPressed: btnStockEnable
+                    ? () async {
+                        setState(() {
+                          btnStockEnable = false;
+                        });
+                        await sincronizarStock();
+                        String errorREd = "";
+                        if (isSincStock == "Ok") {
+                          showAlert(context, "Stock sincronizado", "Stock");
+                        } else {
+                          if (isSincStock == "Error de red")
+                            errorREd = ", error de red, verifique conectividad";
+                          showAlertError(context,
+                              "No se pudo sincronizar Stock" + errorREd);
+                        }
+                      }
+                    : null,
               ),
             ),
             SizedBox(
@@ -309,12 +351,12 @@ class _SincronizarPageState extends State<SincronizarPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Ventas"),
+                child: Text("Ventas", style: TextStyle(color: Colors.white)),
                 onPressed: () async {
                   await sincronizarVentas();
                   String errorREd = "";
                   if (isSincVentas == "Ok") {
-                    showAlert(context, "Ventas sincronizadas");
+                    showAlert(context, "Ventas sincronizadas", "Ventas");
                   } else {
                     if (isSincVentas == "Error de red")
                       errorREd = ", error de red, verifique conectividad";
