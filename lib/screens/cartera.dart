@@ -7,8 +7,10 @@ import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
 import 'buscador_cartera.dart';
 import 'package:productos_app/screens/home_screen.dart';
-import 'package:productos_app/widgets/carrito.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 class CarteraPage extends StatefulWidget {
   const CarteraPage({Key? key}) : super(key: key);
@@ -28,6 +30,10 @@ class _carteraPageState extends State<CarteraPage> {
   Map<String, dynamic> pedidoLocal = {};
   List<dynamic> itemsPedidoLocal = [];
   List<Map<String, dynamic>> detalleCartera = [];
+  List<Map<String, dynamic>> detallePortafolio = [];
+
+
+
   var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
 
   @override
@@ -134,7 +140,7 @@ class _carteraPageState extends State<CarteraPage> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
       final data = resp["content"];
-      print ("Cartera: ");print(data.toString());
+      //print ("Cartera: ");print(data.toString());
       if (!mounted) return;
       setState(() {
         _cartera = data;
@@ -185,15 +191,17 @@ class _carteraPageState extends State<CarteraPage> {
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
     final data = resp["content"];
-    print ("Cartera: ");print(data.toString());
+    //print ("Cartera: ");print(data.toString());
     if (!mounted) return;
     setState(() {
       List<Map<String, dynamic>> contentMapList = data.cast<Map<String, dynamic>>();
                detalleCartera= contentMapList;
          });
 
-    print ("detalleCartera: ");print(detalleCartera);
+    //print ("detalleCartera: ");print(detalleCartera);
   }
+
+
   ///////////////////////-----
 
 
@@ -215,7 +223,7 @@ class _carteraPageState extends State<CarteraPage> {
           },
         ),
         actions: [
-          CarritoPedido(),
+          //CarritoPedido(),
         ],
         title: ListTile(
           onTap: () {
@@ -255,6 +263,19 @@ class _carteraPageState extends State<CarteraPage> {
 
   Widget tituloCartera(BuildContext context)
   {
+    num totalCartera=0;
+    _cartera.forEach((element) {
+
+      totalCartera=totalCartera+element["detailPortfolio"][0]["docTotal"];
+
+    });
+
+    String totalCarteraTxt = numberFormat.format(totalCartera);
+    if (totalCarteraTxt.contains('.')) {
+      int decimalIndex = totalCarteraTxt.indexOf('.');
+      totalCarteraTxt = "\$" + totalCarteraTxt.substring(0, decimalIndex);
+
+    }
     return
       Card(
       child:
@@ -265,13 +286,12 @@ class _carteraPageState extends State<CarteraPage> {
                 title:
                 Center(child:
                 Text(
-
-                       'Clientes:     '+_cartera.length.toString()
-                      +'\n' +'Total:    \$50.000.000\n'
+                       'Clientes:   '+_cartera.length.toString()
+                      +'  ' +'Total:   '+totalCarteraTxt+'\n'
 
                   ,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 18,
                   ),
                 ),
                )
@@ -293,13 +313,14 @@ class _carteraPageState extends State<CarteraPage> {
           itemCount: _cartera.length,
           itemBuilder: (context, index) {
             Map<String, dynamic>? resultado =findElementByCardCode(detalleCartera, _cartera[index]["cardCode"].toString());
-            print ("RESULTADO BUSQUEDA: "); print(resultado);
             String ageSinVencer="0";
             String age0a30="0";
             String age30a60="0";
             String ageo1a90="0";
             String age91a120="0";
             String ageMas120="0";
+            num totalCartera=0;
+            String totalCarteraS ="0";
 
             if (resultado!=null) {
                ageSinVencer = numberFormat.format(
@@ -344,6 +365,13 @@ class _carteraPageState extends State<CarteraPage> {
                 ageMas120 = "\$" + ageMas120.substring(0, decimalIndex);
                 ageMas120 = ageMas120.replaceAll("-", "");
               }
+               totalCartera=resultado!["ageSinVencer"]-(resultado!["age0a30"]+resultado!["age30a60"]+resultado!["age61a90"]+resultado!["age91a120"]+resultado!["ageMas120"]);
+                totalCarteraS = numberFormat.format(totalCartera);
+               if (totalCarteraS.contains('.')) {
+                 int decimalIndex = totalCarteraS.indexOf('.');
+                 totalCarteraS = "\$" + totalCarteraS.substring(0, decimalIndex);
+
+               }
             }
 
 
@@ -365,7 +393,7 @@ class _carteraPageState extends State<CarteraPage> {
                         +'61 - 90 días    '+ageo1a90.toString()+'\n'
                             +'91 - 120 días    '+age91a120.toString()+'\n'
                             +'+ 120 días    '+ageMas120.toString()+'\n'
-                            + 'Total  \$25.000.000'
+                            + 'Total  '+totalCarteraS
                         ,
                         style: TextStyle(
                           fontSize: 15,
@@ -380,11 +408,22 @@ class _carteraPageState extends State<CarteraPage> {
                                children: [
                              IconButton(
                                icon: Icon(Icons.wallet_outlined),
-                               onPressed: () {},
+                               onPressed: () {
+                                 storage.write('clienteDetalle', _cartera[index]);
+
+                                 Navigator.push(
+                                   context,
+                                   MaterialPageRoute(
+                                     builder: (context) => CarteraDetalle(),
+                                   ),
+                                 );
+                               },
                              ),
                              IconButton(
                                  icon: Icon(Icons.mail_outline),
-                                 onPressed: () {}
+                                 onPressed: () {
+                                   _launchEmail();
+                                 }
                              )
                            ]
                            )
@@ -437,6 +476,218 @@ class _carteraPageState extends State<CarteraPage> {
       builder: (BuildContext context) {
         return alert;
       },
+    );
+  }
+}
+///// detalle portafolio
+
+class CarteraDetalle extends StatelessWidget {
+  Map<String, dynamic> clienteDetalle = {};
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        leading: GestureDetector(
+          child: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          },
+        ),
+        actions: [
+          //CarritoPedido(),
+        ],
+        title: ListTile(
+          onTap: () {
+            showSearch(
+              context: context,
+              delegate: CustomSearchDelegate(),
+            );
+          },
+          title: Text('Buscar', style: TextStyle(color: Colors.white)),
+        ),
+      ),
+      body:Center(
+        //height: 120.0, // Altura ajustada según los datos
+
+        child:
+
+        Column(
+          //direction: Axis.horizontal,
+
+            children: [
+              Container(height: 80,
+                //padding: EdgeInsets.all(10.0),
+                child:
+                Flex(
+                    direction: Axis.horizontal,
+                    children: [ Expanded(child: tituloDetalle(context))
+                    ]
+                ),
+              ),
+              Container(child:
+              Expanded(child:carteraDetalle(context)),
+              )
+
+            ]),),
+    );
+  }
+}
+
+Future<void> _launchEmail() async {
+  final Uri emailUri = Uri(
+    scheme: 'mailto',
+    path: "",
+    queryParameters: {
+      'subject': "",
+      'body': "",
+      'attachment': "",
+    },
+  );
+  final String emailUrl = emailUri.toString();
+
+  if (await canLaunch(emailUrl)) {
+    await launch(emailUrl);
+  } else {
+    throw 'No se pudo abrir el cliente de correo.';
+  }
+}
+
+
+Widget tituloDetalle(BuildContext context){
+  Map<String, dynamic>  clienteDetalle = GetStorage().read('clienteDetalle');
+  return
+    Card(
+      child:
+      Container(height: 60,
+        child:
+
+        ListTile(
+            title:
+            Center(child:
+            Text(
+
+              clienteDetalle["cardName"].toString()+'\n '+ clienteDetalle["cardCode"].toString() ,
+              style: TextStyle(
+                fontSize: 20,
+              ),
+            ),
+            )
+
+        ),
+
+      ),
+
+    );
+
+}
+
+
+Widget carteraDetalle(BuildContext context) {
+  Map<String, dynamic>  clienteDetalle = GetStorage().read('clienteDetalle');
+
+  var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
+
+  List detallPortafolio= clienteDetalle["detailPortfolio"];
+   return SafeArea(
+      child: ListView.builder(
+        itemCount: detallPortafolio.length,
+        itemBuilder: (context, index) {
+
+          String saldo = numberFormat.format(clienteDetalle["detailPortfolio"][index]["balance"]);
+          if (saldo.contains('.')) {
+            int decimalIndex = saldo.indexOf('.');
+            saldo = "\$" + saldo.substring(0, decimalIndex);
+          }
+
+          String valor = numberFormat.format(clienteDetalle["detailPortfolio"][index]["docTotal"]);
+          if (valor.contains('.')) {
+            int decimalIndex = valor.indexOf('.');
+            valor = "\$" + valor.substring(0, decimalIndex);
+          }
+
+
+          return Card(
+              child:
+
+              Container(child:
+              Column(
+                  children:[
+                    ListTile(
+                        title:  Center(child:
+                        Text(
+                          'Tipo de documento: ' +clienteDetalle["detailPortfolio"][index]["docDueDate"].toString()+
+                              '\n' +
+                              'Nro. Documento: '+clienteDetalle["detailPortfolio"][index]["docNum"].toString()
+                               +'\n\n'+'Fecha    '+clienteDetalle["detailPortfolio"][index]["docDate"].toString()+'\n'
+                               +'Vencimiento  '+clienteDetalle["detailPortfolio"][index]["docDueDate"].toString()+'  \n'
+                               +'Saldo    '+saldo+'\n'
+                              +'Valor    '+valor+'\n'
+                              +'Días vencidos  '+clienteDetalle["detailPortfolio"][index]["expiredDays"].toString()+'\n'
+
+                          ,
+                          style: TextStyle(
+                            fontSize: 15,
+                          ),
+                        ),
+                        )
+                      //subtitle: Text("Nit: "+_cartera[index]['nit']),
+
+                    ),
+                    Row (mainAxisAlignment: MainAxisAlignment.end,
+
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.picture_as_pdf_outlined),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => WebViewPage(webUrl: clienteDetalle["detailPortfolio"][index]["urlFE"].toString()),
+                                ),
+                              );
+                            },
+                          ),
+
+                        ]
+                    )
+                  ]
+
+              )
+              )
+          );
+
+
+
+        },
+      ));
+
+}
+
+
+class WebViewPage extends StatelessWidget {
+  final String webUrl;
+
+  WebViewPage({required this.webUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Visor documento'),
+      ),
+      body: WebView(
+        initialUrl: webUrl,
+        javascriptMode: JavascriptMode.unrestricted,
+      ),
     );
   }
 }
