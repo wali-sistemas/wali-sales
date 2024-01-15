@@ -30,7 +30,6 @@ class _HomePageState extends State<HomePage> {
     {"screen": ListarPedidosPage(), "title": "Pedidos"},
     {"screen": CarteraPage(), "title": "Cartera"},
     {"screen": ProfilePage(), "title": "Perfil"},
-
   ];
 
   @override
@@ -75,16 +74,15 @@ class _HomePageState extends State<HomePage> {
           onTap: _selectScreen,
           items: const [
             BottomNavigationBarItem(
-                icon: Icon(Icons.data_saver_off_outlined), label: "Dashboard"),
+                icon: Icon(Icons.data_saver_off_outlined), label: "Dash"),
             BottomNavigationBarItem(
                 icon: Icon(Icons.person_pin_circle_rounded), label: 'Clientes'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.sync), label: 'Sincronizar'),
+            BottomNavigationBarItem(icon: Icon(Icons.sync), label: 'Sincr'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.store_outlined), label: 'Pedidos'),
-            BottomNavigationBarItem(icon: Icon(Icons.account_box), label: 'Cartera'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.account_box), label: 'Cartera'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil')
-
           ],
         ),
         body: _screens[_selectedScreenIndex]["screen"],
@@ -182,7 +180,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   label: 'Cartera',
                   backgroundColor: Colors.yellow),
-
               BottomNavigationBarItem(
                   icon: Icon(
                     Icons.person_pin_rounded,
@@ -190,7 +187,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   label: 'Perfil',
                   backgroundColor: Colors.yellow)
-
             ],
           ),
         )));
