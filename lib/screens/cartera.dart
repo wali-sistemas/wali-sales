@@ -13,7 +13,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 class CarteraPage extends StatefulWidget {
   const CarteraPage({Key? key}) : super(key: key);
-
   @override
   State<CarteraPage> createState() => _carteraPageState();
 }
@@ -54,11 +53,6 @@ class _carteraPageState extends State<CarteraPage> {
             empresa +
             '?slpcode=' +
             codigo;
-    // final String apiUrl =
-    //     'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
-    //         codigo +
-    //         '/' +
-    //         empresa;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
     } else {
@@ -92,6 +86,7 @@ class _carteraPageState extends State<CarteraPage> {
             empresa +
             '?itemcode=0&whscode=0&slpcode=' +
             usuario;
+
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
     } else {
@@ -132,11 +127,10 @@ class _carteraPageState extends State<CarteraPage> {
         var snackBar = SnackBar(
           content: Text(texto),
         );
-
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
-      final data = resp["content"];
 
+      final data = resp["content"];
       if (!mounted) return;
       setState(() {
         _cartera = data;
@@ -186,7 +180,6 @@ class _carteraPageState extends State<CarteraPage> {
       var snackBar = SnackBar(
         content: Text(texto),
       );
-
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
     final data = resp["content"];
@@ -217,9 +210,6 @@ class _carteraPageState extends State<CarteraPage> {
             );
           },
         ),
-        actions: [
-          //CarritoPedido(),
-        ],
         title: ListTile(
           onTap: () {
             showSearch(
@@ -231,23 +221,22 @@ class _carteraPageState extends State<CarteraPage> {
         ),
       ),
       body: Center(
-        //height: 120.0, // Altura ajustada según los datos
-
         child: Column(
-            //direction: Axis.horizontal,
-
-            children: [
-              Container(
-                height: 80,
-                //padding: EdgeInsets.all(10.0),
-                child: Flex(
-                    direction: Axis.horizontal,
-                    children: [Expanded(child: tituloCartera(context))]),
+          children: [
+            Container(
+              height: 80,
+              child: Flex(
+                direction: Axis.horizontal,
+                children: [
+                  Expanded(child: tituloCartera(context)),
+                ],
               ),
-              Container(
-                child: Expanded(child: cartera(context)),
-              )
-            ]),
+            ),
+            Container(
+              child: Expanded(child: cartera(context)),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -256,11 +245,7 @@ class _carteraPageState extends State<CarteraPage> {
     num totalCartera = 0;
     _cartera.forEach((element) {
       totalCartera = totalCartera;
-
-      ///element["detailPortfolio"][0]["docTotal"];
     });
-
-    //_cartera[index]["cardCode"]
 
     String totalCarteraTxt = numberFormat.format(totalCartera);
     if (totalCarteraTxt.contains('.')) {
@@ -270,7 +255,8 @@ class _carteraPageState extends State<CarteraPage> {
 
     return Card(
       child: Container(
-        height: 60,
+        height: 50,
+        color: Colors.white,
         child: ListTile(
             title: Center(
           child: Text(
@@ -279,9 +265,6 @@ class _carteraPageState extends State<CarteraPage> {
                 '  ' +
                 'Total: ' +
                 totalCartGen +
-
-                ///_cartera[index]["Total"] +
-                //totalCarteraTxt +
                 '\n',
             style: TextStyle(
               fontSize: 18,
@@ -294,158 +277,200 @@ class _carteraPageState extends State<CarteraPage> {
 
   Widget cartera(BuildContext context) {
     return SafeArea(
-        child: ListView.builder(
-      itemCount: _cartera.length,
-      itemBuilder: (context, index) {
-        Map<String, dynamic>? resultado = findElementByCardCode(
-            detalleCartera, _cartera[index]["cardCode"].toString());
-        String ageSinVencer = "0";
-        String age0a30 = "0";
-        String age30a60 = "0";
-        String ageo1a90 = "0";
-        String age91a120 = "0";
-        String ageMas120 = "0";
-        //num totalCartera = 0;
-        String totalCarteraS = "0";
-        String cupo = "0";
+      child: ListView.builder(
+        itemCount: _cartera.length,
+        itemBuilder: (context, index) {
+          Map<String, dynamic>? resultado = findElementByCardCode(
+              detalleCartera, _cartera[index]["cardCode"].toString());
+          String ageSinVencer = "0";
+          String age0a30 = "0";
+          String age30a60 = "0";
+          String ageo1a90 = "0";
+          String age91a120 = "0";
+          String ageMas120 = "0";
+          String totalCarteraS = "0";
+          String cupo = "0";
 
-        if (resultado != null) {
-          totalCartGen = numberFormat.format(resultado!["total"]);
-          if (totalCartGen.contains('.')) {
-            int decimalIndex = totalCartGen.indexOf('.');
-            totalCartGen = "\$" + totalCartGen.substring(0, decimalIndex);
-            //ageSinVencer = ageSinVencer.replaceAll("-", "");
+          if (resultado != null) {
+            totalCartGen = numberFormat.format(resultado!["total"]);
+            if (totalCartGen.contains('.')) {
+              int decimalIndex = totalCartGen.indexOf('.');
+              totalCartGen = "\$" + totalCartGen.substring(0, decimalIndex);
+            }
+
+            ageSinVencer = numberFormat.format(resultado!["ageSinVencer"]);
+            if (ageSinVencer.contains('.')) {
+              int decimalIndex = ageSinVencer.indexOf('.');
+              ageSinVencer = "\$" + ageSinVencer.substring(0, decimalIndex);
+            }
+
+            age0a30 = numberFormat.format(resultado!["age0a30"]);
+            if (age0a30.contains('.')) {
+              int decimalIndex = age0a30.indexOf('.');
+              age0a30 = "\$" + age0a30.substring(0, decimalIndex);
+            }
+
+            age30a60 = numberFormat.format(resultado!["age30a60"]);
+            if (age30a60.contains('.')) {
+              int decimalIndex = age30a60.indexOf('.');
+              age30a60 = "\$" + age30a60.substring(0, decimalIndex);
+            }
+
+            ageo1a90 = numberFormat.format(resultado!["age61a90"]);
+            if (ageo1a90.contains('.')) {
+              int decimalIndex = ageo1a90.indexOf('.');
+              ageo1a90 = "\$" + ageo1a90.substring(0, decimalIndex);
+            }
+
+            age91a120 = numberFormat.format(resultado!["age91a120"]);
+            if (age91a120.contains('.')) {
+              int decimalIndex = age91a120.indexOf('.');
+              age91a120 = "\$" + age91a120.substring(0, decimalIndex);
+            }
+
+            ageMas120 = numberFormat.format(resultado!["ageMas120"]);
+            if (ageMas120.contains('.')) {
+              int decimalIndex = ageMas120.indexOf('.');
+              ageMas120 = "\$" + ageMas120.substring(0, decimalIndex);
+            }
+
+            totalCarteraS = numberFormat.format(resultado!["subTotal"]);
+            if (totalCarteraS.contains('.')) {
+              int decimalIndex = totalCarteraS.indexOf('.');
+              totalCarteraS = "\$" + totalCarteraS.substring(0, decimalIndex);
+            }
+
+            cupo = numberFormat.format(_cartera[index]["cupo"]);
+            if (cupo.contains('.')) {
+              int decimalIndex = cupo.indexOf('.');
+              cupo = "\$" + cupo.substring(0, decimalIndex);
+            }
           }
 
-          ageSinVencer = numberFormat.format(resultado!["ageSinVencer"]);
-          if (ageSinVencer.contains('.')) {
-            int decimalIndex = ageSinVencer.indexOf('.');
-            ageSinVencer = "\$" + ageSinVencer.substring(0, decimalIndex);
-            //ageSinVencer = ageSinVencer.replaceAll("-", "");
-          }
-
-          age0a30 = numberFormat.format(resultado!["age0a30"]);
-          if (age0a30.contains('.')) {
-            int decimalIndex = age0a30.indexOf('.');
-            age0a30 = "\$" + age0a30.substring(0, decimalIndex);
-            //age0a30 = age0a30.replaceAll("-", "");
-          }
-
-          age30a60 = numberFormat.format(resultado!["age30a60"]);
-          if (age30a60.contains('.')) {
-            int decimalIndex = age30a60.indexOf('.');
-            age30a60 = "\$" + age30a60.substring(0, decimalIndex);
-            //age30a60 = age30a60.replaceAll("-", "");
-          }
-
-          ageo1a90 = numberFormat.format(resultado!["age61a90"]);
-          if (ageo1a90.contains('.')) {
-            int decimalIndex = ageo1a90.indexOf('.');
-            ageo1a90 = "\$" + ageo1a90.substring(0, decimalIndex);
-            //ageo1a90 = ageo1a90.replaceAll("-", "");
-          }
-
-          age91a120 = numberFormat.format(resultado!["age91a120"]);
-          if (age91a120.contains('.')) {
-            int decimalIndex = age91a120.indexOf('.');
-            age91a120 = "\$" + age91a120.substring(0, decimalIndex);
-            //age91a120 = age91a120.replaceAll("-", "");
-          }
-
-          ageMas120 = numberFormat.format(resultado!["ageMas120"]);
-          if (ageMas120.contains('.')) {
-            int decimalIndex = ageMas120.indexOf('.');
-            ageMas120 = "\$" + ageMas120.substring(0, decimalIndex);
-            //ageMas120 = ageMas120.replaceAll("-", "");
-          }
-
-          //totalCartera=resultado!["ageSinVencer"]-(resultado!["age0a30"]+resultado!["age30a60"]+resultado!["age61a90"]+resultado!["age91a120"]+resultado!["ageMas120"]);
-          totalCarteraS = numberFormat.format(resultado!["subTotal"]);
-          if (totalCarteraS.contains('.')) {
-            int decimalIndex = totalCarteraS.indexOf('.');
-            totalCarteraS = "\$" + totalCarteraS.substring(0, decimalIndex);
-          }
-
-          cupo = numberFormat.format(_cartera[index]["cupo"]);
-          if (cupo.contains('.')) {
-            int decimalIndex = cupo.indexOf('.');
-            cupo = "\$" + cupo.substring(0, decimalIndex);
-          }
-        }
-
-        return Card(
+          return Card(
             child: Container(
-                child: Column(children: [
-          ListTile(
-              title: Center(
-            child: Text(
-              _cartera[index]["cardCode"].toString() +
-                  ' - ' +
-                  _cartera[index]["cardName"].toString() +
-                  '\n' +
-                  _cartera[index]["payCondition"].toString() +
-                  '\n' +
-                  'Cupo:    ' +
-                  cupo.toString() +
-                  '\n\n' +
-                  'Sin vencer    ' +
-                  ageSinVencer.toString() +
-                  '\n' +
-                  '1 - 30 días  ' +
-                  age0a30.toString() +
-                  '  \n' +
-                  '31 - 60 días    ' +
-                  age30a60.toString() +
-                  '\n' +
-                  '61 - 90 días    ' +
-                  ageo1a90.toString() +
-                  '\n' +
-                  '91 - 120 días    ' +
-                  age91a120.toString() +
-                  '\n' +
-                  '+ 120 días    ' +
-                  ageMas120.toString() +
-                  '\n' +
-                  'Total  ' +
-                  totalCarteraS,
-              style: TextStyle(
-                fontSize: 15,
-              ),
-            ),
-          )
-              //subtitle: Text("Nit: "+_cartera[index]['nit']),
-
-              ),
-          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            Container(
-              child: Text(_cartera[index]["totalDoc"].toString()),
-            ),
-            IconButton(
-              icon: Icon(Icons.wallet_outlined),
-              onPressed: () {
-                storage.write('clienteDetalle', _cartera[index]);
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CarteraDetalle(),
+              color: Colors.white,
+              padding: EdgeInsets.all(15.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 17,
+                            height: 1.5,
+                          ),
+                          children: [
+                            TextSpan(
+                              text:
+                                  _cartera[index]["cardCode"].toString() + '\n',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  _cartera[index]["cardName"].toString() + '\n',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            TextSpan(
+                              text: _cartera[index]["payCondition"].toString() +
+                                  '  -  Cupo: ' +
+                                  cupo.toString() +
+                                  '\n\n',
+                              style: TextStyle(
+                                fontSize: 14,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Sin vencer    ' +
+                                  ageSinVencer.toString() +
+                                  '\n',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            TextSpan(
+                              text:
+                                  '1 - 30 días  ' + age0a30.toString() + '  \n',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            TextSpan(
+                              text: '31 - 60 días    ' +
+                                  age30a60.toString() +
+                                  '\n',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            TextSpan(
+                              text: '61 - 90 días    ' +
+                                  ageo1a90.toString() +
+                                  '\n',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            TextSpan(
+                              text: '91 - 120 días    ' +
+                                  age91a120.toString() +
+                                  '\n',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            TextSpan(
+                              text: '+ 120 días    ' +
+                                  ageMas120.toString() +
+                                  '\n',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            TextSpan(
+                              text: 'Total: ' + totalCarteraS,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              },
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        child: Text(_cartera[index]["totalDoc"].toString()),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.wallet_outlined),
+                        onPressed: () {
+                          storage.write('clienteDetalle', _cartera[index]);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CarteraDetalle(),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.mail_outline),
+                        onPressed: () {
+                          _launchEmail();
+                        },
+                      )
+                    ],
+                  ),
+                ],
+              ),
             ),
-            IconButton(
-                icon: Icon(Icons.mail_outline),
-                onPressed: () {
-                  _launchEmail();
-                })
-          ])
-        ])));
-      },
-    ));
+          );
+        },
+      ),
+    );
   }
 
   showAlertDialog(BuildContext context, String nit) {
-    // set up the buttons
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
       onPressed: () {
@@ -462,7 +487,6 @@ class _carteraPageState extends State<CarteraPage> {
       },
     );
 
-    // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text("Atención"),
       content: Text(
@@ -473,7 +497,6 @@ class _carteraPageState extends State<CarteraPage> {
       ],
     );
 
-    // show the dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -482,11 +505,10 @@ class _carteraPageState extends State<CarteraPage> {
     );
   }
 }
-///// detalle portafolio
 
+///// detalle portafolio
 class CarteraDetalle extends StatelessWidget {
   Map<String, dynamic> clienteDetalle = {};
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -504,9 +526,6 @@ class CarteraDetalle extends StatelessWidget {
             );
           },
         ),
-        actions: [
-          //CarritoPedido(),
-        ],
         title: ListTile(
           onTap: () {
             showSearch(
@@ -518,23 +537,24 @@ class CarteraDetalle extends StatelessWidget {
         ),
       ),
       body: Center(
-        //height: 120.0, // Altura ajustada según los datos
-
         child: Column(
-            //direction: Axis.horizontal,
-
-            children: [
-              Container(
-                height: 80,
-                //padding: EdgeInsets.all(10.0),
-                child: Flex(
-                    direction: Axis.horizontal,
-                    children: [Expanded(child: tituloDetalle(context))]),
+          children: [
+            Container(
+              height: 80,
+              child: Flex(
+                direction: Axis.horizontal,
+                children: [
+                  Expanded(child: tituloDetalle(context)),
+                ],
               ),
-              Container(
-                child: Expanded(child: carteraDetalle(context)),
-              )
-            ]),
+            ),
+            Container(
+              child: Expanded(
+                child: carteraDetalle(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -563,18 +583,32 @@ Widget tituloDetalle(BuildContext context) {
   Map<String, dynamic> clienteDetalle = GetStorage().read('clienteDetalle');
   return Card(
     child: Container(
-      height: 60,
+      height: 100,
+      color: Colors.white,
       child: ListTile(
-          title: Center(
-        child: Text(
-          clienteDetalle["cardName"].toString() +
-              '\n ' +
-              clienteDetalle["cardCode"].toString(),
-          style: TextStyle(
-            fontSize: 20,
+        title: Center(
+          child: RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black,
+              ),
+              children: [
+                TextSpan(
+                  text: clienteDetalle["cardName"].toString() + '\n',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextSpan(
+                  text: clienteDetalle["cardCode"].toString() + '\n',
+                ),
+              ],
+            ),
           ),
         ),
-      )),
+      ),
     ),
   );
 }
@@ -586,91 +620,205 @@ Widget carteraDetalle(BuildContext context) {
 
   List detallPortafolio = clienteDetalle["detailPortfolio"];
   return SafeArea(
-      child: ListView.builder(
-    itemCount: detallPortafolio.length,
-    itemBuilder: (context, index) {
-      String saldo = numberFormat
-          .format(clienteDetalle["detailPortfolio"][index]["balance"]);
-      if (saldo.contains('.')) {
-        int decimalIndex = saldo.indexOf('.');
-        saldo = "\$" + saldo.substring(0, decimalIndex);
-      }
+    child: ListView.builder(
+      itemCount: detallPortafolio.length,
+      itemBuilder: (context, index) {
+        String saldo = numberFormat
+            .format(clienteDetalle["detailPortfolio"][index]["balance"]);
+        if (saldo.contains('.')) {
+          int decimalIndex = saldo.indexOf('.');
+          saldo = "\$" + saldo.substring(0, decimalIndex);
+        }
 
-      String valor = numberFormat
-          .format(clienteDetalle["detailPortfolio"][index]["docTotal"]);
-      if (valor.contains('.')) {
-        int decimalIndex = valor.indexOf('.');
-        valor = "\$" + valor.substring(0, decimalIndex);
-      }
+        String valor = numberFormat
+            .format(clienteDetalle["detailPortfolio"][index]["docTotal"]);
+        if (valor.contains('.')) {
+          int decimalIndex = valor.indexOf('.');
+          valor = "\$" + valor.substring(0, decimalIndex);
+        }
 
-      return Card(
+        return Card(
           child: Container(
-              child: Column(children: [
-        ListTile(
-            title: Center(
-          child: Text(
-            'Tipo de documento: ' +
-                clienteDetalle["detailPortfolio"][index]["docDueDate"]
-                    .toString() +
-                '\n' +
-                'Nro. Documento: ' +
-                clienteDetalle["detailPortfolio"][index]["docNum"].toString() +
-                '\n\n' +
-                'Fecha    ' +
-                clienteDetalle["detailPortfolio"][index]["docDate"].toString() +
-                '\n' +
-                'Vencimiento  ' +
-                clienteDetalle["detailPortfolio"][index]["docDueDate"]
-                    .toString() +
-                '  \n' +
-                'Saldo    ' +
-                saldo +
-                '\n' +
-                'Valor    ' +
-                valor +
-                '\n' +
-                'Días vencidos  ' +
-                clienteDetalle["detailPortfolio"][index]["expiredDays"]
-                    .toString() +
-                '\n',
-            style: TextStyle(
-              fontSize: 15,
-            ),
-          ),
-        )
-            //subtitle: Text("Nit: "+_cartera[index]['nit']),
-
-            ),
-        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          IconButton(
-            icon: Icon(Icons.picture_as_pdf_outlined),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => WebViewPage(
-                      webUrl: clienteDetalle["detailPortfolio"][index]["urlFE"]
-                          .toString()),
+            color: Colors.white,
+            child: Column(
+              children: [
+                Align(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 15.0),
+                    child: ListTile(
+                      title: RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            fontSize: 17,
+                            color: Colors.black,
+                            height: 1.5,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: '\nTipo de documento: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: clienteDetalle["detailPortfolio"][index]
+                                          ["docType"]
+                                      .toString() +
+                                  '\n',
+                              style: TextStyle(
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Nro de documento: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: clienteDetalle["detailPortfolio"][index]
+                                          ["docNum"]
+                                      .toString() +
+                                  '\n',
+                              style: TextStyle(
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Creado: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: clienteDetalle["detailPortfolio"][index]
+                                          ["docDate"]
+                                      .toString() +
+                                  '\n',
+                              style: TextStyle(
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Vencimiento: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: clienteDetalle["detailPortfolio"][index]
+                                          ["docDueDate"]
+                                      .toString() +
+                                  '\n',
+                              style: TextStyle(
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Saldo: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: saldo + '\n',
+                              style: TextStyle(
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Valor: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: valor + '\n',
+                              style: TextStyle(
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Días vencidos: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
+                            ),
+                            TextSpan(
+                              text: clienteDetalle["detailPortfolio"][index]
+                                      ["expiredDays"]
+                                  .toString(),
+                              style: TextStyle(
+                                fontSize: 17,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              );
-            },
+                Align(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.picture_as_pdf_outlined),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WebViewPage(
+                                webUrl: clienteDetalle["detailPortfolio"][index]
+                                        ["urlFE"]
+                                    .toString(),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ])
-      ])));
-    },
-  ));
+        );
+      },
+    ),
+  );
 }
 
 class WebViewPage extends StatelessWidget {
   final String webUrl;
-
   WebViewPage({required this.webUrl});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Visor documento'),
+        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        leading: GestureDetector(
+          child: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ),
+          onTap: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: Text(
+          'Documento Eléctronico',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
       ),
       body: WebView(
         initialUrl: webUrl,

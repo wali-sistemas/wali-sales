@@ -1397,22 +1397,22 @@ class _DetallePedidoState extends State<DetallePedido> {
                                             cant1.toInt().toString();
                                       } else {
                                         showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return AlertDialog(
-                                                title: Text(
-                                                    "La cantidad de ítems es menor a 1"),
-                                                actions: [
-                                                  TextButton(
-                                                    child: Text("Aceptar"),
-                                                    onPressed: () {
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    },
-                                                  ),
-                                                ],
-                                              );
-                                            });
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text(
+                                                  "La cantidad de ítems es menor a 1"),
+                                              actions: [
+                                                TextButton(
+                                                  child: Text("Aceptar"),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
                                       }
                                     },
                                   ),

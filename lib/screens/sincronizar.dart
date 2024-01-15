@@ -3,6 +3,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
+import 'package:productos_app/screens/dashboard_screen.dart';
 import 'package:productos_app/widgets/carrito.dart';
 
 class SincronizarPage extends StatefulWidget {
@@ -245,10 +246,25 @@ class _SincronizarPageState extends State<SincronizarPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        leading: GestureDetector(
+          child: Icon(
+            Icons.arrow_back_ios,
+            color: Color.fromRGBO(30, 129, 235, 1),
+          ),
+          onTap: () {
+            /*Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => DashboardPage()),
+            );*/
+          },
+        ),
         actions: [
           CarritoPedido(),
         ],
-        title: Text('Sincronizar', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Sincronizar',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: Center(
         child: Column(
