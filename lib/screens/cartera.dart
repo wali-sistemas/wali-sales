@@ -11,7 +11,6 @@ import 'package:connectivity/connectivity.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-
 class CarteraPage extends StatefulWidget {
   const CarteraPage({Key? key}) : super(key: key);
 
@@ -31,8 +30,7 @@ class _carteraPageState extends State<CarteraPage> {
   List<dynamic> itemsPedidoLocal = [];
   List<Map<String, dynamic>> detalleCartera = [];
   List<Map<String, dynamic>> detallePortafolio = [];
-
-
+  String totalCartGen = "0";
 
   var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
 
@@ -51,7 +49,11 @@ class _carteraPageState extends State<CarteraPage> {
   }
 
   Future<void> sincCartera() async {
-    final String apiUrl ='http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/'+empresa+'?slpcode='+codigo;
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/' +
+            empresa +
+            '?slpcode=' +
+            codigo;
     // final String apiUrl =
     //     'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
     //         codigo +
@@ -59,7 +61,6 @@ class _carteraPageState extends State<CarteraPage> {
     //         empresa;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
-      //print("Error de red");
     } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
@@ -72,10 +73,8 @@ class _carteraPageState extends State<CarteraPage> {
       if (codigoError == -1 ||
           response.statusCode != 200 ||
           isConnected == false) {
-        //print("codigoError: $codigoError");
       } else {
         final data = resp["content"];
-        //print(data.toString());
         if (!mounted) return;
         setState(() {
           _cartera = data;
@@ -88,7 +87,6 @@ class _carteraPageState extends State<CarteraPage> {
   }
 
   Future<void> sincronizarStock() async {
-    //Map<String, String> stockTemp = {"id","valor"};
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
             empresa +
@@ -96,18 +94,13 @@ class _carteraPageState extends State<CarteraPage> {
             usuario;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
-      //print("Error de red");
     } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      //print ("REspuesta stock: --------------------");
-      //print(resp.toString());
       final codigoError = resp["code"];
       if (codigoError == -1) {
-        //print("codigoError: $codigoError");
       } else {
         final data = resp["content"];
-        //print(data.toString());
         if (!mounted) return;
         setState(() {
           _stockFull = data;
@@ -121,14 +114,17 @@ class _carteraPageState extends State<CarteraPage> {
 
   Future<void> _fetchData() async {
     if (GetStorage().read('datosCartera') == null) {
-      final String apiUrl ='http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/'+empresa+'?slpcode='+codigo;
-
+      final String apiUrl =
+          'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/' +
+              empresa +
+              '?slpcode=' +
+              codigo;
 
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      String texto = "No se encontraron Cartera para usuario " +
+      String texto = "No se encontro cartera para asesor " +
           codigo +
-          " y empresa " +
+          " en la empresa " +
           empresa;
 
       final codigoError = resp["content"];
@@ -140,7 +136,7 @@ class _carteraPageState extends State<CarteraPage> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
       final data = resp["content"];
-      //print ("Cartera: ");print(data.toString());
+
       if (!mounted) return;
       setState(() {
         _cartera = data;
@@ -161,8 +157,8 @@ class _carteraPageState extends State<CarteraPage> {
     storage.write('datosCartera', _cartera);
   }
 
-
-  Map<String, dynamic>? findElementByCardCode(List<Map<String, dynamic>> list, String cardCode) {
+  Map<String, dynamic>? findElementByCardCode(
+      List<Map<String, dynamic>> list, String cardCode) {
     for (Map<String, dynamic> element in list) {
       if (element['cardCode'] == cardCode) {
         return element;
@@ -171,9 +167,12 @@ class _carteraPageState extends State<CarteraPage> {
     return null;
   }
 
-
   Future<void> fetchDataCartera() async {
-    final String endpoint = 'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/'+empresa+'?slpcode='+codigo;
+    final String endpoint =
+        'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/' +
+            empresa +
+            '?slpcode=' +
+            codigo;
 
     final response = await http.get(Uri.parse(endpoint));
     Map<String, dynamic> resp = jsonDecode(response.body);
@@ -191,19 +190,15 @@ class _carteraPageState extends State<CarteraPage> {
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
     final data = resp["content"];
-    //print ("Cartera: ");print(data.toString());
+
     if (!mounted) return;
     setState(() {
-      List<Map<String, dynamic>> contentMapList = data.cast<Map<String, dynamic>>();
-               detalleCartera= contentMapList;
-         });
-
-    //print ("detalleCartera: ");print(detalleCartera);
+      List<Map<String, dynamic>> contentMapList =
+          data.cast<Map<String, dynamic>>();
+      detalleCartera = contentMapList;
+    });
   }
-
-
   ///////////////////////-----
-
 
   @override
   Widget build(BuildContext context) {
@@ -235,208 +230,218 @@ class _carteraPageState extends State<CarteraPage> {
           title: Text('Buscar', style: TextStyle(color: Colors.white)),
         ),
       ),
-      body:Center(
+      body: Center(
         //height: 120.0, // Altura ajustada según los datos
 
-    child:
+        child: Column(
+            //direction: Axis.horizontal,
 
-      Column(
-          //direction: Axis.horizontal,
-
-        children: [
-          Container(height: 80,
-              //padding: EdgeInsets.all(10.0),
-            child:
-                Flex(
+            children: [
+              Container(
+                height: 80,
+                //padding: EdgeInsets.all(10.0),
+                child: Flex(
                     direction: Axis.horizontal,
-                children: [ Expanded(child: tituloCartera(context))
-        ]
-                ),
-          ),
-          Container(child:
-               Expanded(child:cartera(context)),
-          )
-
-      ]),),
+                    children: [Expanded(child: tituloCartera(context))]),
+              ),
+              Container(
+                child: Expanded(child: cartera(context)),
+              )
+            ]),
+      ),
     );
   }
 
-  Widget tituloCartera(BuildContext context)
-  {
-    num totalCartera=0;
+  Widget tituloCartera(BuildContext context) {
+    num totalCartera = 0;
     _cartera.forEach((element) {
+      totalCartera = totalCartera;
 
-      totalCartera=totalCartera+element["detailPortfolio"][0]["docTotal"];
-
+      ///element["detailPortfolio"][0]["docTotal"];
     });
+
+    //_cartera[index]["cardCode"]
 
     String totalCarteraTxt = numberFormat.format(totalCartera);
     if (totalCarteraTxt.contains('.')) {
       int decimalIndex = totalCarteraTxt.indexOf('.');
       totalCarteraTxt = "\$" + totalCarteraTxt.substring(0, decimalIndex);
-
     }
-    return
-      Card(
-      child:
-            Container(height: 60,
-              child:
 
-               ListTile(
-                title:
-                Center(child:
-                Text(
-                       'Clientes:   '+_cartera.length.toString()
-                      +'  ' +'Total:   '+totalCarteraTxt+'\n'
+    return Card(
+      child: Container(
+        height: 60,
+        child: ListTile(
+            title: Center(
+          child: Text(
+            'Clientes: ' +
+                _cartera.length.toString() +
+                '  ' +
+                'Total: ' +
+                totalCartGen +
 
-                  ,
-                  style: TextStyle(
-                    fontSize: 18,
-                  ),
-                ),
-               )
-
-              ),
-
+                ///_cartera[index]["Total"] +
+                //totalCarteraTxt +
+                '\n',
+            style: TextStyle(
+              fontSize: 18,
+            ),
+          ),
+        )),
       ),
-
     );
-
   }
 
   Widget cartera(BuildContext context) {
-
-
-
     return SafeArea(
         child: ListView.builder(
-          itemCount: _cartera.length,
-          itemBuilder: (context, index) {
-            Map<String, dynamic>? resultado =findElementByCardCode(detalleCartera, _cartera[index]["cardCode"].toString());
-            String ageSinVencer="0";
-            String age0a30="0";
-            String age30a60="0";
-            String ageo1a90="0";
-            String age91a120="0";
-            String ageMas120="0";
-            num totalCartera=0;
-            String totalCarteraS ="0";
+      itemCount: _cartera.length,
+      itemBuilder: (context, index) {
+        Map<String, dynamic>? resultado = findElementByCardCode(
+            detalleCartera, _cartera[index]["cardCode"].toString());
+        String ageSinVencer = "0";
+        String age0a30 = "0";
+        String age30a60 = "0";
+        String ageo1a90 = "0";
+        String age91a120 = "0";
+        String ageMas120 = "0";
+        //num totalCartera = 0;
+        String totalCarteraS = "0";
+        String cupo = "0";
 
-            if (resultado!=null) {
-               ageSinVencer = numberFormat.format(
-                  resultado!["ageSinVencer"]);
-              if (ageSinVencer.contains('.')) {
-                int decimalIndex = ageSinVencer.indexOf('.');
-                ageSinVencer = "\$" + ageSinVencer.substring(0, decimalIndex);
-                ageSinVencer = ageSinVencer.replaceAll("-", "");
-              }
+        if (resultado != null) {
+          totalCartGen = numberFormat.format(resultado!["total"]);
+          if (totalCartGen.contains('.')) {
+            int decimalIndex = totalCartGen.indexOf('.');
+            totalCartGen = "\$" + totalCartGen.substring(0, decimalIndex);
+            //ageSinVencer = ageSinVencer.replaceAll("-", "");
+          }
 
-               age0a30 = numberFormat.format(resultado!["age0a30"]);
-              if (age0a30.contains('.')) {
-                int decimalIndex = age0a30.indexOf('.');
-                age0a30 = "\$" + age0a30.substring(0, decimalIndex);
-                age0a30 = age0a30.replaceAll("-", "");
-              }
+          ageSinVencer = numberFormat.format(resultado!["ageSinVencer"]);
+          if (ageSinVencer.contains('.')) {
+            int decimalIndex = ageSinVencer.indexOf('.');
+            ageSinVencer = "\$" + ageSinVencer.substring(0, decimalIndex);
+            //ageSinVencer = ageSinVencer.replaceAll("-", "");
+          }
 
-               age30a60 = numberFormat.format(resultado!["age30a60"]);
-              if (age30a60.contains('.')) {
-                int decimalIndex = age30a60.indexOf('.');
-                age30a60 = "\$" + age30a60.substring(0, decimalIndex);
-                age30a60 = age30a60.replaceAll("-", "");
-              }
+          age0a30 = numberFormat.format(resultado!["age0a30"]);
+          if (age0a30.contains('.')) {
+            int decimalIndex = age0a30.indexOf('.');
+            age0a30 = "\$" + age0a30.substring(0, decimalIndex);
+            //age0a30 = age0a30.replaceAll("-", "");
+          }
 
-               ageo1a90 = numberFormat.format(resultado!["age61a90"]);
-              if (ageo1a90.contains('.')) {
-                int decimalIndex = ageo1a90.indexOf('.');
-                ageo1a90 = "\$" + ageo1a90.substring(0, decimalIndex);
-                ageo1a90 = ageo1a90.replaceAll("-", "");
-              }
+          age30a60 = numberFormat.format(resultado!["age30a60"]);
+          if (age30a60.contains('.')) {
+            int decimalIndex = age30a60.indexOf('.');
+            age30a60 = "\$" + age30a60.substring(0, decimalIndex);
+            //age30a60 = age30a60.replaceAll("-", "");
+          }
 
-               age91a120 = numberFormat.format(resultado!["age91a120"]);
-              if (age91a120.contains('.')) {
-                int decimalIndex = age91a120.indexOf('.');
-                age91a120 = "\$" + age91a120.substring(0, decimalIndex);
-                age91a120 = age91a120.replaceAll("-", "");
-              }
+          ageo1a90 = numberFormat.format(resultado!["age61a90"]);
+          if (ageo1a90.contains('.')) {
+            int decimalIndex = ageo1a90.indexOf('.');
+            ageo1a90 = "\$" + ageo1a90.substring(0, decimalIndex);
+            //ageo1a90 = ageo1a90.replaceAll("-", "");
+          }
 
-               ageMas120 = numberFormat.format(resultado!["ageMas120"]);
-              if (ageMas120.contains('.')) {
-                int decimalIndex = ageMas120.indexOf('.');
-                ageMas120 = "\$" + ageMas120.substring(0, decimalIndex);
-                ageMas120 = ageMas120.replaceAll("-", "");
-              }
-               totalCartera=resultado!["ageSinVencer"]-(resultado!["age0a30"]+resultado!["age30a60"]+resultado!["age61a90"]+resultado!["age91a120"]+resultado!["ageMas120"]);
-                totalCarteraS = numberFormat.format(totalCartera);
-               if (totalCarteraS.contains('.')) {
-                 int decimalIndex = totalCarteraS.indexOf('.');
-                 totalCarteraS = "\$" + totalCarteraS.substring(0, decimalIndex);
+          age91a120 = numberFormat.format(resultado!["age91a120"]);
+          if (age91a120.contains('.')) {
+            int decimalIndex = age91a120.indexOf('.');
+            age91a120 = "\$" + age91a120.substring(0, decimalIndex);
+            //age91a120 = age91a120.replaceAll("-", "");
+          }
 
-               }
-            }
+          ageMas120 = numberFormat.format(resultado!["ageMas120"]);
+          if (ageMas120.contains('.')) {
+            int decimalIndex = ageMas120.indexOf('.');
+            ageMas120 = "\$" + ageMas120.substring(0, decimalIndex);
+            //ageMas120 = ageMas120.replaceAll("-", "");
+          }
 
+          //totalCartera=resultado!["ageSinVencer"]-(resultado!["age0a30"]+resultado!["age30a60"]+resultado!["age61a90"]+resultado!["age91a120"]+resultado!["ageMas120"]);
+          totalCarteraS = numberFormat.format(resultado!["subTotal"]);
+          if (totalCarteraS.contains('.')) {
+            int decimalIndex = totalCarteraS.indexOf('.');
+            totalCarteraS = "\$" + totalCarteraS.substring(0, decimalIndex);
+          }
 
-            return Card(
-                child:
+          cupo = numberFormat.format(_cartera[index]["cupo"]);
+          if (cupo.contains('.')) {
+            int decimalIndex = cupo.indexOf('.');
+            cupo = "\$" + cupo.substring(0, decimalIndex);
+          }
+        }
 
-                   Container(child:
-                       Column(
-                         children:[
-                    ListTile(
-                      title:  Center(child:
-                      Text(
-                        _cartera[index]["cardName"].toString() +
-                            '\n' +
-                            _cartera[index]["cardCode"].toString()+'- '+_cartera[index]["payCondition"].toString()+'\n'+_cartera[index]["cupo"].toString()
-                        +'\n\n'+'Sin vencer    '+ageSinVencer.toString()+'\n'
-                        +'1 - 30 días  '+age0a30.toString()+'  \n'
-                            +'31 - 60 días    '+age30a60.toString()+'\n'
-                        +'61 - 90 días    '+ageo1a90.toString()+'\n'
-                            +'91 - 120 días    '+age91a120.toString()+'\n'
-                            +'+ 120 días    '+ageMas120.toString()+'\n'
-                            + 'Total  '+totalCarteraS
-                        ,
-                        style: TextStyle(
-                          fontSize: 15,
-                        ),
-                      ),
-            )
-                      //subtitle: Text("Nit: "+_cartera[index]['nit']),
+        return Card(
+            child: Container(
+                child: Column(children: [
+          ListTile(
+              title: Center(
+            child: Text(
+              _cartera[index]["cardCode"].toString() +
+                  ' - ' +
+                  _cartera[index]["cardName"].toString() +
+                  '\n' +
+                  _cartera[index]["payCondition"].toString() +
+                  '\n' +
+                  'Cupo:    ' +
+                  cupo.toString() +
+                  '\n\n' +
+                  'Sin vencer    ' +
+                  ageSinVencer.toString() +
+                  '\n' +
+                  '1 - 30 días  ' +
+                  age0a30.toString() +
+                  '  \n' +
+                  '31 - 60 días    ' +
+                  age30a60.toString() +
+                  '\n' +
+                  '61 - 90 días    ' +
+                  ageo1a90.toString() +
+                  '\n' +
+                  '91 - 120 días    ' +
+                  age91a120.toString() +
+                  '\n' +
+                  '+ 120 días    ' +
+                  ageMas120.toString() +
+                  '\n' +
+                  'Total  ' +
+                  totalCarteraS,
+              style: TextStyle(
+                fontSize: 15,
+              ),
+            ),
+          )
+              //subtitle: Text("Nit: "+_cartera[index]['nit']),
 
-                    ),
-                           Row (mainAxisAlignment: MainAxisAlignment.end,
+              ),
+          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+            Container(
+              child: Text(_cartera[index]["totalDoc"].toString()),
+            ),
+            IconButton(
+              icon: Icon(Icons.wallet_outlined),
+              onPressed: () {
+                storage.write('clienteDetalle', _cartera[index]);
 
-                               children: [
-                             IconButton(
-                               icon: Icon(Icons.wallet_outlined),
-                               onPressed: () {
-                                 storage.write('clienteDetalle', _cartera[index]);
-
-                                 Navigator.push(
-                                   context,
-                                   MaterialPageRoute(
-                                     builder: (context) => CarteraDetalle(),
-                                   ),
-                                 );
-                               },
-                             ),
-                             IconButton(
-                                 icon: Icon(Icons.mail_outline),
-                                 onPressed: () {
-                                   _launchEmail();
-                                 }
-                             )
-                           ]
-                           )
-                     ]
-
-                       )
-                  )
-            );
-
-
-
-          },
-        ));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CarteraDetalle(),
+                  ),
+                );
+              },
+            ),
+            IconButton(
+                icon: Icon(Icons.mail_outline),
+                onPressed: () {
+                  _launchEmail();
+                })
+          ])
+        ])));
+      },
+    ));
   }
 
   showAlertDialog(BuildContext context, String nit) {
@@ -444,14 +449,12 @@ class _carteraPageState extends State<CarteraPage> {
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
       onPressed: () {
-
         Navigator.pop(context);
       },
     );
     Widget continueButton = ElevatedButton(
       child: Text("SI"),
       onPressed: () {
-
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const PedidosPage()),
@@ -484,7 +487,6 @@ class _carteraPageState extends State<CarteraPage> {
 class CarteraDetalle extends StatelessWidget {
   Map<String, dynamic> clienteDetalle = {};
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -515,29 +517,25 @@ class CarteraDetalle extends StatelessWidget {
           title: Text('Buscar', style: TextStyle(color: Colors.white)),
         ),
       ),
-      body:Center(
+      body: Center(
         //height: 120.0, // Altura ajustada según los datos
 
-        child:
-
-        Column(
-          //direction: Axis.horizontal,
+        child: Column(
+            //direction: Axis.horizontal,
 
             children: [
-              Container(height: 80,
+              Container(
+                height: 80,
                 //padding: EdgeInsets.all(10.0),
-                child:
-                Flex(
+                child: Flex(
                     direction: Axis.horizontal,
-                    children: [ Expanded(child: tituloDetalle(context))
-                    ]
-                ),
+                    children: [Expanded(child: tituloDetalle(context))]),
               ),
-              Container(child:
-              Expanded(child:carteraDetalle(context)),
+              Container(
+                child: Expanded(child: carteraDetalle(context)),
               )
-
-            ]),),
+            ]),
+      ),
     );
   }
 }
@@ -561,117 +559,107 @@ Future<void> _launchEmail() async {
   }
 }
 
-
-Widget tituloDetalle(BuildContext context){
-  Map<String, dynamic>  clienteDetalle = GetStorage().read('clienteDetalle');
-  return
-    Card(
-      child:
-      Container(height: 60,
-        child:
-
-        ListTile(
-            title:
-            Center(child:
-            Text(
-
-              clienteDetalle["cardName"].toString()+'\n '+ clienteDetalle["cardCode"].toString() ,
-              style: TextStyle(
-                fontSize: 20,
-              ),
-            ),
-            )
-
+Widget tituloDetalle(BuildContext context) {
+  Map<String, dynamic> clienteDetalle = GetStorage().read('clienteDetalle');
+  return Card(
+    child: Container(
+      height: 60,
+      child: ListTile(
+          title: Center(
+        child: Text(
+          clienteDetalle["cardName"].toString() +
+              '\n ' +
+              clienteDetalle["cardCode"].toString(),
+          style: TextStyle(
+            fontSize: 20,
+          ),
         ),
-
-      ),
-
-    );
-
+      )),
+    ),
+  );
 }
 
-
 Widget carteraDetalle(BuildContext context) {
-  Map<String, dynamic>  clienteDetalle = GetStorage().read('clienteDetalle');
+  Map<String, dynamic> clienteDetalle = GetStorage().read('clienteDetalle');
 
   var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
 
-  List detallPortafolio= clienteDetalle["detailPortfolio"];
-   return SafeArea(
+  List detallPortafolio = clienteDetalle["detailPortfolio"];
+  return SafeArea(
       child: ListView.builder(
-        itemCount: detallPortafolio.length,
-        itemBuilder: (context, index) {
+    itemCount: detallPortafolio.length,
+    itemBuilder: (context, index) {
+      String saldo = numberFormat
+          .format(clienteDetalle["detailPortfolio"][index]["balance"]);
+      if (saldo.contains('.')) {
+        int decimalIndex = saldo.indexOf('.');
+        saldo = "\$" + saldo.substring(0, decimalIndex);
+      }
 
-          String saldo = numberFormat.format(clienteDetalle["detailPortfolio"][index]["balance"]);
-          if (saldo.contains('.')) {
-            int decimalIndex = saldo.indexOf('.');
-            saldo = "\$" + saldo.substring(0, decimalIndex);
-          }
+      String valor = numberFormat
+          .format(clienteDetalle["detailPortfolio"][index]["docTotal"]);
+      if (valor.contains('.')) {
+        int decimalIndex = valor.indexOf('.');
+        valor = "\$" + valor.substring(0, decimalIndex);
+      }
 
-          String valor = numberFormat.format(clienteDetalle["detailPortfolio"][index]["docTotal"]);
-          if (valor.contains('.')) {
-            int decimalIndex = valor.indexOf('.');
-            valor = "\$" + valor.substring(0, decimalIndex);
-          }
+      return Card(
+          child: Container(
+              child: Column(children: [
+        ListTile(
+            title: Center(
+          child: Text(
+            'Tipo de documento: ' +
+                clienteDetalle["detailPortfolio"][index]["docDueDate"]
+                    .toString() +
+                '\n' +
+                'Nro. Documento: ' +
+                clienteDetalle["detailPortfolio"][index]["docNum"].toString() +
+                '\n\n' +
+                'Fecha    ' +
+                clienteDetalle["detailPortfolio"][index]["docDate"].toString() +
+                '\n' +
+                'Vencimiento  ' +
+                clienteDetalle["detailPortfolio"][index]["docDueDate"]
+                    .toString() +
+                '  \n' +
+                'Saldo    ' +
+                saldo +
+                '\n' +
+                'Valor    ' +
+                valor +
+                '\n' +
+                'Días vencidos  ' +
+                clienteDetalle["detailPortfolio"][index]["expiredDays"]
+                    .toString() +
+                '\n',
+            style: TextStyle(
+              fontSize: 15,
+            ),
+          ),
+        )
+            //subtitle: Text("Nit: "+_cartera[index]['nit']),
 
-
-          return Card(
-              child:
-
-              Container(child:
-              Column(
-                  children:[
-                    ListTile(
-                        title:  Center(child:
-                        Text(
-                          'Tipo de documento: ' +clienteDetalle["detailPortfolio"][index]["docDueDate"].toString()+
-                              '\n' +
-                              'Nro. Documento: '+clienteDetalle["detailPortfolio"][index]["docNum"].toString()
-                               +'\n\n'+'Fecha    '+clienteDetalle["detailPortfolio"][index]["docDate"].toString()+'\n'
-                               +'Vencimiento  '+clienteDetalle["detailPortfolio"][index]["docDueDate"].toString()+'  \n'
-                               +'Saldo    '+saldo+'\n'
-                              +'Valor    '+valor+'\n'
-                              +'Días vencidos  '+clienteDetalle["detailPortfolio"][index]["expiredDays"].toString()+'\n'
-
-                          ,
-                          style: TextStyle(
-                            fontSize: 15,
-                          ),
-                        ),
-                        )
-                      //subtitle: Text("Nit: "+_cartera[index]['nit']),
-
-                    ),
-                    Row (mainAxisAlignment: MainAxisAlignment.end,
-
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.picture_as_pdf_outlined),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => WebViewPage(webUrl: clienteDetalle["detailPortfolio"][index]["urlFE"].toString()),
-                                ),
-                              );
-                            },
-                          ),
-
-                        ]
-                    )
-                  ]
-
-              )
-              )
-          );
-
-
-
-        },
-      ));
-
+            ),
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          IconButton(
+            icon: Icon(Icons.picture_as_pdf_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WebViewPage(
+                      webUrl: clienteDetalle["detailPortfolio"][index]["urlFE"]
+                          .toString()),
+                ),
+              );
+            },
+          ),
+        ])
+      ])));
+    },
+  ));
 }
-
 
 class WebViewPage extends StatelessWidget {
   final String webUrl;
