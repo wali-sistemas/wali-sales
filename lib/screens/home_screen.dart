@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage> {
                 icon: Icon(Icons.data_saver_off_outlined), label: "Dash"),
             BottomNavigationBarItem(
                 icon: Icon(Icons.person_pin_circle_rounded), label: 'Clientes'),
-            BottomNavigationBarItem(icon: Icon(Icons.sync), label: 'Sincr'),
+            BottomNavigationBarItem(icon: Icon(Icons.sync), label: 'Sincro'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.store_outlined), label: 'Pedidos'),
             BottomNavigationBarItem(

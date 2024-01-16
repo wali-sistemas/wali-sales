@@ -210,14 +210,12 @@ class _carteraPageState extends State<CarteraPage> {
             );
           },
         ),
-        title: ListTile(
-          onTap: () {
-            showSearch(
-              context: context,
-              delegate: CustomSearchDelegate(),
-            );
-          },
-          title: Text('Buscar', style: TextStyle(color: Colors.white)),
+        /*actions: [
+          CarritoPedido(),
+        ],*/
+        title: Text(
+          'Cartera',
+          style: TextStyle(color: Colors.white),
         ),
       ),
       body: Center(
@@ -381,7 +379,7 @@ class _carteraPageState extends State<CarteraPage> {
                             ),
                             TextSpan(
                               text: _cartera[index]["payCondition"].toString() +
-                                  '  -  Cupo: ' +
+                                  '  -  Cupo Disponible: ' +
                                   cupo.toString() +
                                   '\n\n',
                               style: TextStyle(
@@ -522,18 +520,16 @@ class CarteraDetalle extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomePage()),
+              MaterialPageRoute(builder: (context) => CarteraPage()),
             );
           },
         ),
-        title: ListTile(
-          onTap: () {
-            showSearch(
-              context: context,
-              delegate: CustomSearchDelegate(),
-            );
-          },
-          title: Text('Buscar', style: TextStyle(color: Colors.white)),
+        /*actions: [
+          CarritoPedido(),
+        ],*/
+        title: Text(
+          'Detalle de cartera',
+          style: TextStyle(color: Colors.white),
         ),
       ),
       body: Center(
