@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:get_storage/get_storage.dart';
@@ -5,11 +7,10 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
-import 'buscador_cartera.dart';
 import 'package:productos_app/screens/home_screen.dart';
 import 'package:connectivity/connectivity.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 
 class CarteraPage extends StatefulWidget {
   const CarteraPage({Key? key}) : super(key: key);
@@ -185,12 +186,38 @@ class _carteraPageState extends State<CarteraPage> {
     final data = resp["content"];
 
     if (!mounted) return;
-    setState(() {
-      List<Map<String, dynamic>> contentMapList =
-          data.cast<Map<String, dynamic>>();
-      detalleCartera = contentMapList;
-    });
+    setState(
+      () {
+        List<Map<String, dynamic>> contentMapList =
+            data.cast<Map<String, dynamic>>();
+        detalleCartera = contentMapList;
+      },
+    );
   }
+
+  Future<void> _launchPhone(String phone) async {
+    final telefonoUrl = 'tel:$phone';
+    if (await canLaunch(telefonoUrl)) {
+      await launch(telefonoUrl);
+    } else {
+      throw 'No se pudo abrir la aplicación de teléfono.';
+    }
+  }
+
+  Future<void> _downloadCarteraGeneralPDF(String pdfUrl, String dateDoc) async {
+    final response = await http.get(Uri.parse(pdfUrl));
+
+    if (response.statusCode == 200) {
+      final Uint8List pdfBytes = response.bodyBytes;
+      final directory = await Directory.systemTemp.createTemp();
+      final pdfFile = File(
+          '/storage/emulated/0/Download/CarteraGeneral[' + dateDoc + '].pdf');
+      await pdfFile.writeAsBytes(pdfBytes);
+    } else {
+      throw Exception('Error al descargar la cartera general');
+    }
+  }
+
   ///////////////////////-----
 
   @override
@@ -210,9 +237,31 @@ class _carteraPageState extends State<CarteraPage> {
             );
           },
         ),
-        /*actions: [
-          CarritoPedido(),
-        ],*/
+        actions: [
+          IconButton(
+            color: Colors.white,
+            icon: Icon(Icons.download_outlined),
+            onPressed: () {
+              DateTime now = DateTime.now();
+
+              _downloadCarteraGeneralPDF(
+                'http://wali.igbcolombia.com:8080/shared/' +
+                    GetStorage().read('empresa') +
+                    '/collection/' +
+                    GetStorage().read('usuario') +
+                    '.pdf',
+                DateFormat("yyyyMMdd-hhmm").format(now),
+              );
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Cartera general guardada en descargas'),
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            },
+          ),
+        ],
         title: Text(
           'Cartera',
           style: TextStyle(color: Colors.white),
@@ -226,12 +275,16 @@ class _carteraPageState extends State<CarteraPage> {
               child: Flex(
                 direction: Axis.horizontal,
                 children: [
-                  Expanded(child: tituloCartera(context)),
+                  Expanded(
+                    child: tituloCartera(context),
+                  ),
                 ],
               ),
             ),
             Container(
-              child: Expanded(child: cartera(context)),
+              child: Expanded(
+                child: cartera(context),
+              ),
             )
           ],
         ),
@@ -283,11 +336,13 @@ class _carteraPageState extends State<CarteraPage> {
           String ageSinVencer = "0";
           String age0a30 = "0";
           String age30a60 = "0";
-          String ageo1a90 = "0";
+          String age61a90 = "0";
           String age91a120 = "0";
           String ageMas120 = "0";
           String totalCarteraS = "0";
           String cupo = "0";
+          String phone = "0";
+          String emailCL = "";
 
           if (resultado != null) {
             totalCartGen = numberFormat.format(resultado!["total"]);
@@ -314,10 +369,10 @@ class _carteraPageState extends State<CarteraPage> {
               age30a60 = "\$" + age30a60.substring(0, decimalIndex);
             }
 
-            ageo1a90 = numberFormat.format(resultado!["age61a90"]);
-            if (ageo1a90.contains('.')) {
-              int decimalIndex = ageo1a90.indexOf('.');
-              ageo1a90 = "\$" + ageo1a90.substring(0, decimalIndex);
+            age61a90 = numberFormat.format(resultado!["age61a90"]);
+            if (age61a90.contains('.')) {
+              int decimalIndex = age61a90.indexOf('.');
+              age61a90 = "\$" + age61a90.substring(0, decimalIndex);
             }
 
             age91a120 = numberFormat.format(resultado!["age91a120"]);
@@ -343,6 +398,9 @@ class _carteraPageState extends State<CarteraPage> {
               int decimalIndex = cupo.indexOf('.');
               cupo = "\$" + cupo.substring(0, decimalIndex);
             }
+
+            phone = "3226979043"; //resultado!["phone"];
+            emailCL = "sistemas@igbcolombia.com"; //resultado!["email"];
           }
 
           return Card(
@@ -405,7 +463,7 @@ class _carteraPageState extends State<CarteraPage> {
                             ),
                             TextSpan(
                               text: '61 - 90 días    ' +
-                                  ageo1a90.toString() +
+                                  age61a90.toString() +
                                   '\n',
                               style: TextStyle(fontSize: 16),
                             ),
@@ -436,6 +494,12 @@ class _carteraPageState extends State<CarteraPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      IconButton(
+                        icon: Icon(Icons.phone_outlined),
+                        onPressed: () {
+                          _launchPhone(phone);
+                        },
+                      ),
                       Container(
                         child: Text(_cartera[index]["totalDoc"].toString()),
                       ),
@@ -453,8 +517,42 @@ class _carteraPageState extends State<CarteraPage> {
                       ),
                       IconButton(
                         icon: Icon(Icons.mail_outline),
-                        onPressed: () {
-                          _launchEmail();
+                        onPressed: () async {
+                          final Uri emailUri = Uri(
+                            scheme: 'mailto',
+                            path: "",
+                            queryParameters: {
+                              'to': emailCL,
+                              'subject': "Estado:Edad-de-Cartera-" +
+                                  _cartera[index]["cardCode"].toString(),
+                              'body': _cartera[index]["cardName"].toString() +
+                                  "\n\nSin-vencer:" +
+                                  ageSinVencer.toString() +
+                                  "\n1a30-días:" +
+                                  age0a30.toString() +
+                                  "\n30a60-días:" +
+                                  age30a60.toString() +
+                                  "\n61a90-días:" +
+                                  age61a90.toString() +
+                                  "\n91a120-días:" +
+                                  age91a120.toString() +
+                                  "\nMas120-días:" +
+                                  ageMas120.toString() +
+                                  "\nTotal:" +
+                                  totalCarteraS.toString() +
+                                  "\nCupo-Disponible:" +
+                                  cupo.toString(),
+                              'attachment': ''
+                            },
+                          );
+
+                          final String emailUrl = emailUri.toString();
+
+                          if (await canLaunch(emailUrl)) {
+                            await launch(emailUrl);
+                          } else {
+                            throw 'No se pudo abrir el cliente de correo.';
+                          }
                         },
                       )
                     ],
@@ -520,7 +618,9 @@ class CarteraDetalle extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CarteraPage()),
+              MaterialPageRoute(
+                builder: (context) => CarteraPage(),
+              ),
             );
           },
         ),
@@ -540,7 +640,9 @@ class CarteraDetalle extends StatelessWidget {
               child: Flex(
                 direction: Axis.horizontal,
                 children: [
-                  Expanded(child: tituloDetalle(context)),
+                  Expanded(
+                    child: tituloDetalle(context),
+                  ),
                 ],
               ),
             ),
@@ -553,25 +655,6 @@ class CarteraDetalle extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-Future<void> _launchEmail() async {
-  final Uri emailUri = Uri(
-    scheme: 'mailto',
-    path: "",
-    queryParameters: {
-      'subject': "",
-      'body': "",
-      'attachment': "",
-    },
-  );
-  final String emailUrl = emailUri.toString();
-
-  if (await canLaunch(emailUrl)) {
-    await launch(emailUrl);
-  } else {
-    throw 'No se pudo abrir el cliente de correo.';
   }
 }
 
@@ -715,7 +798,7 @@ Widget carteraDetalle(BuildContext context) {
                               ),
                             ),
                             TextSpan(
-                              text: 'Saldo: ',
+                              text: 'Saldo Pendiente: ',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 17,
@@ -728,7 +811,7 @@ Widget carteraDetalle(BuildContext context) {
                               ),
                             ),
                             TextSpan(
-                              text: 'Valor: ',
+                              text: 'Valor Factura: ',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 17,
@@ -768,18 +851,63 @@ Widget carteraDetalle(BuildContext context) {
                       IconButton(
                         icon: Icon(Icons.picture_as_pdf_outlined),
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => WebViewPage(
-                                webUrl: clienteDetalle["detailPortfolio"][index]
-                                        ["urlFE"]
-                                    .toString(),
-                              ),
-                            ),
-                          );
+                          launch(clienteDetalle["detailPortfolio"][index]
+                                  ["urlFE"]
+                              .toString());
                         },
                       ),
+                      IconButton(
+                        icon: Icon(Icons.mail_outline),
+                        onPressed: () async {
+                          final Uri emailUri = Uri(
+                            scheme: 'mailto',
+                            path: "",
+                            queryParameters: {
+                              'to': clienteDetalle["detailPortfolio"][index]
+                                      ["emailFE"]
+                                  .toString(),
+                              'subject': "Estado:Detalle-de-Cartera",
+                              'body': "Tipo_de_documento:" +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["docType"]
+                                      .toString() +
+                                  '\nNro_de_documento:' +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["docNum"]
+                                      .toString() +
+                                  '\nFecha_de_creación:' +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["docDate"]
+                                      .toString() +
+                                  '\nFecha_de_vencimiento:' +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["docDueDate"]
+                                      .toString() +
+                                  '\nSaldo_pendiente:' +
+                                  saldo +
+                                  '\nValor_factura:' +
+                                  valor +
+                                  '\nDías_vencidos:' +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["expiredDays"]
+                                      .toString() +
+                                  "\n\nFactura_electrónica:\n\nPara_visualizar_el_documento_por_favor_copie_la_siguiente_url_en_su_navegador_favorito:\n\n" +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["urlFE"]
+                                      .toString(),
+                              'attachment': "",
+                            },
+                          );
+
+                          final String emailUrl = emailUri.toString();
+
+                          if (await canLaunch(emailUrl)) {
+                            await launch(emailUrl);
+                          } else {
+                            throw 'No se pudo abrir el cliente de correo.';
+                          }
+                        },
+                      )
                     ],
                   ),
                 ),
@@ -790,36 +918,4 @@ Widget carteraDetalle(BuildContext context) {
       },
     ),
   );
-}
-
-class WebViewPage extends StatelessWidget {
-  final String webUrl;
-  WebViewPage({required this.webUrl});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
-        leading: GestureDetector(
-          child: Icon(
-            Icons.arrow_back_ios,
-            color: Colors.white,
-          ),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: Text(
-          'Documento Eléctronico',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
-      ),
-      body: WebView(
-        initialUrl: webUrl,
-        javascriptMode: JavascriptMode.unrestricted,
-      ),
-    );
-  }
 }
