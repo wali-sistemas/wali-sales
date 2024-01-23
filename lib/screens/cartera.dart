@@ -48,13 +48,13 @@ class _carteraPageState extends State<CarteraPage> {
     String apiUrl = '';
     if (GetStorage().read('nitFiltroCartera') == null) {
       apiUrl =
-          'http://192.168.10.218:8080/manager/res/app/customers-portfolio/' +
+          'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/' +
               empresa +
               '?slpcode=' +
               codigo;
     } else {
       apiUrl =
-          'http://192.168.10.218:8080/manager/res/app/customers-portfolio/' +
+          'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/' +
               empresa +
               '?slpcode=' +
               codigo +
@@ -112,13 +112,13 @@ class _carteraPageState extends State<CarteraPage> {
     String endpoint = '';
     if (GetStorage().read('nitFiltroCartera') == null) {
       endpoint =
-          'http://192.168.10.218:8080/manager/res/app/detail-age-customer-portfolio/' +
+          'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/' +
               empresa +
               '?slpcode=' +
               codigo;
     } else {
       endpoint =
-          'http://192.168.10.218:8080/manager/res/app/detail-age-customer-portfolio/' +
+          'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/' +
               empresa +
               '?slpcode=' +
               codigo +
