@@ -1,10 +1,9 @@
-// ignore_for_file: must_be_immutable
-
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:productos_app/screens/buscador_cartera.dart';
 import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
 import 'package:productos_app/screens/home_screen.dart';
@@ -25,22 +24,18 @@ class _carteraPageState extends State<CarteraPage> {
   String empresa = GetStorage().read('empresa');
   String usuario = GetStorage().read('usuario');
   Connectivity _connectivity = Connectivity();
-  List _stockFull = [];
   Map<String, dynamic> pedidoLocal = {};
   List<dynamic> itemsPedidoLocal = [];
   List<Map<String, dynamic>> detalleCartera = [];
   List<Map<String, dynamic>> detallePortafolio = [];
-  String totalCartGen = "0";
 
   var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
 
   @override
   void initState() {
     super.initState();
-    sincCartera();
-    sincronizarStock();
-    _fetchData();
-    fetchDataCartera();
+    _fetchDataCartera();
+    _fetchDataDetailCartera();
   }
 
   Future<bool> checkConnectivity() async {
@@ -48,100 +43,51 @@ class _carteraPageState extends State<CarteraPage> {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  Future<void> sincCartera() async {
-    final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/' +
-            empresa +
-            '?slpcode=' +
-            codigo;
-    bool isConnected = await checkConnectivity();
-    if (isConnected == false) {
-    } else {
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      String texto = "No se encontraron Cartera para usuario " +
-          codigo +
-          " y empresa " +
-          empresa;
-
-      final codigoError = resp["code"];
-      if (codigoError == -1 ||
-          response.statusCode != 200 ||
-          isConnected == false) {
-      } else {
-        final data = resp["content"];
-        if (!mounted) return;
-        setState(() {
-          _cartera = data;
-
-          /// GUARDAR EN LOCAL STORAGE
-          storage.write('datosCartera', _cartera);
-        });
-      }
-    }
-  }
-
-  Future<void> sincronizarStock() async {
-    final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
-            empresa +
-            '?itemcode=0&whscode=0&slpcode=' +
-            usuario;
-
-    bool isConnected = await checkConnectivity();
-    if (isConnected == false) {
-    } else {
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      final codigoError = resp["code"];
-      if (codigoError == -1) {
-      } else {
-        final data = resp["content"];
-        if (!mounted) return;
-        setState(() {
-          _stockFull = data;
-
-          /// GUARDAR
-          storage.write('stockFull', _stockFull);
-        });
-      }
-    }
-  }
-
-  Future<void> _fetchData() async {
-    if (GetStorage().read('datosCartera') == null) {
-      final String apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/' +
+  Future<void> _fetchDataCartera() async {
+    //if (GetStorage().read('datosCartera') == null) {
+    String apiUrl = '';
+    if (GetStorage().read('nitFiltroCartera') == null) {
+      apiUrl =
+          'http://192.168.10.218:8080/manager/res/app/customers-portfolio/' +
               empresa +
               '?slpcode=' +
               codigo;
-
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      String texto = "No se encontro cartera para asesor " +
-          codigo +
-          " en la empresa " +
-          empresa;
-
-      final codigoError = resp["content"];
-      if (codigoError == -1) {
-        var snackBar = SnackBar(
-          content: Text(texto),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      }
-
-      final data = resp["content"];
-      if (!mounted) return;
-      setState(() {
-        _cartera = data;
-
-        /// GUARDAR EN LOCAL STORAGE
-        _guardarDatos();
-      });
     } else {
-      _cartera = GetStorage().read('datosCartera');
+      apiUrl =
+          'http://192.168.10.218:8080/manager/res/app/customers-portfolio/' +
+              empresa +
+              '?slpcode=' +
+              codigo +
+              '&cardcode=' +
+              GetStorage().read('nitFiltroCartera');
     }
+
+    final response = await http.get(Uri.parse(apiUrl));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+    String texto = "No se encontro cartera para asesor " +
+        codigo +
+        " en la empresa " +
+        empresa;
+
+    final codigoError = resp["code"];
+    if (codigoError == -1) {
+      var snackBar = SnackBar(
+        content: Text(texto),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
+
+    final data = resp["content"];
+    if (!mounted) return;
+    setState(() {
+      _cartera = data;
+
+      /// GUARDAR EN LOCAL STORAGE
+      _guardarDatos();
+    });
+    /*} else {
+      _cartera = GetStorage().read('datosCartera');
+    }*/
   }
 
   Future<void> _guardarDatos() async {
@@ -162,16 +108,27 @@ class _carteraPageState extends State<CarteraPage> {
     return null;
   }
 
-  Future<void> fetchDataCartera() async {
-    final String endpoint =
-        'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/' +
-            empresa +
-            '?slpcode=' +
-            codigo;
+  Future<void> _fetchDataDetailCartera() async {
+    String endpoint = '';
+    if (GetStorage().read('nitFiltroCartera') == null) {
+      endpoint =
+          'http://192.168.10.218:8080/manager/res/app/detail-age-customer-portfolio/' +
+              empresa +
+              '?slpcode=' +
+              codigo;
+    } else {
+      endpoint =
+          'http://192.168.10.218:8080/manager/res/app/detail-age-customer-portfolio/' +
+              empresa +
+              '?slpcode=' +
+              codigo +
+              '&cardcode=' +
+              GetStorage().read('nitFiltroCartera');
+    }
 
     final response = await http.get(Uri.parse(endpoint));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    String texto = "No se encontraron datos de Cartera para usuario " +
+    String texto = "No se encontraron datos de cartera para el usuario " +
         codigo +
         " y empresa " +
         empresa;
@@ -231,6 +188,7 @@ class _carteraPageState extends State<CarteraPage> {
             color: Colors.white,
           ),
           onTap: () {
+            GetStorage().remove('nitFiltroCartera');
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => HomePage()),
@@ -262,9 +220,17 @@ class _carteraPageState extends State<CarteraPage> {
             },
           ),
         ],
-        title: Text(
-          'Cartera',
-          style: TextStyle(color: Colors.white),
+        title: ListTile(
+          onTap: () {
+            showSearch(
+              context: context,
+              delegate: CustomSearchDelegateCartera(),
+            );
+          },
+          title: Text(
+            'Buscar cartera',
+            style: TextStyle(color: Colors.white),
+          ),
         ),
       ),
       body: Center(
@@ -293,15 +259,15 @@ class _carteraPageState extends State<CarteraPage> {
   }
 
   Widget tituloCartera(BuildContext context) {
-    num totalCartera = 0;
-    _cartera.forEach((element) {
-      totalCartera = totalCartera;
+    int total = 0;
+    detalleCartera.forEach((element) {
+      total = element["total"];
     });
 
-    String totalCarteraTxt = numberFormat.format(totalCartera);
-    if (totalCarteraTxt.contains('.')) {
-      int decimalIndex = totalCarteraTxt.indexOf('.');
-      totalCarteraTxt = "\$" + totalCarteraTxt.substring(0, decimalIndex);
+    String totalCartGen = numberFormat.format(total);
+    if (totalCartGen.contains('.')) {
+      int decimalIndex = totalCartGen.indexOf('.');
+      totalCartGen = "\$" + totalCartGen.substring(0, decimalIndex);
     }
 
     return Card(
@@ -345,12 +311,6 @@ class _carteraPageState extends State<CarteraPage> {
           String emailCL = "";
 
           if (resultado != null) {
-            totalCartGen = numberFormat.format(resultado!["total"]);
-            if (totalCartGen.contains('.')) {
-              int decimalIndex = totalCartGen.indexOf('.');
-              totalCartGen = "\$" + totalCartGen.substring(0, decimalIndex);
-            }
-
             ageSinVencer = numberFormat.format(resultado!["ageSinVencer"]);
             if (ageSinVencer.contains('.')) {
               int decimalIndex = ageSinVencer.indexOf('.');
@@ -616,12 +576,7 @@ class CarteraDetalle extends StatelessWidget {
             color: Colors.white,
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CarteraPage(),
-              ),
-            );
+            Navigator.pop(context);
           },
         ),
         /*actions: [

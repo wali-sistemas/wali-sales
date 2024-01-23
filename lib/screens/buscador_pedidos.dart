@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:productos_app/screens/pedidos_screen.dart';
 
 List pedidosGuardados = [];
 List<String> allNames = ["Cliente"];
@@ -12,7 +9,7 @@ var textColor = Color(0xff727272);
 var accentColor = Color(0xff16ADE1);
 var whiteText = Color(0xffF5F5F5);
 
-class CustomSearchDelegate extends SearchDelegate {
+class CustomSearchDelegatePedidos extends SearchDelegate {
   var suggestion = ["Cliente"];
   List<String> searchResult = [];
   List _pedidosBusqueda = [];
@@ -20,25 +17,6 @@ class CustomSearchDelegate extends SearchDelegate {
   String codigo = GetStorage().read('slpCode');
   GetStorage storage = GetStorage();
   String empresa = GetStorage().read('empresa');
-
-  Future<void> _fetchData() async {
-    final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
-            codigo +
-            '/' +
-            empresa;
-
-    final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
-
-    final data = resp["content"];
-    //print(data.toString());
-
-    _pedidosBusqueda = data;
-
-    /// GUARDAR EN LOCAL STORAGE
-    _guardarDatos();
-  }
 
   Future<void> _guardarDatos() async {
     storage.write('ventas', _pedidosBusqueda);
@@ -73,8 +51,7 @@ class CustomSearchDelegate extends SearchDelegate {
     } else {
       _pedidosBusqueda.clear();
       pedidosGuardados = GetStorage().read('ventas');
-      //print("pedidosguardados::::::::::::::: ");
-      //print(pedidosGuardados);
+
       pedidosGuardados.forEach((k) {
         allNames.add(k['cardCode'].toString().toLowerCase());
         allNames.add(k['cardName'].toString().toLowerCase());
@@ -82,8 +59,6 @@ class CustomSearchDelegate extends SearchDelegate {
 
         List<String> palabras = query.split(' ');
 
-        //print("PALABRAS: **********______________________///");
-        //print(palabras);
         if (palabras.isEmpty) palabras.add(query);
         palabras.forEach((element) {
           if (k['cardCode']
@@ -95,9 +70,6 @@ class CustomSearchDelegate extends SearchDelegate {
           }
         });
       });
-
-      //print("allnames buscador:  __________________________________///");
-      //print(allNames);
     }
     searchResult.clear();
 
@@ -105,8 +77,6 @@ class CustomSearchDelegate extends SearchDelegate {
         .where((element) =>
             element.toLowerCase().contains(query.trim().toLowerCase()))
         .toList();
-    //print("searchResult:  ))))))))))))))))");
-    //print(searchResult);
     return ListView.builder(
       itemCount: _pedidosBusqueda.length,
       itemBuilder: (context, index) {
@@ -117,18 +87,16 @@ class CustomSearchDelegate extends SearchDelegate {
               title: Text(
                 'Fecha: ' +
                     _pedidosBusqueda[index]["docDate"].toString() +
-                    ' - Nit: ' +
+                    '\nNit: ' +
                     _pedidosBusqueda[index]["cardCode"].toString() +
                     '\n' +
-                    'Número pedido: ' +
-                    _pedidosBusqueda[index]["docNum"].toString() +
-                    '\n' +
-                    _pedidosBusqueda[index]["itemCode"].toString(),
+                    _pedidosBusqueda[index]["cardName"].toString() +
+                    '\nPedido: ' +
+                    _pedidosBusqueda[index]["docNum"].toString(),
                 style: TextStyle(
                   fontSize: 15,
                 ),
               ),
-              //subtitle: Text("Nit: "+_pedidosBusqueda[index]['nit']),
             ),
           ),
         );
@@ -162,8 +130,6 @@ class CustomSearchDelegate extends SearchDelegate {
       _pedidosBusqueda2 = [];
     }
 
-    //print("_pedidosBusqueda2: ))))))))))))))))))");
-    //print(_pedidosBusqueda2);
     return ListView.builder(
       itemBuilder: (context, index) => ListTile(
         onTap: () {
@@ -173,17 +139,21 @@ class CustomSearchDelegate extends SearchDelegate {
         },
         leading: Icon(query.isEmpty ? Icons.history : Icons.search),
         title: RichText(
-            text: TextSpan(
-          text: 'Fecha: ' +
-              _pedidosBusqueda[index]["docDate"].toString() +
-              ' - Nit: ' +
-              _pedidosBusqueda[index]["cardCode"].toString() +
-              '\n' +
-              'Número pedido: ' +
-              _pedidosBusqueda[index]["docNum"].toString(),
-          style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
-        )),
+          text: TextSpan(
+            text: 'Fecha: ' +
+                _pedidosBusqueda[index]["docDate"].toString() +
+                ' - Nit: ' +
+                _pedidosBusqueda[index]["cardCode"].toString() +
+                '\n' +
+                'Número pedido: ' +
+                _pedidosBusqueda[index]["docNum"].toString(),
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+        ),
       ),
       itemCount: _pedidosBusqueda.length,
     );
