@@ -3,7 +3,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
-import 'package:productos_app/screens/dashboard_screen.dart';
 import 'package:productos_app/widgets/carrito.dart';
 
 class SincronizarPage extends StatefulWidget {
@@ -274,12 +273,16 @@ class _SincronizarPageState extends State<SincronizarPage> {
               height: 50,
             ),
             SizedBox(
-              width: 150, // <-- Your width
+              width: 150,
               height: 30,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Clientes", style: TextStyle(color: Colors.white)),
+                  backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+                ),
+                child: Text(
+                  "Clientes",
+                  style: TextStyle(color: Colors.white),
+                ),
                 onPressed: btnClientEnable
                     ? () async {
                         setState(() {
@@ -304,12 +307,16 @@ class _SincronizarPageState extends State<SincronizarPage> {
               height: 30,
             ),
             SizedBox(
-              width: 150, // <-- Your width
+              width: 150,
               height: 30,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Items", style: TextStyle(color: Colors.white)),
+                  backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+                ),
+                child: Text(
+                  "Items",
+                  style: TextStyle(color: Colors.white),
+                ),
                 onPressed: btnItemEnable
                     ? () async {
                         setState(() {
@@ -333,12 +340,16 @@ class _SincronizarPageState extends State<SincronizarPage> {
               height: 30,
             ),
             SizedBox(
-              width: 150, // <-- Your width
+              width: 150,
               height: 30,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Stock", style: TextStyle(color: Colors.white)),
+                  backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+                ),
+                child: Text(
+                  "Stock",
+                  style: TextStyle(color: Colors.white),
+                ),
                 onPressed: btnStockEnable
                     ? () async {
                         setState(() {
@@ -366,8 +377,12 @@ class _SincronizarPageState extends State<SincronizarPage> {
               height: 30,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromRGBO(30, 129, 235, 1)),
-                child: Text("Ventas", style: TextStyle(color: Colors.white)),
+                  backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+                ),
+                child: Text(
+                  "Ventas",
+                  style: TextStyle(color: Colors.white),
+                ),
                 onPressed: () async {
                   await sincronizarVentas();
                   String errorREd = "";

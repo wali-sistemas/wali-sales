@@ -12,7 +12,7 @@ var textColor = Color(0xff727272);
 var accentColor = Color(0xff16ADE1);
 var whiteText = Color(0xffF5F5F5);
 
-class CustomSearchDelegate extends SearchDelegate {
+class CustomSearchDelegateClientes extends SearchDelegate {
   var suggestion = ["Cliente"];
   List<String> searchResult = [];
   List _clientesBusqueda = [];
@@ -32,7 +32,6 @@ class CustomSearchDelegate extends SearchDelegate {
     Map<String, dynamic> resp = jsonDecode(response.body);
 
     final data = resp["content"];
-    //print(data.toString());
 
     _clientesBusqueda = data;
 
@@ -80,9 +79,6 @@ class CustomSearchDelegate extends SearchDelegate {
           _clientesBusqueda.add(k);
         }
       });
-
-      //print("allnames buscador:  __________________________________///");
-      //print(allNames);
     }
     searchResult.clear();
 
@@ -90,8 +86,6 @@ class CustomSearchDelegate extends SearchDelegate {
         .where((element) =>
             element.toLowerCase().contains(query.trim().toLowerCase()))
         .toList();
-    //print("searchResult:  ))))))))))))))))");
-    //print(searchResult);
     return ListView.builder(
       itemCount: _clientesBusqueda.length,
       itemBuilder: (context, index) {
@@ -101,14 +95,12 @@ class CustomSearchDelegate extends SearchDelegate {
             child: ListTile(
               title: Text(
                 _clientesBusqueda[index]['cardCode'] +
-                    ' - ' +
+                    '\n' +
                     _clientesBusqueda[index]['cardName'],
                 style: TextStyle(
                   fontSize: 15,
                 ),
               ),
-              //subtitle: Text("Nit: "+_clientesBusqueda[index]['nit']),
-
               trailing: TextButton.icon(
                 onPressed: () {
                   if (GetStorage().read('itemsPedido') == null) {
@@ -119,7 +111,8 @@ class CustomSearchDelegate extends SearchDelegate {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const PedidosPage()),
+                      builder: (context) => const PedidosPage(),
+                    ),
                   );
                 },
                 label: const Text(''),
@@ -177,7 +170,9 @@ class CustomSearchDelegate extends SearchDelegate {
             storage.write('cardCode', _clientesBusqueda2[index]["cardCode"]);
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const PedidosPage()),
+              MaterialPageRoute(
+                builder: (context) => const PedidosPage(),
+              ),
             );
           },
           label: const Text(''),
@@ -187,7 +182,10 @@ class CustomSearchDelegate extends SearchDelegate {
             text: TextSpan(
           text: _clientesBusqueda2[index]["cardName"],
           style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         )),
       ),
       itemCount: _clientesBusqueda2.length,

@@ -17,19 +17,25 @@ class CheckAuthScreen extends StatelessWidget {
             if (snapshot.data == '') {
               Future.microtask(() {
                 Navigator.pushReplacement(
-                    context,
-                    PageRouteBuilder(
-                        pageBuilder: (_, __, ___) => LoginScreen(),
-                        transitionDuration: Duration(seconds: 0)));
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => LoginScreen(),
+                    transitionDuration: Duration(seconds: 0),
+                  ),
+                );
               });
             } else {
-              Future.microtask(() {
-                Navigator.pushReplacement(
+              Future.microtask(
+                () {
+                  Navigator.pushReplacement(
                     context,
                     PageRouteBuilder(
-                        pageBuilder: (_, __, ___) => HomePage(),
-                        transitionDuration: Duration(seconds: 0)));
-              });
+                      pageBuilder: (_, __, ___) => HomePage(),
+                      transitionDuration: Duration(seconds: 0),
+                    ),
+                  );
+                },
+              );
             }
             return Container();
           },

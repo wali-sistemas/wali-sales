@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:productos_app/screens/screens.dart';
-import 'dart:convert'; // for using json.decode()
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
@@ -126,7 +126,10 @@ class _PedidosPageState extends State<PedidosPage>
                       delegate: CustomSearchDelegate(),
                     );
                   },
-                  title: Text('Buscar', style: TextStyle(color: Colors.white)),
+                  title: Text(
+                    'Buscar ítems',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
                 bottom: const TabBar(
                   tabs: [

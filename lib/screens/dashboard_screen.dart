@@ -7,7 +7,6 @@ import 'package:pie_chart/pie_chart.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
-import 'package:productos_app/screens/login_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:productos_app/widgets/carrito.dart';
@@ -57,8 +56,6 @@ class _DashboardPageState extends State<DashboardPage> {
             now.month.toString();
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    //print("REspuesta Dashboard: --------------------");
-    //print(resp.toString());
     Map<String, dynamic> data = {};
     if (!resp["content"].toString().contains("Ocurrio un error")) {
       return resp;

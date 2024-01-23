@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -60,23 +59,22 @@ class _ClientesPageState extends State<ClientesPage> {
       if (codigoError == -1 ||
           response.statusCode != 200 ||
           isConnected == false) {
-        //print("codigoError: $codigoError");
       } else {
         final data = resp["content"];
-        //print(data.toString());
         if (!mounted) return;
-        setState(() {
-          _clientes = data;
+        setState(
+          () {
+            _clientes = data;
 
-          /// GUARDAR EN LOCAL STORAGE
-          storage.write('datosClientes', _clientes);
-        });
+            /// GUARDAR EN LOCAL STORAGE
+            storage.write('datosClientes', _clientes);
+          },
+        );
       }
     }
   }
 
   Future<void> sincronizarStock() async {
-    //Map<String, String> stockTemp = {"id","valor"};
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
             empresa +
@@ -88,21 +86,20 @@ class _ClientesPageState extends State<ClientesPage> {
     } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      //print ("REspuesta stock: --------------------");
-      //print(resp.toString());
       final codigoError = resp["code"];
       if (codigoError == -1) {
         //print("codigoError: $codigoError");
       } else {
         final data = resp["content"];
-        //print(data.toString());
         if (!mounted) return;
-        setState(() {
-          _stockFull = data;
+        setState(
+          () {
+            _stockFull = data;
 
-          /// GUARDAR
-          storage.write('stockFull', _stockFull);
-        });
+            /// GUARDAR
+            storage.write('stockFull', _stockFull);
+          },
+        );
       }
     }
   }
@@ -127,18 +124,19 @@ class _ClientesPageState extends State<ClientesPage> {
         var snackBar = SnackBar(
           content: Text(texto),
         );
-
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
       final data = resp["content"];
       //print(data.toString());
       if (!mounted) return;
-      setState(() {
-        _clientes = data;
+      setState(
+        () {
+          _clientes = data;
 
-        /// GUARDAR EN LOCAL STORAGE
-        _guardarDatos();
-      });
+          /// GUARDAR EN LOCAL STORAGE
+          _guardarDatos();
+        },
+      );
     } else {
       _clientes = GetStorage().read('datosClientes');
     }
@@ -176,10 +174,13 @@ class _ClientesPageState extends State<ClientesPage> {
           onTap: () {
             showSearch(
               context: context,
-              delegate: CustomSearchDelegate(),
+              delegate: CustomSearchDelegateClientes(),
             );
           },
-          title: Text('Buscar', style: TextStyle(color: Colors.white)),
+          title: Text(
+            'Buscar cliente',
+            style: TextStyle(color: Colors.white),
+          ),
         ),
       ),
       body: clientes(context),
@@ -206,8 +207,6 @@ class _ClientesPageState extends State<ClientesPage> {
                     fontSize: 15,
                   ),
                 ),
-                //subtitle: Text("Nit: "+_clientes[index]['nit']),
-
                 trailing: TextButton.icon(
                   onPressed: () {
                     storage.remove('dirEnvio');
@@ -228,7 +227,8 @@ class _ClientesPageState extends State<ClientesPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const PedidosPage()),
+                          builder: (context) => const PedidosPage(),
+                        ),
                       );
                     }
                   },
@@ -260,7 +260,9 @@ class _ClientesPageState extends State<ClientesPage> {
         storage.write('nit', nit);
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const PedidosPage()),
+          MaterialPageRoute(
+            builder: (context) => const PedidosPage(),
+          ),
         );
       },
     );

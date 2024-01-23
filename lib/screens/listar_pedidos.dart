@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:productos_app/screens/pedidosGuardados.dart';
 import 'dart:convert';
-import 'package:productos_app/screens/pedidos_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:productos_app/screens/home_screen.dart';
 import 'package:productos_app/screens/buscador_pedidos.dart';
@@ -151,10 +149,10 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
             onTap: () {
               showSearch(
                 context: context,
-                delegate: CustomSearchDelegate(),
+                delegate: CustomSearchDelegatePedidos(),
               );
             },
-            title: Text('Buscar', style: TextStyle(color: Colors.white)),
+            title: Text('Buscar pedido', style: TextStyle(color: Colors.white)),
           ),
         ),
         body: Center(

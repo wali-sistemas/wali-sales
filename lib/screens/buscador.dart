@@ -36,10 +36,9 @@ class CustomSearchDelegate extends SearchDelegate {
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    //print ("REspuesta stock: --------------------");
-    //print(resp.toString());
+
     final data = resp["content"];
-    //print(data.toString());
+
     //if (!mounted) return;
     //setState(() {
     _stockB = data;
@@ -81,8 +80,8 @@ class CustomSearchDelegate extends SearchDelegate {
       itemsGuardados = GetStorage().read('items');
       itemsGuardados.forEach((k) {
         allNames.add(k['itemName'].toString().toLowerCase());
+
         List<String> palabras = query.split(' ');
-        //print ("PALABRAS: **********______________________///");print (palabras);
         if (palabras.isEmpty) palabras.add(query);
         int n = 0;
         palabras.forEach((element) {
@@ -97,9 +96,6 @@ class CustomSearchDelegate extends SearchDelegate {
         });
         if (n == palabras.length) _itemsBuscador.add(k);
       });
-
-      //print("allnames:  __________________________________///");
-      //print(allNames);
     }
     searchResult.clear();
 
@@ -107,14 +103,11 @@ class CustomSearchDelegate extends SearchDelegate {
         .where((element) =>
             element.toLowerCase().contains(query.trim().toLowerCase()))
         .toList();
-    //print("searchResult:  ");
-    //print(searchResult);
     return Container(
       margin: EdgeInsets.all(20),
       child: ListView.builder(
         itemCount: _itemsBuscador.length,
         itemBuilder: (context, indexB) {
-          //_listarStock(_itemsBuscador[index]["itemCode"]);
           if (_stockB.length > 0) {
             _inventario = _stockB[0]['stockWarehouses'];
           }
@@ -163,31 +156,27 @@ class CustomSearchDelegate extends SearchDelegate {
                     ///BUSCAR ITEM SELLECCIONADO
                     int i = 0;
                     int indexSeleccionado = 0;
-                    itemsGuardados.forEach((item) {
-                      if (_itemsBuscador[indexB]['itemCode'] ==
-                          item['itemCode']) {
-                        indexSeleccionado = i;
-                      }
-                      i++;
-                    });
-
-                    ///
-
-                    //print("index buscador: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-                    //print(indexSeleccionado);
+                    itemsGuardados.forEach(
+                      (item) {
+                        if (_itemsBuscador[indexB]['itemCode'] ==
+                            item['itemCode']) {
+                          indexSeleccionado = i;
+                        }
+                        i++;
+                      },
+                    );
 
                     storage.write("index", indexSeleccionado);
                     //print(GetStorage().read('index'));
                     //String dropdownvalue = 'Elija una Bodega';
                     showDialog(
-                        context: context,
-                        builder: (_) {
-                          return MyDialog();
-                        });
+                      context: context,
+                      builder: (_) {
+                        return MyDialog();
+                      },
+                    );
                   },
-                  label: const Text(
-                    '',
-                  ),
+                  label: const Text(''),
                   icon: const Icon(Icons.add),
                 ),
               ),
@@ -207,32 +196,31 @@ class CustomSearchDelegate extends SearchDelegate {
       allNames2.clear();
 
       itemsGuardados = GetStorage().read('items');
-      itemsGuardados.forEach((k) {
-        allNames2.add(k['itemName'].toString().toLowerCase());
+      itemsGuardados.forEach(
+        (k) {
+          allNames2.add(k['itemName'].toString().toLowerCase());
 
-        List<String> palabras2 = query.split(' ');
-        //print ("PALABRAS: **********______________________///");print (palabras2);
-        if (palabras2.isEmpty) palabras2.add(query);
+          List<String> palabras2 = query.split(' ');
+          if (palabras2.isEmpty) palabras2.add(query);
 
-        int m = 0;
-        palabras2.forEach((element2) {
-          if (element2.length > 1) {
-            if (k['itemName'].toLowerCase().contains(element2.toLowerCase())
-                // || k['itemCode'].toLowerCase().contains(element2.trim().toLowerCase())
-                ) {
-              m++;
-            }
+          int m = 0;
+          palabras2.forEach(
+            (element2) {
+              if (element2.length > 1) {
+                if (k['itemName'].toLowerCase().contains(element2.toLowerCase())
+                    // || k['itemCode'].toLowerCase().contains(element2.trim().toLowerCase())
+                    ) {
+                  m++;
+                }
+              }
+            },
+          );
+          if (m == palabras2.length) {
+            _itemsBuscador2.add(k);
           }
-        });
-        if (m == palabras2.length) {
-          _itemsBuscador2.add(k);
-          //print("agregando item");
-        }
-        palabras2.clear();
-      });
-
-      //print("itemsBuscador2:  __________________________________///");
-      //print(_itemsBuscador2);
+          palabras2.clear();
+        },
+      );
     }
 
 // This method is called everytime the search term changes.
@@ -256,39 +244,37 @@ class CustomSearchDelegate extends SearchDelegate {
             ///BUSCAR ITEM SELLECCIONADO
             int i = 0;
             int indexSeleccionado = 0;
-            itemsGuardados.forEach((item) {
-              if (_itemsBuscador2[index]['itemCode'] == item['itemCode']) {
-                indexSeleccionado = i;
-              }
-              i++;
-            });
-
-            ///
-
-            //print("index buscador: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%");print (indexSeleccionado);
+            itemsGuardados.forEach(
+              (item) {
+                if (_itemsBuscador2[index]['itemCode'] == item['itemCode']) {
+                  indexSeleccionado = i;
+                }
+                i++;
+              },
+            );
 
             storage.write("index", indexSeleccionado);
             //print(GetStorage().read('index'));
             //String dropdownvalue = 'Elija una Bodega';
             showDialog(
-                context: context,
-                builder: (_) {
-                  return MyDialog();
-                });
+              context: context,
+              builder: (_) {
+                return MyDialog();
+              },
+            );
           },
-          label: const Text(
-            '',
-          ),
+          label: const Text(''),
           icon: const Icon(Icons.add),
         ),
         title: RichText(
-            text: TextSpan(
-          text: _itemsBuscador2[index]["itemName"] +
-              '\n' +
-              _itemsBuscador2[index]["itemCode"],
-          style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
-        )),
+          text: TextSpan(
+            text: _itemsBuscador2[index]["itemName"] +
+                '\n' +
+                _itemsBuscador2[index]["itemCode"],
+            style: TextStyle(
+                color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
+          ),
+        ),
       ),
       itemCount: _itemsBuscador2.length,
     );

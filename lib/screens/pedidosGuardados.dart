@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -227,7 +226,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
             onTap: () {
               showSearch(
                 context: context,
-                delegate: CustomSearchDelegate(),
+                delegate: CustomSearchDelegatePedidos(),
               );
             },
             title: Text('Buscar', style: TextStyle(color: Colors.white)),
@@ -276,157 +275,151 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
               );
             } else {
               return ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    String totalTxt =
-                        numberFormat.format(snapshot.data![index]["docTotal"]);
-                    totalTxt = totalTxt.substring(0, totalTxt.length - 3);
-                    if (snapshot.hasData) {
-                      return Card(
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Container(
-                                    height: 40,
-                                    child: IconButton(
-                                      icon: Icon(Icons.delete),
-                                      onPressed: () {
-                                        showConfirmOrderSave(
-                                            context,
-                                            snapshot.data![index]["id"],
-                                            "¿Está seguro de eliminar la orden guardada?");
-                                      },
-                                    )),
-                              ],
-                            ),
-                            ListTile(
-                                title: Text(
-                                  'Fecha: ' +
-                                      snapshot.data![index]["docDate"]
-                                          .toString() +
-                                      '\n' +
-                                      snapshot.data![index]["cardCode"]
-                                          .toString() +
-                                      '\n' +
-                                      snapshot.data![index]["cardName"]
-                                          .toString() +
-                                      '\n' +
-                                      'Orden: ' +
-                                      snapshot.data![index]["id"].toString(),
-                                  style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text(
-                                  'Observación: ' +
-                                      snapshot.data![index]["comments"]
-                                          .toString(),
-                                  style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                trailing: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  /*children: [
-                                    SizedBox(height: 30),
-                                  ],*/
-                                )),
-                            ListTile(
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, index) {
+                  String totalTxt =
+                      numberFormat.format(snapshot.data![index]["docTotal"]);
+                  totalTxt = totalTxt.substring(0, totalTxt.length - 3);
+                  if (snapshot.hasData) {
+                    return Card(
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                  height: 40,
+                                  child: IconButton(
+                                    icon: Icon(Icons.delete),
+                                    onPressed: () {
+                                      showConfirmOrderSave(
+                                          context,
+                                          snapshot.data![index]["id"],
+                                          "¿Está seguro de eliminar la orden guardada?");
+                                    },
+                                  )),
+                            ],
+                          ),
+                          ListTile(
                               title: Text(
-                                "Total: " + totalTxt,
+                                'Fecha: ' +
+                                    snapshot.data![index]["docDate"]
+                                        .toString() +
+                                    '\n' +
+                                    snapshot.data![index]["cardCode"]
+                                        .toString() +
+                                    '\n' +
+                                    snapshot.data![index]["cardName"]
+                                        .toString() +
+                                    '\n' +
+                                    'Orden: ' +
+                                    snapshot.data![index]["id"].toString(),
                                 style: TextStyle(
                                     fontSize: 15, fontWeight: FontWeight.bold),
                               ),
+                              subtitle: Text(
+                                'Observación: ' +
+                                    snapshot.data![index]["comments"]
+                                        .toString(),
+                                style: TextStyle(
+                                    fontSize: 15, fontWeight: FontWeight.bold),
+                              ),
+                              trailing: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                /*children: [
+                                    SizedBox(height: 30),
+                                  ],*/
+                              )),
+                          ListTile(
+                            title: Text(
+                              "Total: " + totalTxt,
+                              style: TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.bold),
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Container(
-                                  height: 40,
-                                  child: IconButton(
-                                    icon: Icon(Icons.add),
-                                    onPressed: () {
-                                      if (GetStorage().read('pedido') == null)
-                                        storage.write('pedido', {});
-                                      Map<String, dynamic> pedidoFinal =
-                                          pedidoInicial; //GetStorage().read('pedido');
-                                      pedidoFinal['cardCode'] =
-                                          snapshot.data![index]["cardCode"];
-                                      pedidoFinal['companyName'] =
-                                          snapshot.data![index]["companyName"];
-                                      pedidoFinal['comments'] =
-                                          snapshot.data![index]["comments"];
-                                      pedidoFinal['numAtCard'] =
-                                          snapshot.data![index]["numAtCard"];
-                                      pedidoFinal['shipToCode'] =
-                                          snapshot.data![index]["shipToCode"];
-                                      pedidoFinal['payToCode'] =
-                                          snapshot.data![index]["payToCode"];
-                                      pedidoFinal['discountPercent'] = snapshot
-                                          .data![index]["discountPercent"];
-                                      pedidoFinal['docTotal'] = totalTxt;
-                                      pedidoFinal['lineNum'] =
-                                          snapshot.data![index]["lineNum"] ??
-                                              '';
-                                      pedidoFinal['id'] =
-                                          snapshot.data![index]["id"];
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                height: 40,
+                                child: IconButton(
+                                  icon: Icon(Icons.add),
+                                  onPressed: () {
+                                    if (GetStorage().read('pedido') == null)
+                                      storage.write('pedido', {});
+                                    Map<String, dynamic> pedidoFinal =
+                                        pedidoInicial; //GetStorage().read('pedido');
+                                    pedidoFinal['cardCode'] =
+                                        snapshot.data![index]["cardCode"];
+                                    pedidoFinal['companyName'] =
+                                        snapshot.data![index]["companyName"];
+                                    pedidoFinal['comments'] =
+                                        snapshot.data![index]["comments"];
+                                    pedidoFinal['numAtCard'] =
+                                        snapshot.data![index]["numAtCard"];
+                                    pedidoFinal['shipToCode'] =
+                                        snapshot.data![index]["shipToCode"];
+                                    pedidoFinal['payToCode'] =
+                                        snapshot.data![index]["payToCode"];
+                                    pedidoFinal['discountPercent'] = snapshot
+                                        .data![index]["discountPercent"];
+                                    pedidoFinal['docTotal'] = totalTxt;
+                                    pedidoFinal['lineNum'] =
+                                        snapshot.data![index]["lineNum"] ?? '';
+                                    pedidoFinal['id'] =
+                                        snapshot.data![index]["id"];
 
-                                      List tempItemsList = snapshot.data![index]
-                                          ["detailSalesOrderSave"];
+                                    List tempItemsList = snapshot.data![index]
+                                        ["detailSalesOrderSave"];
 
-                                      /// Pasar a texto campo "quantity" "iva" y "price" que viende del servicio
-                                      tempItemsList.forEach((k) {
-                                        k['quantity'] =
-                                            k['quantity'].toString();
-                                        k['price'] = k['price'].toString();
-                                        k['iva'] = k['iva'].toString();
-                                      });
+                                    /// Pasar a texto campo "quantity" "iva" y "price" que viende del servicio
+                                    tempItemsList.forEach((k) {
+                                      k['quantity'] = k['quantity'].toString();
+                                      k['price'] = k['price'].toString();
+                                      k['iva'] = k['iva'].toString();
+                                    });
 
-                                      //pedidoFinal['detailSalesOrder']=snapshot.data![index]["detailSalesOrderSave"];
-                                      pedidoFinal['detailSalesOrder'] =
-                                          tempItemsList;
-                                      // print ("items Ordenes de venta: ");
-                                      // print (snapshot.data![index]["detailSalesOrderSave"]);
+                                    //pedidoFinal['detailSalesOrder']=snapshot.data![index]["detailSalesOrderSave"];
+                                    pedidoFinal['detailSalesOrder'] =
+                                        tempItemsList;
+                                    // print ("items Ordenes de venta: ");
+                                    // print (snapshot.data![index]["detailSalesOrderSave"]);
 
-                                      setState(() {
-                                        storage.write(
-                                            'pedidoGuardado', pedidoFinal);
-                                        storage.write(
-                                            'itemsPedido',
-                                            snapshot.data![index]
-                                                ["detailSalesOrderSave"]);
-                                        storage.write('pedido', pedidoFinal);
-                                        int idG = snapshot.data![index]["id"];
-                                        actualizarPedidoGuardado["id"] =
-                                            idG.toString();
-                                        storage.write('cardCode',
-                                            snapshot.data![index]["cardCode"]);
-                                        storage.write(
-                                            'actualizarPedidoGuardado',
-                                            actualizarPedidoGuardado);
-                                        storage.write(
-                                            'estadoPedido', 'guardado');
-                                      });
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                PedidosPage()),
-                                      );
-                                    },
-                                  ),
+                                    setState(() {
+                                      storage.write(
+                                          'pedidoGuardado', pedidoFinal);
+                                      storage.write(
+                                          'itemsPedido',
+                                          snapshot.data![index]
+                                              ["detailSalesOrderSave"]);
+                                      storage.write('pedido', pedidoFinal);
+                                      int idG = snapshot.data![index]["id"];
+                                      actualizarPedidoGuardado["id"] =
+                                          idG.toString();
+                                      storage.write('cardCode',
+                                          snapshot.data![index]["cardCode"]);
+                                      storage.write('actualizarPedidoGuardado',
+                                          actualizarPedidoGuardado);
+                                      storage.write('estadoPedido', 'guardado');
+                                    });
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => PedidosPage()),
+                                    );
+                                  },
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      return Text('Error al tratar de realizar la consulta');
-                    }
-                  });
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  } else {
+                    return Text('Error al tratar de realizar la consulta');
+                  }
+                },
+              );
             }
           }
         },
