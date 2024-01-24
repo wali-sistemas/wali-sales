@@ -127,7 +127,7 @@ class ProfilePage extends StatelessWidget {
                       SizedBox(height: 15),
                       Image.asset("./assets/wali.jpg", width: 100, height: 100),
                       SizedBox(height: 10),
-                      Text("Versión 10.3"),
+                      Text("Versión 10.4"),
                       Text("WALI COLMBIA SAS"),
                       Text("\n"),
                       Text("Todos los derechos reservados"),
