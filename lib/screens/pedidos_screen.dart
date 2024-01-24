@@ -1537,22 +1537,24 @@ class _TotalPedidoState extends State<TotalPedido> {
     return http.post(
       Uri.parse(url),
       headers: <String, String>{'Content-Type': 'application/json'},
-      body: jsonEncode(<String, dynamic>{
-        "cardCode": pedidoFinal['cardCode'],
-        "comments": observacionesController.text,
-        "companyName": empresa,
-        "numAtCard": fechaPedido,
-        "status": "G",
-        "shipToCode": dirEnvio,
-        "payToCode": pedidoFinal['payToCode'],
-        "slpCode": pedidoFinal['slpCode'],
-        "discountPercent": pedidoFinal['discountPercent'].toString(),
-        "docTotal": pedidoFinal['docTotal'],
-        "assignedShipToCode": null,
-        "lineNum": pedidoFinal['lineNum'],
-        "cardName": pedidoFinal['cardName'],
-        "detailSalesOrderSave": GetStorage().read('itemsPedido'),
-      }),
+      body: jsonEncode(
+        <String, dynamic>{
+          "cardCode": pedidoFinal['cardCode'],
+          "comments": observacionesController.text,
+          "companyName": empresa,
+          "numAtCard": fechaPedido,
+          "status": "G",
+          "shipToCode": dirEnvio,
+          "payToCode": pedidoFinal['payToCode'],
+          "slpCode": pedidoFinal['slpCode'],
+          "discountPercent": pedidoFinal['discountPercent'].toString(),
+          "docTotal": pedidoFinal['docTotal'],
+          "assignedShipToCode": null,
+          "lineNum": pedidoFinal['lineNum'],
+          "cardName": pedidoFinal['cardName'],
+          "detailSalesOrderSave": GetStorage().read('itemsPedido'),
+        },
+      ),
     );
   }
 
