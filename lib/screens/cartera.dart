@@ -225,10 +225,6 @@ class _carteraPageState extends State<CarteraPage> {
                     await _generateReportCartera(GetStorage().read('usuario'));
                 Map<String, dynamic> resultado = jsonDecode(response.body);
 
-                print("**************************");
-                print(resultado['content']);
-                print("**************************");
-
                 if (response.statusCode == 200 && resultado['content'] != "") {
                   _downloadCarteraGeneralPDF(
                     'http://wali.igbcolombia.com:8080/shared/' +
@@ -866,9 +862,7 @@ Widget carteraDetalle(BuildContext context) {
                             scheme: 'mailto',
                             path: "",
                             queryParameters: {
-                              'to': clienteDetalle["detailPortfolio"][index]
-                                      ["emailFE"]
-                                  .toString(),
+                              'to': clienteDetalle["emailFE"].toString(),
                               'subject': "Estado:Detalle-de-Cartera",
                               'body': "Tipo_de_documento:" +
                                   clienteDetalle["detailPortfolio"][index]
