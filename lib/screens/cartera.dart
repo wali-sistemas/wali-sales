@@ -161,6 +161,25 @@ class _carteraPageState extends State<CarteraPage> {
     }
   }
 
+  Future<http.Response> _generateReportCartera(String slpCode) async {
+    final String url =
+        'http://wali.igbcolombia.com:8080/manager/res/report/generate-report';
+    return http.post(
+      Uri.parse(url),
+      headers: <String, String>{'Content-Type': 'application/json'},
+      body: jsonEncode(
+        <String, dynamic>{
+          'id': slpCode,
+          "copias": 0,
+          "documento": "collection",
+          "companyName": empresa,
+          "origen": "S",
+          "imprimir": false
+        },
+      ),
+    );
+  }
+
   Future<void> _downloadCarteraGeneralPDF(String pdfUrl, String dateDoc) async {
     final response = await http.get(Uri.parse(pdfUrl));
 
@@ -199,24 +218,53 @@ class _carteraPageState extends State<CarteraPage> {
           IconButton(
             color: Colors.white,
             icon: Icon(Icons.download_outlined),
-            onPressed: () {
+            onPressed: () async {
               DateTime now = DateTime.now();
+              try {
+                http.Response response =
+                    await _generateReportCartera(GetStorage().read('usuario'));
+                Map<String, dynamic> resultado = jsonDecode(response.body);
 
-              _downloadCarteraGeneralPDF(
-                'http://wali.igbcolombia.com:8080/shared/' +
-                    GetStorage().read('empresa') +
-                    '/collection/' +
-                    GetStorage().read('usuario') +
-                    '.pdf',
-                DateFormat("yyyyMMdd-hhmm").format(now),
-              );
+                print("**************************");
+                print(resultado['content']);
+                print("**************************");
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Cartera general guardada en descargas'),
-                  duration: Duration(seconds: 3),
-                ),
-              );
+                if (response.statusCode == 200 && resultado['content'] != "") {
+                  _downloadCarteraGeneralPDF(
+                    'http://wali.igbcolombia.com:8080/shared/' +
+                        GetStorage().read('empresa') +
+                        '/collection/' +
+                        GetStorage().read('usuario') +
+                        '.pdf',
+                    DateFormat("yyyyMMdd-hhmm").format(now),
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Cartera general guardada en descargas'),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'No se pudo guardar el pedido, error de red, verifique conectividad por favor',
+                      ),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Error al generar el reporte de cartera general',
+                    ),
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              }
             },
           ),
         ],
@@ -359,8 +407,8 @@ class _carteraPageState extends State<CarteraPage> {
               cupo = "\$" + cupo.substring(0, decimalIndex);
             }
 
-            phone = "3226979043"; //resultado!["phone"];
-            emailCL = "sistemas@igbcolombia.com"; //resultado!["email"];
+            phone = resultado!["phone"].toString();
+            emailCL = resultado!["email"].toString();
           }
 
           return Card(
