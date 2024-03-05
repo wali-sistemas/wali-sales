@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
             BottomNavigationBarItem(
                 icon: Icon(Icons.store_outlined), label: 'Pedidos'),
             BottomNavigationBarItem(
-                icon: Icon(Icons.account_box), label: 'Cartera'),
+                icon: Icon(Icons.wallet_outlined), label: 'Cartera'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil')
           ],
         ),
@@ -112,7 +112,7 @@ class _HomePageState extends State<HomePage> {
     );
     AlertDialog alert = AlertDialog(
       title: Text("Atención"),
-      content: Text("Está seguro que desea salir de la aplicación?"),
+      content: Text("¿Está seguro que desea salir de la aplicación?"),
       actions: [
         cancelButton,
         continueButton,

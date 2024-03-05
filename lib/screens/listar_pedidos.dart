@@ -113,12 +113,14 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
         final data = resp["content"];
         //print(data.toString());
         if (!mounted) return;
-        setState(() {
-          _ventas = data;
+        setState(
+          () {
+            _ventas = data;
 
-          /// GUARDAR
-          storage.write('ventas', _ventas);
-        });
+            /// GUARDAR
+            storage.write('ventas', _ventas);
+          },
+        );
       }
     } else {
       _ventas = GetStorage().read('ventas');
@@ -128,45 +130,50 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Color.fromRGBO(30, 129, 235, 1),
-          leading: GestureDetector(
-            child: Icon(
-              Icons.arrow_back_ios,
-              color: Colors.white,
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => HomePage()),
-              );
-            },
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        leading: GestureDetector(
+          child: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
           ),
-          actions: [
-            CarritoPedido(),
-          ],
-          title: ListTile(
-            onTap: () {
-              showSearch(
-                context: context,
-                delegate: CustomSearchDelegatePedidos(),
-              );
-            },
-            title: Text('Buscar pedido', style: TextStyle(color: Colors.white)),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          },
+        ),
+        actions: [
+          CarritoPedido(),
+        ],
+        title: ListTile(
+          onTap: () {
+            showSearch(
+              context: context,
+              delegate: CustomSearchDelegatePedidos(),
+            );
+          },
+          title: Text(
+            'Buscar pedido',
+            style: TextStyle(color: Colors.white),
           ),
         ),
-        body: Center(
-            child: Column(
+      ),
+      body: Center(
+        child: Column(
           children: [
             IconButton(
-                icon: Icon(Icons.save),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const PedidosGuardadosPage()),
-                  );
-                }),
+              icon: Icon(Icons.save),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PedidosGuardadosPage(),
+                  ),
+                );
+              },
+            ),
             if (_showPedidos)
               Expanded(
                 child: ListView.builder(
@@ -226,7 +233,9 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
               ),
             pedidos(context),
           ],
-        )));
+        ),
+      ),
+    );
   }
 
   Widget pedidos(BuildContext context) {

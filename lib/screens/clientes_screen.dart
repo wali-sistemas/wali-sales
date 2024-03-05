@@ -78,8 +78,8 @@ class _ClientesPageState extends State<ClientesPage> {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
             empresa +
-            '?itemcode=0&whscode=0&slpcode=' +
-            usuario;
+            '?itemcode=0&whscode=0&slpcode=0';
+    //usuario;
     bool isConnected = await checkConnectivity();
     if (isConnected == false) {
       //print("Error de red");
