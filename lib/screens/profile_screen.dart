@@ -58,81 +58,85 @@ class ProfilePage extends StatelessWidget {
     String? nombreAsesor = GetStorage().read('nombreAsesor');
     String? emailAsesor = GetStorage().read('emailAsesor');
     return Scaffold(
-        body: AuthBackgroundProfile(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(height: 200),
-            CardContainer(
-              child: Container(
-                child: Form(
-                  child: Column(
-                    children: [
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: TextFormField(
-                          style: TextStyle(fontSize: 15),
-                          maxLines: null,
-                          readOnly: true,
-                          autocorrect: false,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
+      body: AuthBackgroundProfile(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(height: 200),
+              CardContainer(
+                child: Container(
+                  child: Form(
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          child: TextFormField(
+                            style: TextStyle(fontSize: 15),
+                            maxLines: null,
+                            readOnly: true,
+                            autocorrect: false,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
                               labelText: nombreAsesor,
                               prefixIcon: Icon(Icons.person),
-                              prefixIconColor: Color.fromRGBO(30, 129, 235, 1)),
+                              prefixIconColor: Color.fromRGBO(30, 129, 235, 1),
+                            ),
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 15),
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: TextFormField(
-                          style: TextStyle(fontSize: 20),
-                          readOnly: true,
-                          autocorrect: false,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
+                        SizedBox(height: 15),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          child: TextFormField(
+                            style: TextStyle(fontSize: 20),
+                            readOnly: true,
+                            autocorrect: false,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
                               // hintText: '*****',
                               labelText: usuario,
                               prefixIcon: Icon(Icons.contact_mail_outlined),
-                              prefixIconColor: Color.fromRGBO(30, 129, 235, 1)),
+                              prefixIconColor: Color.fromRGBO(30, 129, 235, 1),
+                            ),
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 15),
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 10),
-                              child: TextFormField(
-                                style: TextStyle(fontSize: 20),
-                                readOnly: true,
-                                autocorrect: false,
-                                keyboardType: TextInputType.emailAddress,
-                                initialValue: "",
-                                decoration: InputDecoration(
+                        SizedBox(height: 15),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 10),
+                                child: TextFormField(
+                                  style: TextStyle(fontSize: 20),
+                                  readOnly: true,
+                                  autocorrect: false,
+                                  keyboardType: TextInputType.emailAddress,
+                                  initialValue: "",
+                                  decoration: InputDecoration(
                                     //hintText: 'co',
                                     labelText: emailAsesor,
                                     prefixIcon: Icon(Icons.email_outlined),
                                     prefixIconColor:
-                                        Color.fromRGBO(30, 129, 235, 1)),
-                              ),
-                            )
-                          ],
+                                        Color.fromRGBO(30, 129, 235, 1),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 15),
-                      Image.asset("./assets/wali.jpg", width: 100, height: 100),
-                      SizedBox(height: 10),
-                      Text("Versión 10.4"),
-                      Text("WALI COLMBIA SAS"),
-                      Text("\n"),
-                      Text("Todos los derechos reservados"),
-                      SizedBox(height: 15),
-                      GestureDetector(
+                        SizedBox(height: 15),
+                        Image.asset("./assets/wali.jpg",
+                            width: 100, height: 100),
+                        SizedBox(height: 10),
+                        Text("Versión 10.6"),
+                        Text("WALI COLMBIA SAS"),
+                        Text("\n"),
+                        Text("Todos los derechos reservados"),
+                        SizedBox(height: 15),
+                        GestureDetector(
                           onTap: () {
                             _downloadPDF();
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -147,45 +151,47 @@ class ProfilePage extends StatelessWidget {
                           child: Text(
                             "Documentación",
                             style: TextStyle(color: Colors.blue),
-                          )),
-                      SizedBox(height: 15),
-                      GestureDetector(
-                        onTap: () async {
-                          _launchWhatsApp();
-                        },
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            FaIcon(FontAwesomeIcons.whatsapp),
-                            Text(
-                              '    Soporte   ',
-                              style: TextStyle(
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 15),
+                        GestureDetector(
+                          onTap: () async {
+                            _launchWhatsApp();
+                          },
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              FaIcon(FontAwesomeIcons.whatsapp),
+                              Text(
+                                '    Soporte   ',
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            FloatingActionButton(
-              heroTag: "btn2",
-              onPressed: () {
-                //con.signOut(),
-                showAlertDialog(context);
-              },
-              child: Icon(Icons.power_settings_new),
-              backgroundColor: Colors.red,
-            ),
-          ],
+              SizedBox(height: 20),
+              FloatingActionButton(
+                heroTag: "btn2",
+                onPressed: () {
+                  //con.signOut(),
+                  showAlertDialog(context);
+                },
+                child: Icon(Icons.power_settings_new),
+                backgroundColor: Colors.red,
+              ),
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 
   showAlertDialog(BuildContext context) {
@@ -203,6 +209,8 @@ class ProfilePage extends StatelessWidget {
         storage.remove('emailAsesor');
         storage.remove('nombreAsesor');
         storage.remove('datosClientes');
+        storage.remove('empresa');
+        storage.remove('observaciones');
         //storage.remove('items');
         Navigator.push(
           context,
@@ -234,8 +242,14 @@ class ProfilePage extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(left: 30, right: 30),
       child: ListTile(
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        subtitle: Text(subtitle, style: const TextStyle(color: Colors.blue)),
+        title: Text(
+          title,
+          style: const TextStyle(color: Colors.white),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(color: Colors.blue),
+        ),
         leading: Icon(iconData, color: Colors.blue),
       ),
     );

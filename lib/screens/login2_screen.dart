@@ -4,8 +4,8 @@ import 'package:productos_app/services/services.dart';
 import 'package:provider/provider.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:productos_app/ui/input_decorations.dart';
-import 'package:productos_app/widgets/widgets.dart';
-import 'package:get_storage/get_storage.dart';
+//import 'package:productos_app/widgets/widgets.dart';
+//import 'package:get_storage/get_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -23,65 +23,141 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.white,
-        body: SingleChildScrollView(
-            child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-              Image.asset(
-                'assets/arriba.jpg',
-                width: 410.8,
-                height: 73.4,
-                fit: BoxFit.cover,
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/arriba.jpg',
+              width: 410.8,
+              height: 73.4,
+              fit: BoxFit.cover,
+            ),
+            Align(
+              alignment: AlignmentDirectional(0, 0),
+              child: Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(0, 25, 0, 0),
+                child: Image.asset(
+                  'assets/wali.jpg',
+                  width: 130,
+                  height: 130,
+                  fit: BoxFit.fitHeight,
+                ),
               ),
-              Align(
-                alignment: AlignmentDirectional(0, 0),
-                child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 25, 0, 0),
-                  child: Image.asset(
-                    'assets/wali.jpg',
-                    width: 130,
-                    height: 130,
-                    fit: BoxFit.fitHeight,
+            ),
+            Align(
+              alignment: AlignmentDirectional(0.8, 0),
+              child: Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
+                child: Text(
+                  'By WALI',
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Color(0xFFBFC7D0),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-              Align(
-                alignment: AlignmentDirectional(0.8, 0),
-                child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
-                  child: Text(
-                    'By WALI',
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      color: Color(0xFFBFC7D0),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+            ),
+            Align(
+              alignment: AlignmentDirectional(-0.7, 0),
+              child: Text(
+                'Usuario',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Color(0xFFBFC7D0),
+                ),
+              ),
+            ),
+            Container(
+              width: MediaQuery.of(context).size.width * 0.75,
+              child: TextFormField(
+                controller: email,
+                autofocus: true,
+                obscureText: false,
+                decoration: InputDecoration(
+                  hintText: 'Usuario',
+                  hintStyle: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0xFF5850E0),
+                      width: 1,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4.0),
+                      topRight: Radius.circular(4.0),
+                    ),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x00000000),
+                      width: 1,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4.0),
+                      topRight: Radius.circular(4.0),
+                    ),
+                  ),
+                  errorBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x00000000),
+                      width: 1,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4.0),
+                      topRight: Radius.circular(4.0),
+                    ),
+                  ),
+                  focusedErrorBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x00000000),
+                      width: 1,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4.0),
+                      topRight: Radius.circular(4.0),
                     ),
                   ),
                 ),
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Color(0xFFBFC7D0),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              Align(
-                alignment: AlignmentDirectional(-0.7, 0),
+            ),
+            Align(
+              alignment: AlignmentDirectional(-0.7, 0),
+              child: Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(0, 50, 0, 0),
                 child: Text(
-                  'Usuario',
+                  'Contraseña',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     color: Color(0xFFBFC7D0),
                   ),
                 ),
               ),
-              Container(
+            ),
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 75),
+              child: Container(
                 width: MediaQuery.of(context).size.width * 0.75,
                 child: TextFormField(
-                  controller: email,
+                  obscureText: true,
+                  controller: password,
                   autofocus: true,
-                  obscureText: false,
+                  //obscureText: !_model.passwordFieldVisibility,
                   decoration: InputDecoration(
-                    hintText: 'Usuario',
+                    hintText: 'Cedula',
                     hintStyle: TextStyle(
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w500,
@@ -134,150 +210,77 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              Align(
-                alignment: AlignmentDirectional(-0.7, 0),
-                child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 50, 0, 0),
-                  child: Text(
-                    'Contraseña',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      color: Color(0xFFBFC7D0),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 75),
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.75,
-                  child: TextFormField(
-                    obscureText: true,
-                    controller: password,
-                    autofocus: true,
-                    //obscureText: !_model.passwordFieldVisibility,
-                    decoration: InputDecoration(
-                      hintText: 'Cedula',
-                      hintStyle: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                      ),
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0xFF5850E0),
-                          width: 1,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      errorBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedErrorBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                    ),
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      color: Color(0xFFBFC7D0),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-              Align(
-                alignment: AlignmentDirectional(0, 0),
-                child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 10),
-                  child: DropdownButton<String>(
-                    value: dropdownvalue,
-                    icon: const Icon(Icons.keyboard_arrow_down),
-                    items: items.map((String items) {
-                      return DropdownMenuItem(
-                        value: items,
-                        child: Text(items),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      storage.write("empresa", newValue);
-                      setState(() {
+            ),
+            Align(
+              alignment: AlignmentDirectional(0, 0),
+              child: Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 10),
+                child: DropdownButton<String>(
+                  value: dropdownvalue,
+                  icon: const Icon(Icons.keyboard_arrow_down),
+                  items: items.map((String items) {
+                    return DropdownMenuItem(
+                      value: items,
+                      child: Text(items),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    storage.write("empresa", newValue);
+                    setState(
+                      () {
                         dropdownvalue = newValue!;
-                      });
-                    },
-                  ),
+                      },
+                    );
+                  },
                 ),
               ),
-              MaterialButton(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  disabledColor: Colors.grey,
-                  elevation: 0,
-                  color: Colors.deepPurple,
-                  child: Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 80, vertical: 15),
-                      child: Text(
-                        'Ingresar',
-                        style: TextStyle(color: Colors.white),
-                      )),
-                  onPressed: () async {
-                    if (dropdownvalue == "Elija una empresa") {
-                      var snackBar = SnackBar(
-                        content: Text("Por favor elija una empresa"),
-                      );
-
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    } else {
-                      FocusScope.of(context).unfocus();
-                      final authService =
-                          Provider.of<AuthService>(context, listen: false);
-
-                      final String? errorMessage =
-                          await authService.login2(email.text, password.text);
-                      //final errorMessage = null;
-                      if (errorMessage == null) {
-                        storage.write("usuario", email.text);
-                        Navigator.pushReplacementNamed(context, 'home');
-                      } else {
-                        NotificationsService.showSnackbar(errorMessage);
-                      }
-                    }
-                  }),
-              Align(
-                child: Image.asset(
-                  'assets/abajo.jpg',
-                  width: 410.8,
-                  height: 73.4,
-                  fit: BoxFit.cover,
-                ),
-              )
-            ])));
+            ),
+            MaterialButton(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              disabledColor: Colors.grey,
+              elevation: 0,
+              color: Colors.deepPurple,
+              child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+                  child: Text(
+                    'Ingresar',
+                    style: TextStyle(color: Colors.white),
+                  )),
+              onPressed: () async {
+                if (dropdownvalue == "Elija una empresa") {
+                  var snackBar = SnackBar(
+                    content: Text("Por favor elija una empresa"),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                } else {
+                  FocusScope.of(context).unfocus();
+                  final authService =
+                      Provider.of<AuthService>(context, listen: false);
+                  final String? errorMessage =
+                      await authService.login2(email.text, password.text);
+                  //final errorMessage = null;
+                  if (errorMessage == null) {
+                    storage.write("usuario", email.text);
+                    Navigator.pushReplacementNamed(context, 'home');
+                  } else {
+                    NotificationsService.showSnackbar(errorMessage);
+                  }
+                }
+              },
+            ),
+            Align(
+              child: Image.asset(
+                'assets/abajo.jpg',
+                width: 410.8,
+                height: 73.4,
+                fit: BoxFit.cover,
+              ),
+            )
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -346,45 +349,45 @@ class _LoginFormState extends State<_LoginForm> {
             ),
             SizedBox(height: 30),
             MaterialButton(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                disabledColor: Colors.grey,
-                elevation: 0,
-                color: Colors.deepPurple,
-                child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 80, vertical: 15),
-                    child: Text(
-                      loginForm.isLoading ? 'Espere' : 'Ingresar',
-                      style: TextStyle(color: Colors.white),
-                    )),
-                onPressed: loginForm.isLoading
-                    ? null
-                    : () async {
-                        if (dropdownvalue == "Elija una empresa") {
-                          var snackBar = SnackBar(
-                            content: Text("Por favor elija una empresa"),
-                          );
-
-                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              disabledColor: Colors.grey,
+              elevation: 0,
+              color: Colors.deepPurple,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+                child: Text(
+                  loginForm.isLoading ? 'Espere' : 'Ingresar',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              onPressed: loginForm.isLoading
+                  ? null
+                  : () async {
+                      if (dropdownvalue == "Elija una empresa") {
+                        var snackBar = SnackBar(
+                          content: Text("Por favor elija una empresa"),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      } else {
+                        FocusScope.of(context).unfocus();
+                        final authService =
+                            Provider.of<AuthService>(context, listen: false);
+                        loginForm.isLoading = true;
+                        final String? errorMessage = await authService.login2(
+                            loginForm.email, loginForm.password);
+                        //final errorMessage = null;
+                        if (errorMessage == null) {
+                          storage.write("usuario", loginForm.email);
+                          Navigator.pushReplacementNamed(context, 'home');
                         } else {
-                          FocusScope.of(context).unfocus();
-                          final authService =
-                              Provider.of<AuthService>(context, listen: false);
-
-                          loginForm.isLoading = true;
-
-                          final String? errorMessage = await authService.login2(
-                              loginForm.email, loginForm.password);
-                          //final errorMessage = null;
-                          if (errorMessage == null) {
-                            storage.write("usuario", loginForm.email);
-                            Navigator.pushReplacementNamed(context, 'home');
-                          } else {
-                            NotificationsService.showSnackbar(errorMessage);
-                            loginForm.isLoading = false;
-                          }
+                          NotificationsService.showSnackbar(errorMessage);
+                          loginForm.isLoading = false;
                         }
-                      }),
+                      }
+                    },
+            ),
             SizedBox(height: 20),
             ////  LISTA
             Center(
@@ -402,11 +405,13 @@ class _LoginFormState extends State<_LoginForm> {
                     }).toList(),
                     onChanged: (newValue) {
                       storage.write("empresa", newValue);
-                      setState(() {
-                        //print("Seleccionado: ");
-                        //print(newValue);
-                        dropdownvalue = newValue!;
-                      });
+                      setState(
+                        () {
+                          //print("Seleccionado: ");
+                          //print(newValue);
+                          dropdownvalue = newValue!;
+                        },
+                      );
                     },
                   ),
                 ],

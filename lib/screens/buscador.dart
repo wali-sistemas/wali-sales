@@ -26,7 +26,7 @@ class CustomSearchDelegate extends SearchDelegate {
   List _itemsBuscador2 = [];
   String empresa = GetStorage().read('empresa');
 
-  Future<void> _listarStock(String item) async {
+  /*Future<void> _listarStock(String item) async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
             empresa +
@@ -43,7 +43,7 @@ class CustomSearchDelegate extends SearchDelegate {
     //setState(() {
     _stockB = data;
     //});
-  }
+  }*/
 
   @override
   List<Widget> buildActions(BuildContext context) {
