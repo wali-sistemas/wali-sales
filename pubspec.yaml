@@ -44,6 +44,7 @@ dependencies:
   flutter_cache_manager: ^3.2.0
   webview_flutter: ^2.0.13
   location: ^5.0.2
+  geolocator: ^11.0.0
 
 
 

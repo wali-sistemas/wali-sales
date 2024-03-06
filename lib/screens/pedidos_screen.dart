@@ -15,7 +15,8 @@ import 'package:productos_app/models/DatabaseHelper.dart';
 //import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:location/location.dart';
+//import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 
 class PedidosPage extends StatefulWidget {
   const PedidosPage({Key? key}) : super(key: key);
@@ -2298,7 +2299,7 @@ class _TotalPedidoState extends State<TotalPedido> {
     }
   }
 
-  Future<LocationData> activeteLocation() async {
+  /*Future<LocationData> activeteLocation() async {
     Location location = Location();
     bool serviceEnabled;
     LocationData locationData;
@@ -2308,6 +2309,42 @@ class _TotalPedidoState extends State<TotalPedido> {
       return locationData;
     } else {
       return new LocationData.fromMap({"latitude": 0.0, "longitude": 0.0});
+    }
+  }*/
+
+  Future<Position> activeteLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return new Position(
+            longitude: 0.0,
+            latitude: 0.0,
+            timestamp: null,
+            accuracy: 0.0,
+            altitude: 0.0,
+            altitudeAccuracy: 0.0,
+            heading: 0.0,
+            headingAccuracy: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0);
+      } else {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        return position;
+      }
+    } catch (e) {
+      return new Position(
+          longitude: 0.0,
+          latitude: 0.0,
+          timestamp: null,
+          accuracy: 0.0,
+          altitude: 0.0,
+          altitudeAccuracy: 0.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0);
     }
   }
 
@@ -2554,13 +2591,14 @@ class _TotalPedidoState extends State<TotalPedido> {
                           showAlertErrorDir(
                               context, "Obligatorio agregar ítems en detalle.");
                         } else {
-                          LocationData locationData = await activeteLocation();
+                          Position locationData = await activeteLocation();
                           if (locationData.latitude == 0.0 ||
                               locationData.longitude == 0.0) {
                             showAlertErrorDir(context,
-                                "Active la ubicación del móvil para poder continuar.");
-                            Location location = Location();
-                            location.getLocation();
+                                "Active la ubicación del móvil, y presione de nuevo guardar pedido.");
+                            Geolocator.getCurrentPosition(
+                              desiredAccuracy: LocationAccuracy.high,
+                            );
                           } else {
                             try {
                               http.Response response =
@@ -2621,13 +2659,14 @@ class _TotalPedidoState extends State<TotalPedido> {
                           showAlertErrorDir(
                               context, "Obligatorio agregar ítems en detalle.");
                         } else {
-                          LocationData locationData = await activeteLocation();
+                          Position locationData = await activeteLocation();
                           if (locationData.latitude == 0.0 ||
                               locationData.longitude == 0.0) {
                             showAlertErrorDir(context,
-                                "Active la ubicación del móvil para poder continuar.");
-                            Location location = Location();
-                            location.getLocation();
+                                "Active la ubicación del móvil, y presione de nuevo enviar pedido.");
+                            Geolocator.getCurrentPosition(
+                              desiredAccuracy: LocationAccuracy.high,
+                            );
                           } else {
                             try {
                               http.Response response =

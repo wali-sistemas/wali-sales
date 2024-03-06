@@ -7,7 +7,8 @@ import 'package:productos_app/widgets/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:location/location.dart';
+//import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 
 class LoginScreen extends StatelessWidget {
   @override
@@ -74,7 +75,7 @@ class _LoginFormState extends State<_LoginForm> {
     loadInitialData();
   }
 
-  Future<LocationData> activeteLocation() async {
+  /*Future<LocationData> activeteLocation() async {
     Location location = Location();
     bool serviceEnabled;
     LocationData locationData;
@@ -84,6 +85,42 @@ class _LoginFormState extends State<_LoginForm> {
       return locationData;
     } else {
       return new LocationData.fromMap({"latitude": 0.0, "longitude": 0.0});
+    }
+  }*/
+
+  Future<Position> activeteLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return new Position(
+            longitude: 0.0,
+            latitude: 0.0,
+            timestamp: null,
+            accuracy: 0.0,
+            altitude: 0.0,
+            altitudeAccuracy: 0.0,
+            heading: 0.0,
+            headingAccuracy: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0);
+      } else {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        return position;
+      }
+    } catch (e) {
+      return new Position(
+          longitude: 0.0,
+          latitude: 0.0,
+          timestamp: null,
+          accuracy: 0.0,
+          altitude: 0.0,
+          altitudeAccuracy: 0.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0);
     }
   }
 
@@ -174,7 +211,7 @@ class _LoginFormState extends State<_LoginForm> {
                 decoration: InputDecoration(
                   hintText: 'Digite usuario',
                   labelText: 'Usuario',
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: Icon(Icons.person_outline_rounded),
                   prefixIconColor: Color.fromRGBO(30, 129, 235, 1),
                 ),
                 onChanged: (value) => loginForm.email = value,
@@ -282,13 +319,16 @@ class _LoginFormState extends State<_LoginForm> {
                         if (errorMessage == null) {
                           storage.write("usuario", loginForm.email);
                           storage.write("clave", loginForm.password);
-                          LocationData locationData = await activeteLocation();
+                          Position locationData = await activeteLocation();
                           if (locationData.latitude == 0.0 ||
                               locationData.longitude == 0.0) {
                             NotificationsService.showSnackbar(
                                 "Active la ubicación del móvil para poder continuar.");
-                            Location location = Location();
-                            location.getLocation();
+                            Geolocator.getCurrentPosition(
+                              desiredAccuracy: LocationAccuracy.high,
+                            );
+                            /*Location location = Location();
+                            location.getLocation();*/
                             loginForm.isLoading = false;
                           } else {
                             try {
@@ -321,6 +361,15 @@ class _LoginFormState extends State<_LoginForm> {
                       }
                     },
             ),
+            SizedBox(height: 10),
+            Column(
+              children: [
+                Text(
+                  "Copyright © Walicolombia | 2024 Version 10.6",
+                  style: TextStyle(fontSize: 10),
+                ),
+              ],
+            )
           ],
         ),
       ),
