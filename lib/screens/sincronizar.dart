@@ -3,7 +3,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
-import 'package:location/location.dart';
+//import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:productos_app/widgets/carrito.dart';
 
 class SincronizarPage extends StatefulWidget {
@@ -75,7 +76,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
     }
   }
 
-  Future<LocationData> activeteLocation() async {
+  /*Future<LocationData> activeteLocation() async {
     Location location = Location();
     bool serviceEnabled;
     LocationData locationData;
@@ -85,6 +86,42 @@ class _SincronizarPageState extends State<SincronizarPage> {
       return locationData;
     } else {
       return new LocationData.fromMap({"latitude": 0.0, "longitude": 0.0});
+    }
+  }*/
+
+  Future<Position> activeteLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return new Position(
+            longitude: 0.0,
+            latitude: 0.0,
+            timestamp: null,
+            accuracy: 0.0,
+            altitude: 0.0,
+            altitudeAccuracy: 0.0,
+            heading: 0.0,
+            headingAccuracy: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0);
+      } else {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        return position;
+      }
+    } catch (e) {
+      return new Position(
+          longitude: 0.0,
+          latitude: 0.0,
+          timestamp: null,
+          accuracy: 0.0,
+          altitude: 0.0,
+          altitudeAccuracy: 0.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0);
     }
   }
 
@@ -320,8 +357,11 @@ class _SincronizarPageState extends State<SincronizarPage> {
                       btnGpsEnable = true;
                     },
                   );
-                  Location location = Location();
-                  location.getLocation();
+                  /*Location location = Location();
+                  location.getLocation();*/
+                  Geolocator.getCurrentPosition(
+                    desiredAccuracy: LocationAccuracy.high,
+                  );
                 }
                 Navigator.of(context).pop();
               },
@@ -602,7 +642,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
                             btnGpsEnable = false;
                           },
                         );
-                        LocationData locationData = await activeteLocation();
+                        Position locationData = await activeteLocation();
                         String errorREd = "";
                         if (locationData.latitude == 0.0 ||
                             locationData.longitude == 0.0) {
@@ -620,23 +660,26 @@ class _SincronizarPageState extends State<SincronizarPage> {
                                 jsonDecode(response!.body);
                             if (res['code'] < 0) {
                               errorREd =
-                                  ", error de red, verifique conectividad";
+                                  ", error de red, verifique conectividad.";
                             } else {
                               isSincGps = "Ok";
                             }
                           } catch (e) {
-                            errorREd = ", error de red, verifique conectividad";
+                            errorREd =
+                                ", error de red, verifique conectividad.";
                           }
                         }
                         if (isSincGps == "Ok") {
                           showAlert(context, "GPS sincronizado", "GPS");
                         } else {
                           if (isSincGps == "Error de red") {
-                            errorREd = ", error de red, verifique conectividad";
+                            errorREd =
+                                ", error de red, verifique conectividad.";
                             showAlertError(context,
                                 "No se pudo sincronizar GPS" + errorREd, "GPS");
                           } else {
-                            errorREd = ", active la ubicación";
+                            errorREd =
+                                ", active la ubicación y vuelva a lanzar.";
                             showAlertError(context,
                                 "No se pudo sincronizar GPS" + errorREd, "GPS");
                           }
