@@ -1,9 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'pedidos_screen.dart';
 
 List itemsGuardados = [];
@@ -13,7 +10,6 @@ var mainColor = Color(0xff1B3954);
 var textColor = Color(0xff727272);
 var accentColor = Color(0xff16ADE1);
 var whiteText = Color(0xffF5F5F5);
-List _itemsBuscador = [];
 List _stockB = [];
 
 class CustomSearchDelegate extends SearchDelegate {

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:productos_app/providers/login_form_provider.dart';
 import 'package:productos_app/services/services.dart';
@@ -7,7 +9,6 @@ import 'package:productos_app/widgets/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-//import 'package:location/location.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -15,6 +16,7 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return WillPopScope(
       child: Scaffold(
+        backgroundColor: Colors.white,
         body: AuthBackground(
           child: SingleChildScrollView(
             child: Column(
@@ -74,19 +76,6 @@ class _LoginFormState extends State<_LoginForm> {
     super.initState();
     loadInitialData();
   }
-
-  /*Future<LocationData> activeteLocation() async {
-    Location location = Location();
-    bool serviceEnabled;
-    LocationData locationData;
-    serviceEnabled = await location.serviceEnabled();
-    if (serviceEnabled) {
-      locationData = await location.getLocation();
-      return locationData;
-    } else {
-      return new LocationData.fromMap({"latitude": 0.0, "longitude": 0.0});
-    }
-  }*/
 
   Future<Position> activeteLocation() async {
     try {
@@ -365,7 +354,7 @@ class _LoginFormState extends State<_LoginForm> {
             Column(
               children: [
                 Text(
-                  "Copyright © Walicolombia | 2024 Version 10.6",
+                  "Copyright © WaliColombia | 2024 Version 10.7",
                   style: TextStyle(fontSize: 10),
                 ),
               ],

@@ -422,75 +422,153 @@ class _carteraPageState extends State<CarteraPage> {
                             fontSize: 17,
                             height: 1.5,
                           ),
-                          children: [
-                            TextSpan(
-                              text:
-                                  _cartera[index]["cardCode"].toString() + '\n',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            TextSpan(
-                              text:
-                                  _cartera[index]["cardName"].toString() + '\n',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            TextSpan(
-                              text: _cartera[index]["payCondition"].toString() +
-                                  '  -  Cupo Disponible: ' +
-                                  cupo.toString() +
-                                  '\n\n',
-                              style: TextStyle(
-                                fontSize: 14,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Sin vencer    ' +
-                                  ageSinVencer.toString() +
-                                  '\n',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            TextSpan(
-                              text:
-                                  '1 - 30 días  ' + age0a30.toString() + '  \n',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            TextSpan(
-                              text: '31 - 60 días    ' +
-                                  age30a60.toString() +
-                                  '\n',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            TextSpan(
-                              text: '61 - 90 días    ' +
-                                  age61a90.toString() +
-                                  '\n',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            TextSpan(
-                              text: '91 - 120 días    ' +
-                                  age91a120.toString() +
-                                  '\n',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            TextSpan(
-                              text: '+ 120 días    ' +
-                                  ageMas120.toString() +
-                                  '\n',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            TextSpan(
-                              text: 'Total: ' + totalCarteraS,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                          children: empresa == "REDPLAS"
+                              ? [
+                                  TextSpan(
+                                    text:
+                                        _cartera[index]["cardCode"].toString() +
+                                            '\n',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        _cartera[index]["cardName"].toString() +
+                                            '\n',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: _cartera[index]["payCondition"]
+                                            .toString() +
+                                        '  -  Cupo Disponible: ' +
+                                        cupo.toString() +
+                                        '\n\n',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Sin vencer    ' +
+                                        ageSinVencer.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '1 - 30 días  ' +
+                                        age0a30.toString() +
+                                        '  \n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '31 - 45 días    ' +
+                                        age30a60.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '46 - 60 días    ' +
+                                        age61a90.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '61 - 90 días    ' +
+                                        age91a120.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '+ 90 días    ' +
+                                        ageMas120.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: 'Total: ' + totalCarteraS,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ]
+                              : [
+                                  TextSpan(
+                                    text:
+                                        _cartera[index]["cardCode"].toString() +
+                                            '\n',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        _cartera[index]["cardName"].toString() +
+                                            '\n',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: _cartera[index]["payCondition"]
+                                            .toString() +
+                                        '  -  Cupo Disponible: ' +
+                                        cupo.toString() +
+                                        '\n\n',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Sin vencer    ' +
+                                        ageSinVencer.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '1 - 30 días  ' +
+                                        age0a30.toString() +
+                                        '  \n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '31 - 60 días    ' +
+                                        age30a60.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '61 - 90 días    ' +
+                                        age61a90.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '91 - 120 días    ' +
+                                        age91a120.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: '+ 120 días    ' +
+                                        ageMas120.toString() +
+                                        '\n',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  TextSpan(
+                                    text: 'Total: ' + totalCarteraS,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                         ),
                       ),
                     ],

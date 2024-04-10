@@ -50,9 +50,9 @@ class _ClientesPageState extends State<ClientesPage> {
     } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      String texto = "No se encontraron clientes para usuario " +
+      String texto = "No se encontraron clientes para el asesor " +
           codigo +
-          " y empresa " +
+          " en la empresa " +
           empresa;
 
       final codigoError = resp["code"];
@@ -114,9 +114,9 @@ class _ClientesPageState extends State<ClientesPage> {
 
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      String texto = "No se encontraron clientes para usuario " +
+      String texto = "No se encontraron clientes para el asesor " +
           codigo +
-          " y empresa " +
+          " en la empresa " +
           empresa;
 
       final codigoError = resp["code"];
@@ -153,6 +153,7 @@ class _ClientesPageState extends State<ClientesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(30, 129, 235, 1),
         leading: GestureDetector(
@@ -195,7 +196,7 @@ class _ClientesPageState extends State<ClientesPage> {
       itemBuilder: (context, index) {
         return Card(
           child: Container(
-            color: Colors.white,
+            color: Color.fromRGBO(250, 251, 253, 1),
             child: Padding(
               padding: EdgeInsets.all(8),
               child: ListTile(
@@ -219,7 +220,9 @@ class _ClientesPageState extends State<ClientesPage> {
                             _clientes[index]['cardCode'] &&
                         itemsPedidoLocal.length > 0) {
                       showAlertDialogItemsInShoppingCart(
-                          context, pedidoLocal["cardCode"]);
+                        context,
+                        _clientes[index]['cardCode'],
+                      );
                     } else {
                       storage.write('estadoPedido', 'nuevo');
                       storage.write('nit', _clientes[index]["nit"]);
@@ -233,7 +236,10 @@ class _ClientesPageState extends State<ClientesPage> {
                     }
                   },
                   label: const Text(''),
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(
+                    Icons.add,
+                    color: Colors.black54,
+                  ),
                 ),
               ),
             ),
@@ -247,17 +253,20 @@ class _ClientesPageState extends State<ClientesPage> {
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
       onPressed: () {
-        storage.write('nit', nit);
         Navigator.pop(context);
       },
     );
     Widget continueButton = ElevatedButton(
       child: Text("SI"),
       onPressed: () {
-        storage.remove('observaciones');
-        storage.remove('pedido');
-        storage.remove('itemsPedido');
-        storage.write('nit', nit);
+        storage.remove("observaciones");
+        storage.remove("pedido");
+        storage.remove("itemsPedido");
+        storage.remove("dirEnvio");
+        storage.remove("pedidoGuardado");
+        storage.write("estadoPedido", "nuevo");
+        storage.write('cardCode', nit);
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -269,7 +278,8 @@ class _ClientesPageState extends State<ClientesPage> {
     AlertDialog alert = AlertDialog(
       title: Text("Atención"),
       content: Text(
-          "Tiene ítmes pendientes para otro cliente, si continúa se borrarán e inciará un pedido nuevo, desea continuar?"),
+        "Tiene ítems pendientes para otro cliente, si continúa se borrarán e iniciará un pedido nuevo, desea continuar?",
+      ),
       actions: [
         cancelButton,
         continueButton,

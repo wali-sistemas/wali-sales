@@ -19,7 +19,7 @@ class ProfilePage extends StatelessWidget {
 
     if (response.statusCode == 200) {
       final Uint8List pdfBytes = response.bodyBytes;
-      final directory = await Directory.systemTemp.createTemp();
+      //final directory = await Directory.systemTemp.createTemp();
       final pdfFile = File('/storage/emulated/0/Download/instructivo1.pdf');
       await pdfFile.writeAsBytes(pdfBytes);
       //print("Archivo descargado");
@@ -32,8 +32,7 @@ class ProfilePage extends StatelessWidget {
 
   void _launchWhatsApp() async {
     final url = 'https://wa.me/';
-    var urlEnc = Uri.encodeFull(url);
-
+    //var urlEnc = Uri.encodeFull(url);
     if (await launchUrl(Uri.parse(
         'whatsapp://send?text=Hola, requiero soporte de Wali Sales acerca de:&phone=+573104226264'))) {
       await launchUrl(Uri.parse(
@@ -58,6 +57,7 @@ class ProfilePage extends StatelessWidget {
     String? nombreAsesor = GetStorage().read('nombreAsesor');
     String? emailAsesor = GetStorage().read('emailAsesor');
     return Scaffold(
+      backgroundColor: Colors.white,
       body: AuthBackgroundProfile(
         child: SingleChildScrollView(
           child: Column(
@@ -70,7 +70,9 @@ class ProfilePage extends StatelessWidget {
                       children: [
                         Container(
                           padding: EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
+                            horizontal: 10,
+                            vertical: 10,
+                          ),
                           child: TextFormField(
                             style: TextStyle(fontSize: 15),
                             maxLines: null,
@@ -87,7 +89,9 @@ class ProfilePage extends StatelessWidget {
                         SizedBox(height: 15),
                         Container(
                           padding: EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
+                            horizontal: 10,
+                            vertical: 10,
+                          ),
                           child: TextFormField(
                             style: TextStyle(fontSize: 20),
                             readOnly: true,
@@ -108,7 +112,9 @@ class ProfilePage extends StatelessWidget {
                             children: [
                               Container(
                                 padding: EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 10),
+                                  horizontal: 10,
+                                  vertical: 10,
+                                ),
                                 child: TextFormField(
                                   style: TextStyle(fontSize: 20),
                                   readOnly: true,
@@ -130,21 +136,20 @@ class ProfilePage extends StatelessWidget {
                         SizedBox(height: 15),
                         Image.asset("./assets/wali.jpg",
                             width: 100, height: 100),
-                        SizedBox(height: 10),
-                        Text("Versión 10.6"),
+                        SizedBox(height: 5),
+                        Text("Versión 10.7"),
                         Text("WALI COLMBIA SAS"),
-                        Text("\n"),
                         Text("Todos los derechos reservados"),
-                        SizedBox(height: 15),
+                        SizedBox(height: 10),
                         GestureDetector(
                           onTap: () {
                             _downloadPDF();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                    'Archivo guardado en carpeta Descargas'),
-                                duration: Duration(
-                                    seconds: 3), // Duración de la notificación
+                                  'Archivo guardado en carpeta Descargas',
+                                ),
+                                duration: Duration(seconds: 3),
                               ),
                             );
                           },
@@ -163,8 +168,9 @@ class ProfilePage extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               FaIcon(FontAwesomeIcons.whatsapp),
+                              SizedBox(width: 10),
                               Text(
-                                '    Soporte   ',
+                                'Línea de atención al cliente',
                                 style: TextStyle(
                                   color: Colors.blue,
                                 ),
@@ -177,16 +183,16 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               FloatingActionButton(
                 heroTag: "btn2",
                 onPressed: () {
-                  //con.signOut(),
                   showAlertDialog(context);
                 },
                 child: Icon(Icons.power_settings_new),
                 backgroundColor: Colors.red,
               ),
+              SizedBox(height: 40),
             ],
           ),
         ),

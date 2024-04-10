@@ -1,148 +1,162 @@
-import 'package:connectivity/connectivity.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter/material.dart';
-import 'package:get_storage/get_storage.dart';
 import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:connectivity/connectivity.dart';
+import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:productos_app/models/DatabaseHelper.dart';
-import 'package:productos_app/screens/buscador_productos.dart';
-import 'package:productos_app/screens/screens.dart';
+import 'pedidos_screen.dart';
+import 'package:http/http.dart' as http;
 
-class ProductosPage extends StatefulWidget {
-  const ProductosPage({Key? key}) : super(key: key);
+List itemsGuardados = [];
+List<String> allNames = [""];
+List<String> allNames2 = [""];
+var mainColor = Color(0xff1B3954);
+var textColor = Color(0xff727272);
+var accentColor = Color(0xff16ADE1);
+var whiteText = Color(0xffF5F5F5);
+List _stockB = [];
 
-  @override
-  State<ProductosPage> createState() => _ProductosPageState();
-}
-
-class _ProductosPageState extends State<ProductosPage> {
+class CustomSearchDelegate extends SearchDelegate {
+  var suggestion = [""];
+  List<String> searchResult = [];
+  TextEditingController cantidadController = TextEditingController();
+  TextEditingController observacionesController = TextEditingController();
   GetStorage storage = GetStorage();
-  String urlImagenItem = "";
+  List _itemsBuscador = [];
+  List _itemsBuscador2 = [];
   String empresa = GetStorage().read('empresa');
-  String usuario = GetStorage().read('usuario');
-  List _items = [];
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: DefaultTabController(
-        length: 1,
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            backgroundColor: Color.fromRGBO(30, 129, 235, 1),
-            leading: GestureDetector(
-              child: Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-              ),
-              onTap: () {
-                storage.remove('observaciones');
-                storage.remove("pedido");
-                storage.remove("itemsPedido");
-                storage.remove("dirEnvio");
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => HomePage(),
-                  ),
-                );
-              },
-            ),
-            title: ListTile(
-              onTap: () {
-                showSearch(
-                  context: context,
-                  delegate: CustomSearchDelegate(),
-                );
-              },
-              title: Text(
-                'Buscar producto',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            bottom: const TabBar(
-              tabs: [
-                Tab(
-                  child: Text(
-                    'Catálogo de productos',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          body: TabBarView(
-            children: [
-              //formulario(context),
-              items(context),
-              //detalle(context),
-              //total(context)
-            ],
-          ),
-        ),
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
       ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
     );
   }
 
-  Widget items(BuildContext context) {
-    _listarItems();
-    return SafeArea(
+  @override
+  Widget buildResults(BuildContext context) {
+    List _inventario = [];
+
+    if (GetStorage().read('items') == null) {
+      //print("allnames VACIO :  *******__________________________________");
+    } else {
+      _itemsBuscador.clear();
+      itemsGuardados = GetStorage().read('items');
+      itemsGuardados.forEach(
+        (k) {
+          allNames.add(k['itemName'].toString().toLowerCase());
+
+          List<String> palabras = query.split(' ');
+          if (palabras.isEmpty) palabras.add(query);
+          int n = 0;
+          palabras.forEach(
+            (element) {
+              if (k['itemName']
+                      .toLowerCase()
+                      .contains(element.trim().toLowerCase()) ||
+                  k['itemCode']
+                      .toLowerCase()
+                      .contains(element.trim().toLowerCase())) {
+                n++;
+              }
+            },
+          );
+          if (n == palabras.length) _itemsBuscador.add(k);
+        },
+      );
+    }
+    searchResult.clear();
+
+    searchResult = allNames
+        .where((element) =>
+            element.toLowerCase().contains(query.trim().toLowerCase()))
+        .toList();
+    return Container(
+      margin: EdgeInsets.all(20),
       child: ListView.builder(
-        itemCount: _items.length,
-        itemBuilder: (context, index) {
+        itemCount: _itemsBuscador.length,
+        itemBuilder: (context, indexB) {
+          if (_stockB.length > 0) {
+            _inventario = _stockB[0]['stockWarehouses'];
+          }
+
+          var listaBodegas = ['Elija una Bodega'];
+          for (var bodega in _inventario) {
+            listaBodegas.add('Bodega: ' +
+                bodega['whsCode'].toString() +
+                ': ' +
+                bodega['quantity'].toString());
+          }
           return Card(
             child: Padding(
-              padding: EdgeInsets.all(1),
-              child: Container(
-                color: Color.fromRGBO(250, 251, 253, 1),
-                child: ListTile(
-                  title: Text(
-                    _items[index]['itemName'],
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
+              padding: EdgeInsets.all(8),
+              child: ListTile(
+                title: Text(
+                  _itemsBuscador[indexB]['itemName'],
+                  style: TextStyle(
+                    fontSize: 15,
                   ),
-                  subtitle: Text(
-                    "Sku: " + _items[index]['itemCode'],
-                    style: TextStyle(
-                      fontSize: 13,
-                    ),
-                  ),
-                  leading: GestureDetector(
-                    onTap: () {
-                      urlImagenItem = _items[index]['pictureUrl'];
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) {
-                            return DetailScreen(_items[index]['pictureUrl']);
-                          },
-                        ),
-                      );
-                    },
-                    child: CachedNetworkImage(
-                      imageUrl: _items[index]['pictureUrl'],
-                      placeholder: (context, url) =>
-                          CircularProgressIndicator(),
-                      errorWidget: (context, url, error) =>
-                          Icon(Icons.wallpaper),
-                    ),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
+                ),
+                subtitle: Text("Código: " + _itemsBuscador[indexB]['itemCode']),
+                leading: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
                         builder: (_) {
-                          storage.write("index", index);
-                          return MyDialog();
+                          return DetailScreen(
+                            _itemsBuscador[indexB]['pictureUrl'],
+                          );
                         },
-                      );
-                    },
+                      ),
+                    );
+                  },
+                  child: CachedNetworkImage(
+                    imageUrl: _itemsBuscador[indexB]['pictureUrl'],
+                    placeholder: (context, url) => CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
                   ),
+                ),
+                trailing: TextButton.icon(
+                  onPressed: () {
+                    ///BUSCAR ITEM SELLECCIONADO
+                    int i = 0;
+                    int indexSeleccionado = 0;
+                    itemsGuardados.forEach(
+                      (item) {
+                        if (_itemsBuscador[indexB]['itemCode'] ==
+                            item['itemCode']) {
+                          indexSeleccionado = i;
+                        }
+                        i++;
+                      },
+                    );
+                    storage.write("index", indexSeleccionado);
+                    showDialog(
+                      context: context,
+                      builder: (_) {
+                        return MyDialog();
+                      },
+                    );
+                  },
+                  label: const Text(''),
+                  icon: const Icon(Icons.add),
                 ),
               ),
             ),
@@ -152,50 +166,92 @@ class _ProductosPageState extends State<ProductosPage> {
     );
   }
 
-  Future<void> _listarItems() async {
-    if (GetStorage().read('items') == null) {
-      final String apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
-              empresa +
-              '?slpcode=' +
-              usuario;
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      final data = resp["content"];
-      if (!mounted) return;
-      setState(() {
-        _items = data;
-
-        /// GUARDAR EN SHAREDPREFERENCES MIENTRAS SE HACE CON SQL
-        //String itemsG = jsonEncode(_items);
-        storage.write('items', _items);
-        //_guardarItems();
-      });
-    } else {
-      _items = GetStorage().read('items');
-    }
-  }
-}
-
-class DetailScreen extends StatelessWidget {
-  final String image;
-  const DetailScreen(this.image, {Key? key}) : super(key: key);
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: GestureDetector(
-        onTap: () {
-          Navigator.pop(context);
+  Widget buildSuggestions(BuildContext context) {
+    if (GetStorage().read('items') == null) {
+      //print("allnames VACIO :  *******__________________________________");
+    } else {
+      _itemsBuscador2.clear();
+      allNames2.clear();
+
+      itemsGuardados = GetStorage().read('items');
+      itemsGuardados.forEach(
+        (k) {
+          allNames2.add(k['itemName'].toString().toLowerCase());
+
+          List<String> palabras2 = query.split(' ');
+          if (palabras2.isEmpty) palabras2.add(query);
+
+          int m = 0;
+          palabras2.forEach(
+            (element2) {
+              if (element2.length > 1) {
+                if (k['itemName'].toLowerCase().contains(element2.toLowerCase())
+                    // || k['itemCode'].toLowerCase().contains(element2.trim().toLowerCase())
+                    ) {
+                  m++;
+                }
+              }
+            },
+          );
+          if (m == palabras2.length) {
+            _itemsBuscador2.add(k);
+          }
+          palabras2.clear();
         },
-        child: Center(
-          child: Hero(
-            tag: 'imageHero',
-            child: Image.network(
-              image,
+      );
+    }
+
+    if (query == "" || query == " ") {
+      _itemsBuscador2.clear();
+    }
+    return ListView.builder(
+      itemBuilder: (context, index) => ListTile(
+        onTap: () {
+          if (query.isEmpty) {
+            query = suggestion[index];
+          }
+        },
+        leading: Icon(query.isEmpty ? Icons.history : Icons.search),
+        trailing: TextButton.icon(
+          onPressed: () {
+            ///BUSCAR ITEM SELLECCIONADO
+            int i = 0;
+            int indexSeleccionado = 0;
+            itemsGuardados.forEach(
+              (item) {
+                if (_itemsBuscador2[index]['itemCode'] == item['itemCode']) {
+                  indexSeleccionado = i;
+                }
+                i++;
+              },
+            );
+
+            storage.write("index", indexSeleccionado);
+            showDialog(
+              context: context,
+              builder: (_) {
+                return MyDialog();
+              },
+            );
+          },
+          label: const Text(''),
+          icon: const Icon(Icons.add),
+        ),
+        title: RichText(
+          text: TextSpan(
+            text: _itemsBuscador2[index]["itemName"] +
+                '\n' +
+                _itemsBuscador2[index]["itemCode"],
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
             ),
           ),
         ),
       ),
+      itemCount: _itemsBuscador2.length,
     );
   }
 }
@@ -229,6 +285,7 @@ class _MyDialogState extends State<MyDialog> {
   int idPedidoDb = 0;
   int idLocal = 0;
   int fullStock = 0;
+  FocusNode _focusNode = FocusNode();
 
   Connectivity _connectivity = Connectivity();
   final itemTemp = {
@@ -248,6 +305,7 @@ class _MyDialogState extends State<MyDialog> {
   @override
   void initState() {
     super.initState();
+    _focusNode.requestFocus();
   }
 
   Future<void> _listarItems() async {

@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'buscador.dart';
+import 'buscador_items.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:productos_app/models/DatabaseHelper.dart';
@@ -89,20 +89,6 @@ class _PedidosPageState extends State<PedidosPage>
     datosClientesArr = clientesGuardados;
   }
 
-  /*Future<void> _leerDatosold() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    var userPref = pref.getString('datosClientes');
-    if (userPref != null) {
-      List<dynamic> clientesMap = jsonDecode(userPref);
-      if (!mounted) return;
-      setState(
-        () {
-          datosClientesArr = clientesMap;
-        },
-      );
-    }
-  }*/
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -110,6 +96,7 @@ class _PedidosPageState extends State<PedidosPage>
       home: DefaultTabController(
         length: 4,
         child: Scaffold(
+          backgroundColor: Colors.white,
           appBar: AppBar(
             backgroundColor: Color.fromRGBO(30, 129, 235, 1),
             leading: GestureDetector(
@@ -199,28 +186,13 @@ class _PedidosPageState extends State<PedidosPage>
     }
   }
 
-  /*Future<void> _selectDate(BuildContext context) async {
-    DateTime currentDate = DateTime.now();
-    final DateTime? pickedDate = await showDatePicker(
-        context: context,
-        initialDate: currentDate,
-        firstDate: DateTime(2015),
-        lastDate: DateTime(2050));
-    if (pickedDate != null && pickedDate != currentDate)
-      setState(
-        () {
-          currentDate = pickedDate;
-        },
-      );
-  }*/
-
   int findItemIndex(List<dynamic> list, dynamic item) {
     for (int i = 0; i < list.length; i++) {
       if (list[i] == item) {
         return i;
       }
     }
-    return -1; // Si el elemento no se encuentra en la lista
+    return -1;
   }
 
   @override
@@ -449,7 +421,7 @@ class _PedidosPageState extends State<PedidosPage>
             child: Padding(
               padding: EdgeInsets.all(1),
               child: Container(
-                color: Colors.white,
+                color: Color.fromRGBO(250, 251, 253, 1),
                 child: ListTile(
                   title: Text(
                     _items[index]['itemName'],
@@ -568,6 +540,7 @@ class _MyDialogState extends State<MyDialog> {
   int idPedidoDb = 0;
   int idLocal = 0;
   int fullStock = 0;
+  FocusNode _focusNode = FocusNode();
 
   Connectivity _connectivity = Connectivity();
   final itemTemp = {
@@ -587,62 +560,34 @@ class _MyDialogState extends State<MyDialog> {
   @override
   void initState() {
     super.initState();
-    //sincronizarStock();
+    _focusNode.requestFocus();
   }
 
   Future<void> _listarItems() async {
-    final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
-    final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
-    final data = resp["content"];
-    if (!mounted) return;
-    setState(
-      () {
-        _items = data;
-
-        /// GUARDAR EN SHAREDPREFERENCES MIENTRAS SE HACE CON SQL
-        //String itemsG = jsonEncode(_items);
-        storage.write('items', _items);
-        //_guardarItems();
-      },
-    );
-  }
-
-  /*Future<void> sincronizarStock() async {
-    final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
-            empresa +
-            '?itemcode=0&whscode=0&slpcode=0';
-    //usuario;
-    bool isConnected = await checkConnectivity();
-    if (isConnected == false) {
-      if (GetStorage().read('stockFull') != null) {
-        List _stockFullLocal = GetStorage().read('stockFull');
-        setState(
-          () {
-            _stockFull = _stockFullLocal;
-          },
-        );
-      }
-    } else {
+    if (GetStorage().read('items') == null) {
+      final String apiUrl =
+          'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
+              empresa +
+              '?slpcode=' +
+              usuario;
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      final codigoError = resp["code"];
-      if (codigoError == 0) {
-        final data = resp["content"];
-        if (!mounted) return;
-        setState(
-          () {
-            _stockFull = data;
+      final data = resp["content"];
+      if (!mounted) return;
+      setState(
+        () {
+          _items = data;
 
-            /// GUARDAR
-            storage.write('stockFull', _stock);
-          },
-        );
-      }
+          /// GUARDAR EN SHAREDPREFERENCES MIENTRAS SE HACE CON SQL
+          //String itemsG = jsonEncode(_items);
+          storage.write('items', _items);
+          //_guardarItems();
+        },
+      );
+    } else {
+      _items = GetStorage().read('items');
     }
-  }*/
+  }
 
   Future<int> _getStockByItemAndWhsCode(String item, String whsCode) async {
     final String apiUrl =
@@ -841,6 +786,7 @@ class _MyDialogState extends State<MyDialog> {
     }
 
     return AlertDialog(
+      backgroundColor: Colors.white,
       title: Text(
         itemsGuardados[index]['itemName'],
         style: TextStyle(fontSize: 14),
@@ -933,73 +879,85 @@ class _MyDialogState extends State<MyDialog> {
           height: 35,
           child: TextField(
             onChanged: (text) {
-              RegExp regex = RegExp(r'0+[1-9]');
-              if (text.length == 0) {
-                setState(
-                  () {
-                    btnAgregarActivo = false;
-                  },
-                );
-              }
-              if (text.isEmpty) {
-                btnAgregarActivo = false;
-              } else {
-                if (!areAllCharactersNumbers(text)) {
+              //TODO: Validar stock, si compañia es IGB o MOTOZONE
+              if (empresa != "REDPLAS") {
+                RegExp regex = RegExp(r'0+[1-9]');
+                if (text.length == 0) {
                   setState(
                     () {
-                      mensaje = "Cantidad debe ser numérica";
-                      textoVisible = true;
                       btnAgregarActivo = false;
                     },
                   );
+                }
+                if (text.isEmpty) {
+                  btnAgregarActivo = false;
                 } else {
-                  if (int.parse(text) > fullStock) {
+                  if (!areAllCharactersNumbers(text)) {
                     setState(
                       () {
-                        mensaje = "Cantidad es mayor al stock";
+                        mensaje = "Cantidad debe ser numérica";
                         textoVisible = true;
                         btnAgregarActivo = false;
                       },
                     );
                   } else {
-                    if (int.parse(text) < 1) {
+                    if (int.parse(text) > fullStock) {
                       setState(
                         () {
-                          mensaje = "Cantidad debe ser mayor a 0";
+                          mensaje = "Cantidad es mayor al stock";
                           textoVisible = true;
                           btnAgregarActivo = false;
                         },
                       );
                     } else {
-                      if (regex.hasMatch(text)) {
+                      if (int.parse(text) < 1) {
                         setState(
                           () {
-                            mensaje = "Cantidad contiene 0 a la izq";
+                            mensaje = "Cantidad debe ser mayor a 0";
                             textoVisible = true;
                             btnAgregarActivo = false;
                           },
                         );
                       } else {
-                        setState(
-                          () {
-                            mensaje = "";
-                            textoVisible = false;
-                            btnAgregarActivo = true;
-                          },
-                        );
+                        if (regex.hasMatch(text)) {
+                          setState(
+                            () {
+                              mensaje = "Cantidad contiene 0 a la izq";
+                              textoVisible = true;
+                              btnAgregarActivo = false;
+                            },
+                          );
+                        } else {
+                          setState(
+                            () {
+                              mensaje = "";
+                              textoVisible = false;
+                              btnAgregarActivo = true;
+                            },
+                          );
+                        }
                       }
                     }
                   }
                 }
+              } else {
+                setState(
+                  () {
+                    mensaje = "";
+                    textoVisible = false;
+                    btnAgregarActivo = true;
+                  },
+                );
               }
             },
             style: const TextStyle(color: Colors.black),
             controller: cantidadController,
             keyboardType: TextInputType.text,
+            focusNode: _focusNode,
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
-              hintText: 'Por favor ingrese cantidad',
+              //hintText: 'Por favor ingrese cantidad',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(5.0),
               ),
@@ -1088,7 +1046,9 @@ class _MyDialogState extends State<MyDialog> {
                               itemTemp["discountPorc"] = itemsGuardados[index]
                                       ["discountPorc"]
                                   .toString();
-                              itemTemp["whsCode"] = whsCodeStockItem;
+                              itemTemp["whsCode"] = whsCodeStockItem == null
+                                  ? "01"
+                                  : whsCodeStockItem.toString();
                               itemTemp["iva"] =
                                   itemsGuardados[index]["iva"].toString();
                               itemsPedido.add(itemTemp);
@@ -1177,7 +1137,9 @@ class _MyDialogState extends State<MyDialog> {
                             itemTemp["discountPorc"] = itemsGuardados[index]
                                     ["discountPorc"]
                                 .toString();
-                            itemTemp["whsCode"] = whsCodeStockItem;
+                            itemTemp["whsCode"] = whsCodeStockItem == null
+                                ? "01"
+                                : whsCodeStockItem.toString();
                             itemTemp["iva"] =
                                 itemsGuardados[index]["iva"].toString();
                             itemsPedido.add(itemTemp);
@@ -1374,7 +1336,10 @@ class _DetallePedidoState extends State<DetallePedido> {
     }
     return SafeArea(
       child: listaItems.isEmpty
-          ? Text("\n\n\n        Sin ítems")
+          ? Text(
+              "No se encontraron ítems agregados para mostar",
+              textAlign: TextAlign.center,
+            )
           : Column(
               children: [
                 Row(
@@ -1384,7 +1349,9 @@ class _DetallePedidoState extends State<DetallePedido> {
                       icon: Icon(Icons.delete),
                       onPressed: () {
                         showAlertDetailItems(
-                            context, "¿Está seguro de borrar todos los ítems?");
+                          context,
+                          "¿Está seguro de borrar todos los ítems?",
+                        );
                       },
                     ),
                     Text(
@@ -1434,11 +1401,12 @@ class _DetallePedidoState extends State<DetallePedido> {
                                       icon: Icon(Icons.delete),
                                       onPressed: () {
                                         showAlertDetailSingleItem(
-                                            context,
-                                            listaItems[index]['itemCode'],
-                                            "¿Está seguro de borrar el ítem " +
-                                                listaItems[index]['itemCode'] +
-                                                "?");
+                                          context,
+                                          listaItems[index]['itemCode'],
+                                          "¿Está seguro de borrar el ítem " +
+                                              listaItems[index]['itemCode'] +
+                                              "?",
+                                        );
                                       },
                                     ),
                                     IconButton(
@@ -1477,9 +1445,8 @@ class _DetallePedidoState extends State<DetallePedido> {
                                               _stock2[0]['stockWarehouses'];
                                           fullStock = _stock2[0]['stockFull'];
                                         }
-                                        num stockSuma = 0;
-                                        //int mayor = 0;
 
+                                        num stockSuma = 0;
                                         for (var bodega in _inventario) {
                                           if (bodega['quantity'] > 0 &&
                                               bodega['whsCode'] == zona) {
@@ -1505,7 +1472,6 @@ class _DetallePedidoState extends State<DetallePedido> {
                                           listaItems[index]['quantity'] =
                                               cant1.toInt().toString();
                                         } else {
-                                          //////////////
                                           showDialog(
                                             context: context,
                                             builder: (BuildContext context) {
@@ -1523,7 +1489,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                                                 ],
                                               );
                                             },
-                                          ); //////
+                                          );
                                         }
                                         storage.write("cantidadItem", 0);
                                       },
@@ -1591,7 +1557,8 @@ class _DetallePedidoState extends State<DetallePedido> {
                                             builder: (BuildContext context) {
                                               return AlertDialog(
                                                 title: Text(
-                                                    "La cantidad de ítems es menor a 1"),
+                                                  "La cantidad de ítems es menor a 1",
+                                                ),
                                                 actions: [
                                                   TextButton(
                                                     child: Text("Aceptar"),
@@ -1609,7 +1576,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(width: 16.0), // Espacio entre columnas
+                                SizedBox(width: 16.0),
                                 Expanded(
                                   child: Text(
                                     listaItems[index]['itemName'] +
@@ -1686,9 +1653,18 @@ class _TotalPedidoState extends State<TotalPedido> {
     String formatter = DateFormat('hhmm').format(now);
     formatter = formatter.replaceAll(":", "");
     String fecha = DateFormat("yyyyMMdd").format(now);
-    String fechaPedido = fecha.toString() +
-        pedidoFinal['cardCode'].toString() +
-        formatter.toString();
+    String numAtCard;
+
+    if (GetStorage().read('pedidoGuardado') == null) {
+      numAtCard = fecha.toString() +
+          pedidoFinal['cardCode'].toString() +
+          formatter.toString();
+    } else {
+      numAtCard = fecha.toString() +
+          pedidoFinal['cardCode'].toString() +
+          GetStorage().read('pedidoGuardado')['id'].toString();
+    }
+
     DatabaseHelper dbHelper = DatabaseHelper();
     dbHelper.deleteAllItemsP();
     dbHelper.deleteAllItems();
@@ -1700,7 +1676,7 @@ class _TotalPedidoState extends State<TotalPedido> {
         'cardCode': pedidoFinal['cardCode'],
         "comments": observacionesController.text,
         "companyName": empresa,
-        "numAtCard": fechaPedido,
+        "numAtCard": numAtCard,
         "shipToCode": dirEnvio,
         "payToCode": pedidoFinal['payToCode'],
         "slpCode": pedidoFinal['slpCode'],
@@ -1722,7 +1698,7 @@ class _TotalPedidoState extends State<TotalPedido> {
     String formatter = DateFormat('hhmm').format(now);
     formatter = formatter.replaceAll(":", "");
     String fecha = DateFormat("yyyyMMdd").format(now);
-    String fechaPedido = fecha.toString() +
+    String numAtCard = fecha.toString() +
         pedidoFinal['cardCode'].toString() +
         formatter.toString();
     return http.post(
@@ -1733,7 +1709,7 @@ class _TotalPedidoState extends State<TotalPedido> {
           "cardCode": pedidoFinal['cardCode'],
           "comments": observacionesController.text,
           "companyName": empresa,
-          "numAtCard": fechaPedido,
+          "numAtCard": numAtCard,
           "status": "G",
           "shipToCode": dirEnvio,
           "payToCode": pedidoFinal['payToCode'],
@@ -1748,39 +1724,6 @@ class _TotalPedidoState extends State<TotalPedido> {
       ),
     );
   }
-
-  /*Future<http.Response> _enviarPedidoTemp(
-      BuildContext context, Map<String, dynamic> pedidoFinal) {
-    final String url = 'http://179.50.4.120:8580/igb/igb.php';
-    //DateFormat formatter = DateFormat('hhmm');
-    DateTime now = DateTime.now();
-    //String formatter = DateFormat.Hms().format(now);
-    String formatter = DateFormat('hhmm').format(now);
-    formatter = formatter.replaceAll(":", "");
-    String fecha = DateFormat("yyyyMMdd").format(now);
-    String fechaPedido = fecha.toString() +
-        pedidoFinal['cardCode'].toString() +
-        formatter.toString();
-    DatabaseHelper dbHelper = DatabaseHelper();
-    dbHelper.deleteAllItems();
-    return http.post(
-      Uri.parse(url),
-      headers: <String, String>{'Content-Type': 'application/json'},
-      body: jsonEncode(<String, dynamic>{
-        'cardCode': pedidoFinal['cardCode'],
-        "comments": observacionesController.text,
-        "companyName": "IGB",
-        "numAtCard": fechaPedido,
-        "shipToCode": pedidoFinal['shipToCode'],
-        "payToCode": pedidoFinal['payToCode'],
-        "slpCode": pedidoFinal['slpCode'],
-        "discountPercent": pedidoFinal['discountPercent'].toString(),
-        "docTotal": pedidoFinal['docTotal'],
-        "lineNum": pedidoFinal['lineNum'],
-        "detailSalesOrder": GetStorage().read('itemsPedido'),
-      }),
-    );
-  }*/
 
   int restarStock(String item, String bodegaB, int cantidad) {
     if (GetStorage().read('stockFull') != null) {
@@ -1910,7 +1853,9 @@ class _TotalPedidoState extends State<TotalPedido> {
 
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
+                  MaterialPageRoute(
+                    builder: (context) => HomePage(),
+                  ),
                 );
               },
               child: Text('OK'),
@@ -2016,22 +1961,27 @@ class _TotalPedidoState extends State<TotalPedido> {
                               setState(
                                 () {
                                   actualizarEstadoPed(
-                                      GetStorage().read('pedidoGuardado')['id'],
-                                      0,
-                                      'C');
+                                    GetStorage().read('pedidoGuardado')['id'],
+                                    0,
+                                    'C',
+                                  );
                                 },
                               );
                             } else {
-                              showAlertError(context,
-                                  "No se pudo guardar el pedido, error de red, verifique conectividad por favor");
+                              showAlertError(
+                                context,
+                                "No se pudo guardar el pedido, error de red, verifique conectividad por favor",
+                              );
                             }
                           } catch (e) {
                             setState(
                               () {
-                                Get.snackbar('Error',
-                                    'El servicio no responde, contacte al administrador',
-                                    colorText: Colors.red,
-                                    backgroundColor: Colors.white);
+                                Get.snackbar(
+                                  'Error',
+                                  'El servicio no responde, contacte al administrador',
+                                  colorText: Colors.red,
+                                  backgroundColor: Colors.white,
+                                );
                               },
                             );
                           }
@@ -2134,10 +2084,10 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 setState(
                                   () {
                                     actualizarEstadoPed(
-                                        int.parse(
-                                            actualizarPedidoGuardado["id"]),
-                                        resultado['content'],
-                                        'F');
+                                      int.parse(actualizarPedidoGuardado["id"]),
+                                      resultado['content'],
+                                      'F',
+                                    );
                                   },
                                 );
                               }
@@ -2155,13 +2105,17 @@ class _TotalPedidoState extends State<TotalPedido> {
                               );*/
                             } else {
                               Get.snackbar(
-                                  'Error', 'No se pudo crear el pedido',
-                                  colorText: Colors.red,
-                                  backgroundColor: Colors.white);
+                                'Error',
+                                'No se pudo crear el pedido',
+                                colorText: Colors.red,
+                                backgroundColor: Colors.white,
+                              );
                             }
                           } else {
-                            showAlertError(context,
-                                "No se pudo enviar el pedido, error de red, verifique conectividad por favor");
+                            showAlertError(
+                              context,
+                              "No se pudo enviar el pedido, error de red, verifique conectividad por favor",
+                            );
                           }
                         }
                       : null,
@@ -2584,18 +2538,24 @@ class _TotalPedidoState extends State<TotalPedido> {
                             GetStorage().read('dirEnvio') == "" ||
                             GetStorage().read('dirEnvio') ==
                                 "Elija un destino") {
-                          showAlertErrorDir(context,
-                              "Obligatorio seleccionar la dirección de destino.");
+                          showAlertErrorDir(
+                            context,
+                            "Obligatorio seleccionar la dirección de destino.",
+                          );
                         } else if (GetStorage().read('itemsPedido') == null ||
                             GetStorage().read('itemsPedido') == "") {
                           showAlertErrorDir(
-                              context, "Obligatorio agregar ítems en detalle.");
+                            context,
+                            "Obligatorio agregar ítems en detalle.",
+                          );
                         } else {
                           Position locationData = await activeteLocation();
                           if (locationData.latitude == 0.0 ||
                               locationData.longitude == 0.0) {
-                            showAlertErrorDir(context,
-                                "Active la ubicación del móvil, y presione de nuevo guardar pedido.");
+                            showAlertErrorDir(
+                              context,
+                              "Active la ubicación del móvil, y presione de nuevo guardar pedido.",
+                            );
                             Geolocator.getCurrentPosition(
                               desiredAccuracy: LocationAccuracy.high,
                             );
@@ -2620,8 +2580,10 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 showAlertErrorDir(context, res['content']);
                               }
                             } catch (e) {
-                              showAlertErrorDir(context,
-                                  "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente");
+                              showAlertErrorDir(
+                                context,
+                                "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente",
+                              );
                             }
                           }
                         }
@@ -2652,18 +2614,24 @@ class _TotalPedidoState extends State<TotalPedido> {
                             GetStorage().read('dirEnvio') == "" ||
                             GetStorage().read('dirEnvio') ==
                                 "Elija un destino") {
-                          showAlertErrorDir(context,
-                              "Obligatorio seleccionar la dirección de destino.");
+                          showAlertErrorDir(
+                            context,
+                            "Obligatorio seleccionar la dirección de destino.",
+                          );
                         } else if (GetStorage().read('itemsPedido') == null ||
                             GetStorage().read('itemsPedido') == "") {
                           showAlertErrorDir(
-                              context, "Obligatorio agregar ítems en detalle.");
+                            context,
+                            "Obligatorio agregar ítems en detalle.",
+                          );
                         } else {
                           Position locationData = await activeteLocation();
                           if (locationData.latitude == 0.0 ||
                               locationData.longitude == 0.0) {
-                            showAlertErrorDir(context,
-                                "Active la ubicación del móvil, y presione de nuevo enviar pedido.");
+                            showAlertErrorDir(
+                              context,
+                              "Active la ubicación del móvil, y presione de nuevo enviar pedido.",
+                            );
                             Geolocator.getCurrentPosition(
                               desiredAccuracy: LocationAccuracy.high,
                             );
@@ -2688,8 +2656,10 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 showAlertErrorDir(context, res['content']);
                               }
                             } catch (e) {
-                              showAlertErrorDir(context,
-                                  "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente");
+                              showAlertErrorDir(
+                                context,
+                                "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente",
+                              );
                             }
                           }
                         }

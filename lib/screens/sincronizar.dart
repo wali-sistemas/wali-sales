@@ -380,10 +380,10 @@ class _SincronizarPageState extends State<SincronizarPage> {
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(30, 129, 235, 1),
         leading: GestureDetector(
-          child: Icon(
+          /*child: Icon(
             Icons.arrow_back_ios,
             color: Color.fromRGBO(30, 129, 235, 1),
-          ),
+          ),*/
           onTap: () {
             /*Navigator.push(
               context,

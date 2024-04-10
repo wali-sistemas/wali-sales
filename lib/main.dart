@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:productos_app/screens/dashboard_screen.dart';
-import 'package:productos_app/screens/profile_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:productos_app/screens/screens.dart';

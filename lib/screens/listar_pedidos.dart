@@ -1,7 +1,9 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:productos_app/screens/pedidosGuardados.dart';
+import 'package:productos_app/screens/pedidos_guardados.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:productos_app/screens/home_screen.dart';
@@ -81,6 +83,47 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
     pedidosG = pedidos;
   }
 
+  Future<http.Response> _generateReportOrderDetail(String docNum) async {
+    print("*********************");
+    print(docNum);
+    print("*********************");
+
+    final String url =
+        'http://wali.igbcolombia.com:8080/manager/res/report/generate-report';
+    return http.post(
+      Uri.parse(url),
+      headers: <String, String>{'Content-Type': 'application/json'},
+      body: jsonEncode(
+        <String, dynamic>{
+          'id': docNum,
+          "copias": 0,
+          "documento": "orderDetail",
+          "companyName": empresa,
+          "origen": "S",
+          "imprimir": false
+        },
+      ),
+    );
+  }
+
+  Future<void> _downloadDetailOrderPDF(
+      String pdfUrl, String dateDoc, String docNum) async {
+    final response = await http.get(Uri.parse(pdfUrl));
+
+    if (response.statusCode == 200) {
+      final Uint8List pdfBytes = response.bodyBytes;
+      final directory = await Directory.systemTemp.createTemp();
+      final pdfFile = File('/storage/emulated/0/Download/Detalle-Orden[' +
+          docNum +
+          '-' +
+          dateDoc +
+          '].pdf');
+      await pdfFile.writeAsBytes(pdfBytes);
+    } else {
+      throw Exception('Error al descargar el detalle de la orden');
+    }
+  }
+
   void _mostrarPedidos() {
     setState(() {
       _showPedidos = !_showPedidos;
@@ -130,6 +173,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(30, 129, 235, 1),
         leading: GestureDetector(
@@ -155,7 +199,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
             );
           },
           title: Text(
-            'Buscar pedido',
+            'Buscar enviados',
             style: TextStyle(color: Colors.white),
           ),
         ),
@@ -163,16 +207,25 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
       body: Center(
         child: Column(
           children: [
-            IconButton(
-              icon: Icon(Icons.save),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PedidosGuardadosPage(),
-                  ),
-                );
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.calendar_today),
+                  onPressed: _toggleCalendar,
+                ),
+                IconButton(
+                  icon: Icon(Icons.save),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PedidosGuardadosPage(),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
             if (_showPedidos)
               Expanded(
@@ -184,7 +237,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                         padding: EdgeInsets.all(8),
                         child: ListTile(
                           title: Text(
-                            'Fecha: ' +
+                            'Fechaa: ' +
                                 pedidosG[index].id.toString() +
                                 ' - Nit: ' +
                                 pedidosG[index].cardCode.toString() +
@@ -214,10 +267,6 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                   },
                 ),
               ),
-            IconButton(
-              icon: Icon(Icons.calendar_today),
-              onPressed: _toggleCalendar,
-            ),
             if (_showCalendar)
               Container(
                 child: TableCalendar(
@@ -252,28 +301,92 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
           }
           return Card(
             child: Container(
-              color: Colors.white,
+              color: Color.fromRGBO(250, 251, 253, 1),
               child: Padding(
-                padding: EdgeInsets.all(8),
-                child: ListTile(
-                  title: Text(
-                    'Fecha: ' +
-                        _ventas[index]["docDate"].toString() +
-                        ' - Nit: ' +
-                        _ventas[index]["cardCode"].toString() +
-                        '\n' +
-                        _ventas[index]["cardName"].toString() +
-                        '\n' +
-                        'Orden: ' +
-                        _ventas[index]["docNum"].toString(),
-                    style: TextStyle(
-                      fontSize: 15,
+                padding: EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Fecha: ' +
+                                _ventas[index]["docDate"].toString() +
+                                ' - Nit: ' +
+                                _ventas[index]["cardCode"].toString() +
+                                '\n' +
+                                _ventas[index]["cardName"].toString() +
+                                '\n' +
+                                'Orden: ' +
+                                _ventas[index]["docNum"].toString(),
+                            style: TextStyle(
+                              fontSize: 15,
+                            ),
+                          ),
+                          Text(
+                            "Total: " + total,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  subtitle: Text(
-                    "Total: " + total,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                    IconButton(
+                      onPressed: () async {
+                        try {
+                          http.Response response =
+                              await _generateReportOrderDetail(
+                                  _ventas[index]["docNum"].toString());
+
+                          Map<String, dynamic> resultado =
+                              jsonDecode(response.body);
+
+                          if (response.statusCode == 200 &&
+                              resultado['content'] != "") {
+                            _downloadDetailOrderPDF(
+                              'http://wali.igbcolombia.com:8080/shared/' +
+                                  GetStorage().read('empresa') +
+                                  '/sales/orderDetail/' +
+                                  _ventas[index]["docNum"].toString() +
+                                  '.pdf',
+                              DateFormat("yyyyMMdd-hhmm").format(now),
+                              _ventas[index]["docNum"].toString(),
+                            );
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Detalle de la orden guardada en descargas'),
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'No se pudo guardar el pedido, error de red, verifique conectividad por favor',
+                                ),
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Error al generar el reporte para ver el detalle de la orden',
+                              ),
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      },
+                      icon: Icon(Icons.remove_red_eye_outlined),
+                    ),
+                  ],
                 ),
               ),
             ),
