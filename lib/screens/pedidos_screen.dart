@@ -1655,7 +1655,8 @@ class _TotalPedidoState extends State<TotalPedido> {
     String fecha = DateFormat("yyyyMMdd").format(now);
     String numAtCard;
 
-    if (GetStorage().read('pedidoGuardado') == null) {
+    if (GetStorage().read('pedidoGuardado') == null ||
+        GetStorage().read('pedidoGuardado').isEmpty) {
       numAtCard = fecha.toString() +
           pedidoFinal['cardCode'].toString() +
           formatter.toString();
@@ -1672,23 +1673,25 @@ class _TotalPedidoState extends State<TotalPedido> {
     return http.post(
       Uri.parse(url),
       headers: <String, String>{'Content-Type': 'application/json'},
-      body: jsonEncode(<String, dynamic>{
-        'cardCode': pedidoFinal['cardCode'],
-        "comments": observacionesController.text,
-        "companyName": empresa,
-        "numAtCard": numAtCard,
-        "shipToCode": dirEnvio,
-        "payToCode": pedidoFinal['payToCode'],
-        "slpCode": pedidoFinal['slpCode'],
-        "discountPercent": pedidoFinal['discountPercent'].toString(),
-        "docTotal": pedidoFinal['docTotal'],
-        "lineNum": pedidoFinal['lineNum'],
-        "detailSalesOrder": GetStorage().read('itemsPedido'),
-      }),
+      body: jsonEncode(
+        <String, dynamic>{
+          'cardCode': pedidoFinal['cardCode'],
+          "comments": observacionesController.text,
+          "companyName": empresa,
+          "numAtCard": numAtCard,
+          "shipToCode": dirEnvio,
+          "payToCode": pedidoFinal['payToCode'],
+          "slpCode": pedidoFinal['slpCode'],
+          "discountPercent": pedidoFinal['discountPercent'].toString(),
+          "docTotal": pedidoFinal['docTotal'],
+          "lineNum": pedidoFinal['lineNum'],
+          "detailSalesOrder": GetStorage().read('itemsPedido'),
+        },
+      ),
     );
   }
 
-  Future<http.Response> _enviarPedidoGuardado(
+  Future<http.Response> _guardarPedido(
       BuildContext context, Map<String, dynamic> pedidoFinal) {
     final String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/save-order';
@@ -1940,8 +1943,7 @@ class _TotalPedidoState extends State<TotalPedido> {
 
                           try {
                             http.Response response =
-                                await _enviarPedidoGuardado(
-                                    context, pedidoFinal);
+                                await _guardarPedido(context, pedidoFinal);
                             Map<String, dynamic> resultado =
                                 jsonDecode(response.body);
 
