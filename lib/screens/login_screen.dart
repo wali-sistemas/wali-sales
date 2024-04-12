@@ -354,7 +354,7 @@ class _LoginFormState extends State<_LoginForm> {
             Column(
               children: [
                 Text(
-                  "Copyright © WaliColombia | 2024 Version 10.7",
+                  "Copyright © WaliColombia | 2024 Version 10.8",
                   style: TextStyle(fontSize: 10),
                 ),
               ],
