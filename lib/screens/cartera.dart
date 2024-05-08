@@ -10,6 +10,7 @@ import 'package:productos_app/screens/home_screen.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 
 class CarteraPage extends StatefulWidget {
   const CarteraPage({Key? key}) : super(key: key);
@@ -161,7 +162,8 @@ class _carteraPageState extends State<CarteraPage> {
     }
   }
 
-  Future<http.Response> _generateReportCartera(String slpCode) async {
+  Future<http.Response> _generateReport(
+      String id, String document, String origen) async {
     final String url =
         'http://wali.igbcolombia.com:8080/manager/res/report/generate-report';
     return http.post(
@@ -169,28 +171,34 @@ class _carteraPageState extends State<CarteraPage> {
       headers: <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
-          'id': slpCode,
+          'id': id,
           "copias": 0,
-          "documento": "collection",
+          "documento": document,
           "companyName": empresa,
-          "origen": "S",
+          "origen": origen,
           "imprimir": false
         },
       ),
     );
   }
 
-  Future<void> _downloadCarteraGeneralPDF(String pdfUrl, String dateDoc) async {
+  Future<void> _downloadReportPDF(
+      String pdfUrl, String dateDoc, String document, String cardCode) async {
     final response = await http.get(Uri.parse(pdfUrl));
 
     if (response.statusCode == 200) {
       final Uint8List pdfBytes = response.bodyBytes;
       final directory = await Directory.systemTemp.createTemp();
-      final pdfFile = File(
-          '/storage/emulated/0/Download/CarteraGeneral[' + dateDoc + '].pdf');
+      final pdfFile = File('/storage/emulated/0/Download/' +
+          document +
+          '-' +
+          cardCode +
+          '[' +
+          dateDoc +
+          '].pdf');
       await pdfFile.writeAsBytes(pdfBytes);
     } else {
-      throw Exception('Error al descargar la cartera general');
+      throw Exception('Error al descargar el documento');
     }
   }
 
@@ -221,18 +229,20 @@ class _carteraPageState extends State<CarteraPage> {
             onPressed: () async {
               DateTime now = DateTime.now();
               try {
-                http.Response response =
-                    await _generateReportCartera(GetStorage().read('usuario'));
+                http.Response response = await _generateReport(
+                    GetStorage().read('usuario'), "collection", "S");
                 Map<String, dynamic> resultado = jsonDecode(response.body);
 
                 if (response.statusCode == 200 && resultado['content'] != "") {
-                  _downloadCarteraGeneralPDF(
+                  _downloadReportPDF(
                     'http://wali.igbcolombia.com:8080/shared/' +
                         GetStorage().read('empresa') +
                         '/collection/' +
                         GetStorage().read('usuario') +
                         '.pdf',
                     DateFormat("yyyyMMdd-hhmm").format(now),
+                    "CarteraGeneral",
+                    "",
                   );
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -600,40 +610,90 @@ class _carteraPageState extends State<CarteraPage> {
                       IconButton(
                         icon: Icon(Icons.mail_outline),
                         onPressed: () async {
-                          final Uri emailUri = Uri(
-                            scheme: 'mailto',
-                            path: "",
-                            queryParameters: {
-                              'to': emailCL,
-                              'subject': "Estado:Edad-de-Cartera-" +
-                                  _cartera[index]["cardCode"].toString(),
-                              'body': _cartera[index]["cardName"].toString() +
-                                  "\n\nSin-vencer:" +
-                                  ageSinVencer.toString() +
-                                  "\n1a30-días:" +
-                                  age0a30.toString() +
-                                  "\n30a60-días:" +
-                                  age30a60.toString() +
-                                  "\n61a90-días:" +
-                                  age61a90.toString() +
-                                  "\n91a120-días:" +
-                                  age91a120.toString() +
-                                  "\nMas120-días:" +
-                                  ageMas120.toString() +
-                                  "\nTotal:" +
-                                  totalCarteraS.toString() +
-                                  "\nCupo-Disponible:" +
-                                  cupo.toString(),
-                              'attachment': ''
-                            },
+                          DateTime now = DateTime.now();
+                          try {
+                            http.Response response = await _generateReport(
+                                _cartera[index]["cardCode"].toString(),
+                                "accountSetting",
+                                "S");
+                            Map<String, dynamic> resultado =
+                                jsonDecode(response.body);
+
+                            if (response.statusCode == 200 &&
+                                resultado['content'] != "") {
+                              _downloadReportPDF(
+                                'http://wali.igbcolombia.com:8080/shared/' +
+                                    GetStorage().read('empresa') +
+                                    '/accountSetting/' +
+                                    _cartera[index]["cardCode"].toString() +
+                                    '.pdf',
+                                DateFormat("yyyyMMdd-hhmm").format(now),
+                                "EstadoCuenta",
+                                _cartera[index]["cardCode"].toString(),
+                              );
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Estado de cuenta guardada en descargas'),
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'No se pudo guardar el pedido, error de red, verifique conectividad por favor',
+                                  ),
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Error al generar el reporte de estado de cuenta',
+                                ),
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+
+                          final Email email = Email(
+                            subject: "Edad de Cartera Cliente: " +
+                                _cartera[index]["cardCode"].toString(),
+                            body: _cartera[index]["cardName"].toString() +
+                                "\n\nSin Vencer: " +
+                                ageSinVencer.toString() +
+                                "\n1 a 3 0 días: " +
+                                age0a30.toString() +
+                                "\n30 a 60 días: " +
+                                age30a60.toString() +
+                                "\n61 a 90 días: " +
+                                age61a90.toString() +
+                                "\n91 a 120 días: " +
+                                age91a120.toString() +
+                                "\nMás 120 días: " +
+                                ageMas120.toString() +
+                                "\nTotal: " +
+                                totalCarteraS.toString() +
+                                "\nCupo Disponible: " +
+                                cupo.toString(),
+                            recipients: [emailCL],
+                            attachmentPaths: [
+                              '/storage/emulated/0/Download/EstadoCuenta-' +
+                                  _cartera[index]["cardCode"].toString() +
+                                  '[' +
+                                  DateFormat("yyyyMMdd-hhmm").format(now) +
+                                  '].pdf'
+                            ],
                           );
 
-                          final String emailUrl = emailUri.toString();
-
-                          if (await canLaunch(emailUrl)) {
-                            await launch(emailUrl);
-                          } else {
-                            throw 'No se pudo abrir el cliente de correo.';
+                          try {
+                            await FlutterEmailSender.send(email);
+                          } catch (error) {
+                            print('Error al enviar el correo: $error');
                           }
                         },
                       )
@@ -936,50 +996,49 @@ Widget carteraDetalle(BuildContext context) {
                       IconButton(
                         icon: Icon(Icons.mail_outline),
                         onPressed: () async {
-                          final Uri emailUri = Uri(
-                            scheme: 'mailto',
-                            path: "",
-                            queryParameters: {
-                              'to': clienteDetalle["emailFE"].toString(),
-                              'subject': "Estado:Detalle-de-Cartera",
-                              'body': "Tipo_de_documento:" +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["docType"]
-                                      .toString() +
-                                  '\nNro_de_documento:' +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["docNum"]
-                                      .toString() +
-                                  '\nFecha_de_creación:' +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["docDate"]
-                                      .toString() +
-                                  '\nFecha_de_vencimiento:' +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["docDueDate"]
-                                      .toString() +
-                                  '\nSaldo_pendiente:' +
-                                  saldo +
-                                  '\nValor_factura:' +
-                                  valor +
-                                  '\nDías_vencidos:' +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["expiredDays"]
-                                      .toString() +
-                                  "\n\nFactura_electrónica:\n\nPara_visualizar_el_documento_por_favor_copie_la_siguiente_url_en_su_navegador_favorito:\n\n" +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["urlFE"]
-                                      .toString(),
-                              'attachment': "",
-                            },
+                          final Email email = Email(
+                            subject: "Detalle de cartera " +
+                                clienteDetalle["detailPortfolio"][index]
+                                    ["docType"] +
+                                " #" +
+                                clienteDetalle["detailPortfolio"][index]
+                                        ["docNum"]
+                                    .toString(),
+                            body: "Tipo de documento: " +
+                                clienteDetalle["detailPortfolio"][index]
+                                        ["docType"]
+                                    .toString() +
+                                '\nNro de documento: ' +
+                                clienteDetalle["detailPortfolio"][index]
+                                        ["docNum"]
+                                    .toString() +
+                                '\nFecha de creación: ' +
+                                clienteDetalle["detailPortfolio"][index]
+                                        ["docDate"]
+                                    .toString() +
+                                '\nFecha de vencimiento: ' +
+                                clienteDetalle["detailPortfolio"][index]
+                                        ["docDueDate"]
+                                    .toString() +
+                                '\nSaldo pendiente: ' +
+                                saldo +
+                                '\nValor factura: ' +
+                                valor +
+                                '\nDías vencidos: ' +
+                                clienteDetalle["detailPortfolio"][index]
+                                        ["expiredDays"]
+                                    .toString() +
+                                "\n\nFactura electrónica:\n\nPara visualizar el documento por favor copie la siguiente url en su navegador favorito:\n\n" +
+                                clienteDetalle["detailPortfolio"][index]
+                                        ["urlFE"]
+                                    .toString(),
+                            recipients: [clienteDetalle["emailFE"].toString()],
                           );
 
-                          final String emailUrl = emailUri.toString();
-
-                          if (await canLaunch(emailUrl)) {
-                            await launch(emailUrl);
-                          } else {
-                            throw 'No se pudo abrir el cliente de correo.';
+                          try {
+                            await FlutterEmailSender.send(email);
+                          } catch (error) {
+                            print('Error al enviar el correo: $error');
                           }
                         },
                       )

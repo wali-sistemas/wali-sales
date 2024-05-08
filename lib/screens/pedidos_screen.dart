@@ -1628,8 +1628,8 @@ class _TotalPedidoState extends State<TotalPedido> {
   TextEditingController observacionesController = TextEditingController();
   GetStorage storage = GetStorage();
   String empresa = GetStorage().read('empresa');
-  //bool btnPedidoActivo = true;
-  //bool btnGuardadActivo = true;
+  bool btnPedidoActivo = false;
+  bool btnGuardarActivo = false;
   bool cargando = false;
   final numberFormat = new NumberFormat.simpleCurrency();
   Connectivity _connectivity = Connectivity();
@@ -1806,16 +1806,20 @@ class _TotalPedidoState extends State<TotalPedido> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                /*setState(
-                  () {
-                    btnGuardadActivo = true;
-                  },
-                );*/
                 Navigator.pop(context);
               },
               child: Text('OK'),
             ),
           ],
+        );
+      },
+    ).then(
+      (value) {
+        setState(
+          () {
+            btnPedidoActivo = false;
+            btnGuardarActivo = false;
+          },
         );
       },
     );
@@ -1934,19 +1938,16 @@ class _TotalPedidoState extends State<TotalPedido> {
                           // else {print ("Ya está el pedido, actualizando ...");}
                           insertPedidoDb(pedidoF);
                           listarPedidos();
-
                           setState(
                             () {
                               cargando = true;
                             },
                           );
-
                           try {
                             http.Response response =
                                 await _guardarPedido(context, pedidoFinal);
                             Map<String, dynamic> resultado =
                                 jsonDecode(response.body);
-
                             if (response.statusCode == 200 &&
                                 resultado['content'] != "") {
                               Navigator.pop(context);
@@ -2004,6 +2005,14 @@ class _TotalPedidoState extends State<TotalPedido> {
                 )
               ],
             );
+          },
+        );
+      },
+    ).then(
+      (value) {
+        setState(
+          () {
+            btnGuardarActivo = false;
           },
         );
       },
@@ -2098,13 +2107,6 @@ class _TotalPedidoState extends State<TotalPedido> {
                               storage.remove("dirEnvio");
                               storage.remove("pedidoGuardado");
                               storage.write('estadoPedido', 'nuevo');
-                              //btnPedidoActivo = true;
-                              /*setState(
-                                () {
-                                  btnPedidoActivo = true;
-                                  cargando = true;
-                                },
-                              );*/
                             } else {
                               Get.snackbar(
                                 'Error',
@@ -2125,6 +2127,14 @@ class _TotalPedidoState extends State<TotalPedido> {
                 )
               ],
             );
+          },
+        );
+      },
+    ).then(
+      (value) {
+        setState(
+          () {
+            btnPedidoActivo = false;
           },
         );
       },
@@ -2525,173 +2535,179 @@ class _TotalPedidoState extends State<TotalPedido> {
               height: 20,
             ),
             Row(
-              children: [
+              children: <Widget>[
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                          Color.fromRGBO(30, 129, 235, 1),
-                        ),
+                    child: MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      onPressed: () async {
-                        if (GetStorage().read('dirEnvio') == null ||
-                            GetStorage().read('dirEnvio') == "" ||
-                            GetStorage().read('dirEnvio') ==
-                                "Elija un destino") {
-                          showAlertErrorDir(
-                            context,
-                            "Obligatorio seleccionar la dirección de destino.",
-                          );
-                        } else if (GetStorage().read('itemsPedido') == null ||
-                            GetStorage().read('itemsPedido') == "") {
-                          showAlertErrorDir(
-                            context,
-                            "Obligatorio agregar ítems en detalle.",
-                          );
-                        } else {
-                          Position locationData = await activeteLocation();
-                          if (locationData.latitude == 0.0 ||
-                              locationData.longitude == 0.0) {
-                            showAlertErrorDir(
-                              context,
-                              "Active la ubicación del móvil, y presione de nuevo guardar pedido.",
-                            );
-                            Geolocator.getCurrentPosition(
-                              desiredAccuracy: LocationAccuracy.high,
-                            );
-                          } else {
-                            try {
-                              http.Response response =
-                                  await createRecordGeoLocation(
-                                      locationData.latitude.toString(),
-                                      locationData.longitude.toString(),
-                                      GetStorage().read('usuario'),
-                                      empresa,
-                                      'P');
-                              Map<String, dynamic> res =
-                                  jsonDecode(response.body);
-                              if (res['code'] == 0) {
-                                showAlertConfirmOrder(
-                                    context,
-                                    pedidoFinal,
-                                    true,
-                                    "¿Está seguro que deseea enviar el pedido?");
-                              } else {
-                                showAlertErrorDir(context, res['content']);
-                              }
-                            } catch (e) {
-                              showAlertErrorDir(
-                                context,
-                                "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente",
-                              );
-                            }
-                          }
-                        }
-                      },
-                      child: Text(
-                        'Enviar Pedido',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                          Color.fromRGBO(30, 129, 235, 1),
-                        ),
-                      ),
-                      onPressed: () async {
-                        /*setState(
+                      disabledColor: Colors.grey,
+                      elevation: 0,
+                      color: Color.fromRGBO(30, 129, 235, 1),
+                      onPressed: btnPedidoActivo
+                          ? null
+                          : () async {
+                              setState(
                                 () {
-                                  btnGuardadActivo = false;
+                                  btnPedidoActivo = true;
                                 },
-                              );*/
-                        if (GetStorage().read('dirEnvio') == null ||
-                            GetStorage().read('dirEnvio') == "" ||
-                            GetStorage().read('dirEnvio') ==
-                                "Elija un destino") {
-                          showAlertErrorDir(
-                            context,
-                            "Obligatorio seleccionar la dirección de destino.",
-                          );
-                        } else if (GetStorage().read('itemsPedido') == null ||
-                            GetStorage().read('itemsPedido') == "") {
-                          showAlertErrorDir(
-                            context,
-                            "Obligatorio agregar ítems en detalle.",
-                          );
-                        } else {
-                          Position locationData = await activeteLocation();
-                          if (locationData.latitude == 0.0 ||
-                              locationData.longitude == 0.0) {
-                            showAlertErrorDir(
-                              context,
-                              "Active la ubicación del móvil, y presione de nuevo enviar pedido.",
-                            );
-                            Geolocator.getCurrentPosition(
-                              desiredAccuracy: LocationAccuracy.high,
-                            );
-                          } else {
-                            try {
-                              http.Response response =
-                                  await createRecordGeoLocation(
-                                      locationData.latitude.toString(),
-                                      locationData.longitude.toString(),
-                                      GetStorage().read('usuario'),
-                                      empresa,
-                                      'G');
-                              Map<String, dynamic> res =
-                                  jsonDecode(response.body);
-                              if (res['code'] == 0) {
-                                showAlertConfirmOrderForSave(
-                                    context,
-                                    pedidoFinal,
-                                    true,
-                                    "¿Está seguro que deseea guardar el pedido?");
-                              } else {
-                                showAlertErrorDir(context, res['content']);
-                              }
-                            } catch (e) {
-                              showAlertErrorDir(
-                                context,
-                                "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente",
                               );
-                            }
-                          }
-                        }
-                      },
-                      child: Text(
-                        'Guardar Pedido',
-                        style: TextStyle(color: Colors.white),
+                              if (GetStorage().read('dirEnvio') == null ||
+                                  GetStorage().read('dirEnvio') == "" ||
+                                  GetStorage().read('dirEnvio') ==
+                                      "Elija un destino") {
+                                showAlertErrorDir(
+                                  context,
+                                  "Obligatorio seleccionar la dirección de destino.",
+                                );
+                              } else if (GetStorage().read('itemsPedido') ==
+                                      null ||
+                                  GetStorage().read('itemsPedido') == "") {
+                                showAlertErrorDir(
+                                  context,
+                                  "Obligatorio agregar ítems en detalle.",
+                                );
+                              } else {
+                                Position locationData =
+                                    await activeteLocation();
+                                if (locationData.latitude == 0.0 ||
+                                    locationData.longitude == 0.0) {
+                                  showAlertErrorDir(
+                                    context,
+                                    "Active la ubicación del móvil, y presione de nuevo guardar pedido.",
+                                  );
+                                  Geolocator.getCurrentPosition(
+                                    desiredAccuracy: LocationAccuracy.high,
+                                  );
+                                } else {
+                                  try {
+                                    http.Response response =
+                                        await createRecordGeoLocation(
+                                            locationData.latitude.toString(),
+                                            locationData.longitude.toString(),
+                                            GetStorage().read('usuario'),
+                                            empresa,
+                                            'P');
+                                    Map<String, dynamic> res =
+                                        jsonDecode(response.body);
+                                    if (res['code'] == 0) {
+                                      showAlertConfirmOrder(
+                                        context,
+                                        pedidoFinal,
+                                        true,
+                                        "¿Está seguro que deseea enviar el pedido?",
+                                      );
+                                    } else {
+                                      showAlertErrorDir(
+                                          context, res['content']);
+                                    }
+                                  } catch (e) {
+                                    showAlertErrorDir(
+                                      context,
+                                      "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente",
+                                    );
+                                  }
+                                }
+                              }
+                            },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          btnPedidoActivo ? 'Espere' : 'Enviar Pedido',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
                 ),
-                /*Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                            Color.fromRGBO(30, 129, 235, 1))),
-                    onPressed: () {
-                      DatabaseHelper dbHelper = DatabaseHelper();
-                      dbHelper.deleteAllItemsP();
-                      dbHelper.deleteAllItems();
-                      requestStoragePermission();
-                      //deleteAppData();
-                    },
-                    child: Text('Borrar Cache',
-                        style: TextStyle(color: Colors.white)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      disabledColor: Colors.grey,
+                      elevation: 0,
+                      color: Color.fromRGBO(30, 129, 235, 1),
+                      onPressed: btnGuardarActivo
+                          ? null
+                          : () async {
+                              setState(
+                                () {
+                                  btnGuardarActivo = true;
+                                },
+                              );
+                              if (GetStorage().read('dirEnvio') == null ||
+                                  GetStorage().read('dirEnvio') == "" ||
+                                  GetStorage().read('dirEnvio') ==
+                                      "Elija un destino") {
+                                showAlertErrorDir(
+                                  context,
+                                  "Obligatorio seleccionar la dirección de destino.",
+                                );
+                              } else if (GetStorage().read('itemsPedido') ==
+                                      null ||
+                                  GetStorage().read('itemsPedido') == "") {
+                                showAlertErrorDir(
+                                  context,
+                                  "Obligatorio agregar ítems en detalle.",
+                                );
+                              } else {
+                                Position locationData =
+                                    await activeteLocation();
+                                if (locationData.latitude == 0.0 ||
+                                    locationData.longitude == 0.0) {
+                                  showAlertErrorDir(
+                                    context,
+                                    "Active la ubicación del móvil, y presione de nuevo enviar pedido.",
+                                  );
+                                  Geolocator.getCurrentPosition(
+                                    desiredAccuracy: LocationAccuracy.high,
+                                  );
+                                } else {
+                                  try {
+                                    http.Response response =
+                                        await createRecordGeoLocation(
+                                            locationData.latitude.toString(),
+                                            locationData.longitude.toString(),
+                                            GetStorage().read('usuario'),
+                                            empresa,
+                                            'G');
+                                    Map<String, dynamic> res =
+                                        jsonDecode(response.body);
+                                    if (res['code'] == 0) {
+                                      showAlertConfirmOrderForSave(
+                                          context,
+                                          pedidoFinal,
+                                          true,
+                                          "¿Está seguro que deseea guardar el pedido?");
+                                    } else {
+                                      showAlertErrorDir(
+                                          context, res['content']);
+                                    }
+                                  } catch (e) {
+                                    showAlertErrorDir(
+                                      context,
+                                      "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente",
+                                    );
+                                  }
+                                }
+                              }
+                            },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          btnGuardarActivo ? 'Espere' : 'Guardar Pedido',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),*/
               ],
             ),
           ],

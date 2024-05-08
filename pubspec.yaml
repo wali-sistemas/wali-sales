@@ -45,7 +45,7 @@ dependencies:
   webview_flutter: ^2.0.13
   location: ^5.0.2
   geolocator: ^11.0.0
-
+  flutter_email_sender: ^6.0.3
 
 
 
