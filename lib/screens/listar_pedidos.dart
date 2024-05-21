@@ -84,10 +84,6 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
   }
 
   Future<http.Response> _generateReportOrderDetail(String docNum) async {
-    print("*********************");
-    print(docNum);
-    print("*********************");
-
     final String url =
         'http://wali.igbcolombia.com:8080/manager/res/report/generate-report';
     return http.post(
@@ -237,7 +233,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                         padding: EdgeInsets.all(8),
                         child: ListTile(
                           title: Text(
-                            'Fechaa: ' +
+                            'Fecha: ' +
                                 pedidosG[index].id.toString() +
                                 ' - Nit: ' +
                                 pedidosG[index].cardCode.toString() +
@@ -319,7 +315,10 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                                 _ventas[index]["cardName"].toString() +
                                 '\n' +
                                 'Orden: ' +
-                                _ventas[index]["docNum"].toString(),
+                                _ventas[index]["docNum"].toString() +
+                                '\n' +
+                                'Estado: ' +
+                                _ventas[index]["status"].toString(),
                             style: TextStyle(
                               fontSize: 15,
                             ),

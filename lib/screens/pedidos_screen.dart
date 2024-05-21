@@ -2385,8 +2385,8 @@ class _TotalPedidoState extends State<TotalPedido> {
         itemsPedidoLocal = GetStorage().read('itemsPedido');
         cantidadItems = itemsPedidoLocal.length;
       }
-      double iva = 0.0;
 
+      double iva = 0.0;
       itemsPedidoLocal.forEach(
         (element) {
           var subt = double.parse(element["price"]) *
@@ -2400,15 +2400,29 @@ class _TotalPedidoState extends State<TotalPedido> {
       String ivaTxt = numberFormat.format(iva);
       double total = subtotal.toDouble() + iva;
       String subtotalTxt = numberFormat.format(subtotal);
-      String totalTxt = numberFormat.format(total);
+      String descuento = pedidoFinal['discountPercent'];
+      //String totalTxt = numberFormat.format(total);
       String estadoPedido = "";
+
+      if (subtotalTxt.contains('.')) {
+        int decimalIndex = subtotalTxt.indexOf('.');
+        subtotalTxt = subtotalTxt.substring(0, decimalIndex);
+      }
+      if (descuento.contains('.')) {
+        int decimalIndex = descuento.indexOf('.');
+        descuento = descuento.substring(0, decimalIndex);
+      }
+      ivaTxt = numberFormat.format(iva - (iva * (int.parse(descuento) / 100)));
       if (ivaTxt.contains('.')) {
         int decimalIndex = ivaTxt.indexOf('.');
         ivaTxt = ivaTxt.substring(0, decimalIndex);
       }
-      if (subtotalTxt.contains('.')) {
-        int decimalIndex = subtotalTxt.indexOf('.');
-        subtotalTxt = subtotalTxt.substring(0, decimalIndex);
+      String totalDocTxt = numberFormat.format(subtotal -
+          (subtotal * (int.parse(descuento) / 100)) +
+          (iva - (iva * (int.parse(descuento) / 100))));
+      if (totalDocTxt.contains('.')) {
+        int decimalIndex = totalDocTxt.indexOf('.');
+        totalDocTxt = totalDocTxt.substring(0, decimalIndex);
       }
       if (pedidoFinal['comments'].toString() != null) {
         textoObservaciones = pedidoFinal['comments'];
@@ -2422,11 +2436,6 @@ class _TotalPedidoState extends State<TotalPedido> {
           observacionesController.text = obs;
         }
       }
-
-      // if (totalTxt.contains('.')) {
-      //   int decimalIndex = totalTxt.indexOf('.');
-      //   totalTxt = subtotalTxt.substring(0, decimalIndex);
-      // }
 
       pedidoFinal['docTotal'] = total.toString();
       return SingleChildScrollView(
@@ -2466,7 +2475,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                           height: 10,
                         ),
                         Text(
-                          "Descuento: " + pedidoFinal['discountPercent'],
+                          "Descuento: %" + descuento,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         SizedBox(
@@ -2480,7 +2489,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                           height: 10,
                         ),
                         Text(
-                          "Total: " + totalTxt,
+                          "Total: " + totalDocTxt,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         SizedBox(

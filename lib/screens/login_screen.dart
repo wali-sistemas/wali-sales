@@ -66,6 +66,7 @@ class _LoginFormState extends State<_LoginForm> {
   String dropdownvalue = 'Elija una empresa';
   String? usuario = "";
   String? clave = "";
+  String versionApp = "10.8";
   //bool activeLogin = true;
   var loginForm;
   TextEditingController usuarioController = TextEditingController();
@@ -130,6 +131,20 @@ class _LoginFormState extends State<_LoginForm> {
         },
       ),
     );
+  }
+
+  Future<bool> createRecordLogin(String empresa, String slpCode) async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/create-record-login/' +
+            empresa +
+            '/' +
+            slpCode +
+            '/' +
+            versionApp;
+    final response = await http.get(Uri.parse(apiUrl));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+    final data = resp["content"];
+    return data;
   }
 
   void loadInitialData() async {
@@ -331,6 +346,10 @@ class _LoginFormState extends State<_LoginForm> {
                               Map<String, dynamic> res =
                                   jsonDecode(response.body);
                               if (res['code'] == 0) {
+                                Future<bool> res = createRecordLogin(
+                                  GetStorage().read('empresa'),
+                                  loginForm.email,
+                                );
                                 Navigator.pushReplacementNamed(context, 'home');
                               } else {
                                 NotificationsService.showSnackbar(
@@ -354,7 +373,7 @@ class _LoginFormState extends State<_LoginForm> {
             Column(
               children: [
                 Text(
-                  "Copyright © WaliColombia | 2024 Version 10.8",
+                  "Copyright © WaliColombia | 2024 Version " + versionApp,
                   style: TextStyle(fontSize: 10),
                 ),
               ],
