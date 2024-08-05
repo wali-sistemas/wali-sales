@@ -85,7 +85,7 @@ class _LoginFormState extends State<_LoginForm> {
         return new Position(
             longitude: 0.0,
             latitude: 0.0,
-            timestamp: null,
+            timestamp: DateTime.now(),
             accuracy: 0.0,
             altitude: 0.0,
             altitudeAccuracy: 0.0,
@@ -103,7 +103,7 @@ class _LoginFormState extends State<_LoginForm> {
       return new Position(
           longitude: 0.0,
           latitude: 0.0,
-          timestamp: null,
+          timestamp: DateTime.now(),
           accuracy: 0.0,
           altitude: 0.0,
           altitudeAccuracy: 0.0,

@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:productos_app/screens/home_screen.dart';
-import 'package:productos_app/screens/buscador_pedidos.dart';
+//import 'package:productos_app/screens/buscador_pedidos.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:connectivity/connectivity.dart';
@@ -19,7 +19,6 @@ class PedidosGuardadosPage extends StatefulWidget {
 }
 
 class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
-  List _ventas = [];
   String codigo = GetStorage().read('slpCode');
   GetStorage storage = GetStorage();
   String usuario = GetStorage().read('usuario');
@@ -35,8 +34,14 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
   String mes = "";
   String dia = "";
   Connectivity _connectivity = Connectivity();
+  List<Pedido> pedidosG = [];
+  List ordenesGuardadasServidor = [];
+  List<dynamic> itemsPedidoLocal = [];
+  List<dynamic> data = [];
+  List clientes = [];
+  final Set<DateTime> _markedDays = {};
 
-  final pedidoInicial = {
+  Map<String, dynamic> pedidoInicial = {
     "cardCode": "",
     "cardName": "",
     "nit": "",
@@ -58,30 +63,47 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     });
   }
 
+  @override
   void initState() {
     year = now.year.toString();
     mes = now.month.toString();
     dia = now.day.toString();
+
+    super.initState();
+    getOrdersMarkedDays();
   }
 
-  void _onDaySelected(DateTime selectedDay, DateTime selectedMes) {
-    String diaSel = "";
-    String mesSel = "";
-    String yearSel = "";
-    setState(() {
-      _selectedDay = selectedDay;
-      dia = selectedDay.day.toString();
-      mes = selectedDay.month.toString();
-      year = selectedDay.year.toString();
-      //print("Dia seleccionado: $diaSel");
-      _showCalendar =
-          false; // Oculta el calendario después de seleccionar un día
-      // if(GetStorage().read('ventas')!=null)
-      //   print(GetStorage().read('ventas'));
-      //storage.remove("ventas");
-    });
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    setState(
+      () {
+        _selectedDay = selectedDay;
+        _focusedDay = focusedDay;
+        dia = selectedDay.day.toString();
+        mes = selectedDay.month.toString();
+        year = selectedDay.year.toString();
+        // Oculta el calendario después de seleccionar un día
+        _showCalendar = false;
+      },
+    );
+  }
 
-    //_fetchData("2023", mesSel, diaSel);
+  Future<void> getOrdersMarkedDays() async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/marked-days-saved-order/' +
+            empresa +
+            '?slpcode=' +
+            usuario;
+    final response = await http.get(Uri.parse(apiUrl));
+    data = jsonDecode(response.body);
+
+    if (data != null) {
+      for (String obj in data) {
+        DateFormat dateFormat = DateFormat("yyyy-MM-dd");
+        DateTime f = dateFormat.parse(obj);
+
+        _markedDays.add(f);
+      }
+    }
   }
 
   Future<void> actualizarEstadoPedGuardado(int idP) async {
@@ -91,9 +113,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
             '?id=' +
             idP.toString() +
             '&docNum=0&status=C';
-    //print ("URL ACTUALIZARSERVICIO2: ");print (apiUrl);
     final response = await http.get(Uri.parse(apiUrl));
-    //print ("Respuesta actualizarServicio2: ");print (response.body);
     if (response.body == "true") {
       //print("Se cambió estado a C");
     } else {
@@ -106,16 +126,15 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  List<Pedido> pedidosG = [];
-  List ordenesGuardadasServidor = [];
-
   Future<void> consultarGuardados() async {
     List<Pedido> pedidos = [];
     DatabaseHelper dbHelper = DatabaseHelper();
     pedidos = await dbHelper.getPedidos();
-    setState(() {
-      pedidosG = pedidos;
-    });
+    setState(
+      () {
+        pedidosG = pedidos;
+      },
+    );
   }
 
   void showConfirmOrderSave(BuildContext context, int idOrder, String message) {
@@ -129,7 +148,6 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                // Cierra el diálogo al presionar este botón
                 Navigator.pop(context);
               },
               child: Text("No"),
@@ -143,7 +161,6 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
                     storage.remove('pedidoGuardado');
                   },
                 );
-                // Cierra el diálogo al presionar este botón
                 Navigator.pop(context);
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -161,8 +178,6 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     );
   }
 
-  List<dynamic> data = [];
-  ////// Traer pedidos guardados del sevidor
   Future<List<dynamic>> getOrdenesGuardadasServidor() async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/list-order-saves/' +
@@ -194,16 +209,60 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     //   data={"code":-1,"content":"Ocurrio un error"};
     //
     // }
-    if (data != null)
+    if (data != null) {
       return data;
-    else
+    } else {
       return [];
+    }
   }
 
   void _mostrarPedidos() {
     setState(
       () {
         _showPedidos = !_showPedidos;
+      },
+    );
+  }
+
+  void showAlertDialogItemsInShoppingCart(BuildContext context) {
+    Widget cancelButton = ElevatedButton(
+      child: Text("NO"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    Widget continueButton = ElevatedButton(
+      child: Text("SI"),
+      onPressed: () {
+        storage.remove("observaciones");
+        storage.remove("pedido");
+        storage.remove("itemsPedido");
+        storage.remove("dirEnvio");
+        storage.remove("pedidoGuardado");
+        storage.write("estadoPedido", "nuevo");
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(),
+          ),
+        );
+      },
+    );
+    AlertDialog alert = AlertDialog(
+      title: Text("Atención"),
+      content: Text(
+        "Tiene ítems agregados al carrito, si continúa se borrarán e iniciará un pedido nuevo, desea continuar?",
+      ),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return alert;
       },
     );
   }
@@ -222,10 +281,8 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
           onTap: () {
             storage.remove('observaciones');
             storage.remove("pedido");
-            storage.remove("itemsPedido");
             storage.remove("dirEnvio");
             storage.remove("pedidoGuardado");
-
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -268,10 +325,51 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
                     return isSameDay(_selectedDay, day);
                   },
                   onDaySelected: _onDaySelected,
+                  calendarBuilders: CalendarBuilders(
+                    markerBuilder: (context, date, events) {
+                      if (_markedDays.contains(
+                          DateTime(date.year, date.month, date.day))) {
+                        return Positioned(
+                          right: 5,
+                          top: 5,
+                          child: _buildMarker(),
+                        );
+                      }
+                      return null;
+                    },
+                    selectedBuilder: (context, date, _) {
+                      return _buildSelectedMarker(date);
+                    },
+                  ),
                 ),
               ),
             pedidosGuardados(context),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMarker() {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        color: Colors.red,
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+
+  Widget _buildSelectedMarker(DateTime date) {
+    return Container(
+      margin: const EdgeInsets.all(4.0),
+      padding: const EdgeInsets.all(4.0),
+      color: Colors.blue,
+      child: Center(
+        child: Text(
+          '${date.day}',
+          style: TextStyle().copyWith(color: Colors.white),
         ),
       ),
     );
@@ -316,9 +414,10 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
                                   icon: Icon(Icons.delete),
                                   onPressed: () {
                                     showConfirmOrderSave(
-                                        context,
-                                        snapshot.data![index]["id"],
-                                        "¿Está seguro de eliminar la orden guardada?");
+                                      context,
+                                      snapshot.data![index]["id"],
+                                      "¿Está seguro de eliminar la orden guardada?",
+                                    );
                                   },
                                 ),
                               ),
@@ -369,79 +468,95 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
                                 child: IconButton(
                                   icon: Icon(Icons.add),
                                   onPressed: () {
-                                    if (GetStorage().read('pedido') == null)
-                                      storage.write('pedido', {});
-                                    Map<String, dynamic> pedidoFinal =
-                                        pedidoInicial;
-                                    pedidoFinal['cardCode'] =
-                                        snapshot.data![index]["cardCode"];
-                                    pedidoFinal['companyName'] =
-                                        snapshot.data![index]["companyName"];
-                                    pedidoFinal['comments'] =
-                                        snapshot.data![index]["comments"];
-                                    pedidoFinal['numAtCard'] =
-                                        snapshot.data![index]["numAtCard"];
-                                    pedidoFinal['shipToCode'] =
-                                        snapshot.data![index]["shipToCode"];
-                                    pedidoFinal['payToCode'] =
-                                        snapshot.data![index]["payToCode"];
-                                    pedidoFinal['discountPercent'] = snapshot
-                                        .data![index]["discountPercent"];
-                                    pedidoFinal['docTotal'] = totalTxt;
-                                    pedidoFinal['lineNum'] =
-                                        snapshot.data![index]["lineNum"] ?? '';
-                                    pedidoFinal['id'] =
-                                        snapshot.data![index]["id"];
+                                    print("***********************");
+                                    print(GetStorage().read('itemsPedido'));
+                                    print(snapshot.data![index]["cardCode"]);
+                                    print(snapshot.data);
+                                    print("***********************");
 
-                                    List tempItemsList = snapshot.data![index]
-                                        ["detailSalesOrderSave"];
-
-                                    /// Pasar a texto campo "quantity" "iva" y "price" que viende del servicio
-                                    tempItemsList.forEach((k) {
-                                      k['quantity'] = k['quantity'].toString();
-                                      k['price'] = k['price'].toString();
-                                      k['iva'] = k['iva'].toString();
-                                    });
-
-                                    //pedidoFinal['detailSalesOrder']=snapshot.data![index]["detailSalesOrderSave"];
-                                    pedidoFinal['detailSalesOrder'] =
-                                        tempItemsList;
-                                    // print ("items Ordenes de venta: ");
-                                    // print (snapshot.data![index]["detailSalesOrderSave"]);
-
-                                    setState(
-                                      () {
-                                        storage.write(
-                                            'pedidoGuardado', pedidoFinal);
-                                        storage.write(
-                                            'itemsPedido',
+                                    if (GetStorage().read('itemsPedido') ==
+                                        null) {
+                                      if (GetStorage().read('pedido') == null) {
+                                        storage.write('pedido', {});
+                                      } else {
+                                        Map<String, dynamic> pedidoFinal =
+                                            Map<String, dynamic>.from(
+                                                pedidoInicial);
+                                        pedidoFinal['cardCode'] =
+                                            snapshot.data![index]["cardCode"];
+                                        pedidoFinal['companyName'] = snapshot
+                                            .data![index]["companyName"];
+                                        pedidoFinal['comments'] =
+                                            snapshot.data![index]["comments"];
+                                        pedidoFinal['numAtCard'] =
+                                            snapshot.data![index]["numAtCard"];
+                                        pedidoFinal['shipToCode'] =
+                                            snapshot.data![index]["shipToCode"];
+                                        pedidoFinal['payToCode'] =
+                                            snapshot.data![index]["payToCode"];
+                                        pedidoFinal['discountPercent'] =
                                             snapshot.data![index]
-                                                ["detailSalesOrderSave"]);
-                                        storage.write('pedido', pedidoFinal);
-                                        int idG = snapshot.data![index]["id"];
-                                        actualizarPedidoGuardado["id"] =
-                                            idG.toString();
-                                        storage.write('cardCode',
-                                            snapshot.data![index]["cardCode"]);
-                                        storage.write(
-                                            'actualizarPedidoGuardado',
-                                            actualizarPedidoGuardado);
-                                        storage.write(
-                                            'estadoPedido', 'guardado');
-                                      },
-                                    );
+                                                ["discountPercent"];
+                                        pedidoFinal['docTotal'] = totalTxt;
+                                        pedidoFinal['lineNum'] =
+                                            snapshot.data![index]["lineNum"] ??
+                                                '';
+                                        pedidoFinal['id'] =
+                                            snapshot.data![index]["id"];
 
-                                    print("***************");
-                                    print(GetStorage()
-                                        .read('pedidoGuardado')['id']);
-                                    print("***************");
+                                        List tempItemsList =
+                                            snapshot.data![index]
+                                                ["detailSalesOrderSave"];
 
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => PedidosPage(),
-                                      ),
-                                    );
+                                        /// Pasar a texto campo "quantity" "iva" y "price" que viende del servicio
+                                        tempItemsList.forEach((k) {
+                                          k['quantity'] =
+                                              k['quantity'].toString();
+                                          k['price'] = k['price'].toString();
+                                          k['iva'] = k['iva'].toString();
+                                        });
+
+                                        pedidoFinal['detailSalesOrder'] =
+                                            tempItemsList;
+
+                                        setState(
+                                          () {
+                                            storage.write(
+                                                'pedidoGuardado', pedidoFinal);
+                                            storage.write(
+                                                'itemsPedido',
+                                                snapshot.data![index]
+                                                    ["detailSalesOrderSave"]);
+                                            storage.write(
+                                                'pedido', pedidoFinal);
+                                            int idG =
+                                                snapshot.data![index]["id"];
+                                            actualizarPedidoGuardado["id"] =
+                                                idG.toString();
+                                            storage.write(
+                                                'cardCode',
+                                                snapshot.data![index]
+                                                    ["cardCode"]);
+                                            storage.write(
+                                                'actualizarPedidoGuardado',
+                                                actualizarPedidoGuardado);
+                                            storage.write(
+                                                'estadoPedido', 'guardado');
+                                          },
+                                        );
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PedidosPage(),
+                                          ),
+                                        );
+                                      }
+                                    } else {
+                                      showAlertDialogItemsInShoppingCart(
+                                        context,
+                                      );
+                                    }
                                   },
                                 ),
                               ),

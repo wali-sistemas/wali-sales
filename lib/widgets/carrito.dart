@@ -29,13 +29,11 @@ class _CarritoPedidoState extends State<CarritoPedido> {
   @override
   Widget build(BuildContext context) {
     contar = true;
-
     if (GetStorage().read('pedido') != null) {
       Map<String, dynamic> pedidoLocal = GetStorage().read('pedido');
     }
     if (GetStorage().read('itemsPedido') != null) {
       itemsPedidoLocal = GetStorage().read('itemsPedido');
-      // print ("itemsPedidoLocal: "); print (itemsPedidoLocal);
       if (GetStorage().read('pedidoGuardado') == null) {
         Map<String, dynamic> pedidoInicial = {};
         storage.write("pedidoGuardado", pedidoInicial);
@@ -44,25 +42,10 @@ class _CarritoPedidoState extends State<CarritoPedido> {
         pedidoLocal = GetStorage().read('pedidoGuardado');
         contar = false;
       }
-
-      // if(pedidoLocal['slpCode']!=usuario)
-      // {
-      //   print ("borrando itemsPedidoLocal");
-      //   itemsPedidoLocal=List.empty();
-      //   pedidoLocal = {};
-      // }
-    } else
+    } else {
       itemsPedidoLocal = List.empty();
+    }
 
-    //print ("itemsPedidoLocal1: "); print (itemsPedidoLocal);
-
-    // print ("items pendientes: ");print(itemsPedidoLocal.toString());
-    // print ("usuario en items: ");print(pedidoLocal.toString());
-
-    //if (itemsPedidoLocal.length >0 && pedidoLocal['slpCode']==usuario)
-
-    //  if (itemsPedidoLocal.length >0 )
-    // {
     if (GetStorage().read('estadoPedido') != null) {
       estadoPedido = GetStorage().read('estadoPedido');
     } else {
@@ -70,13 +53,14 @@ class _CarritoPedidoState extends State<CarritoPedido> {
     }
 
     if (estadoPedido == "nuevo") {
-      setState(() {
-        {
-          itemCount = itemsPedidoLocal.length;
-        }
-      });
+      setState(
+        () {
+          {
+            itemCount = itemsPedidoLocal.length;
+          }
+        },
+      );
     }
-    // }
     return Container(
       child: Stack(
         children: [
@@ -87,17 +71,17 @@ class _CarritoPedidoState extends State<CarritoPedido> {
               storage.remove("dirEnvio");
               if (GetStorage().read('estadoPedido') != null) {
                 if (GetStorage().read('estadoPedido') == "guardado") {
-                  //print("estadoPedido:");
-                  //print(estadoPedido);
                   storage.remove('itemsPedido');
                 }
               }
-
-              //storage.write('estadoPedido', 'nuevo');
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => PedidosPage()),
-              );
+              if (GetStorage().read('itemsPedido') != null) {
+                storage.write('estadoPedido', 'nuevo');
+                storage.remove('observaciones');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PedidosPage()),
+                );
+              }
             },
           ),
           itemCount > 0

@@ -1,21 +1,20 @@
-//import 'dart:ffi';
 import 'package:flutter/material.dart';
+import 'package:flutter_blurhash/flutter_blurhash.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:productos_app/screens/screens.dart';
 import 'dart:convert';
-//import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'buscador_items.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:productos_app/models/DatabaseHelper.dart';
-//import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:path_provider/path_provider.dart';
-//import 'package:location/location.dart';
 import 'package:geolocator/geolocator.dart';
 
 class PedidosPage extends StatefulWidget {
@@ -35,7 +34,6 @@ class _PedidosPageState extends State<PedidosPage>
   String empresa = GetStorage().read('empresa');
   String usuario = GetStorage().read('usuario');
   TextEditingController cantidadController = TextEditingController();
-  TextEditingController observacionesController = TextEditingController();
   GetStorage storage = GetStorage();
   List clientesGuardados = [];
   String dropdownvalue2 = 'Elija un destino';
@@ -89,6 +87,15 @@ class _PedidosPageState extends State<PedidosPage>
     datosClientesArr = clientesGuardados;
   }
 
+  Future<void> _launchPhone(String phone) async {
+    final telefonoUrl = 'tel:$phone';
+    if (await canLaunch(telefonoUrl)) {
+      await launch(telefonoUrl);
+    } else {
+      throw 'No se pudo abrir la aplicación de teléfono.';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -105,7 +112,10 @@ class _PedidosPageState extends State<PedidosPage>
                 color: Colors.white,
               ),
               onTap: () {
-                Navigator.pop(context);
+                if (GetStorage().read('estadoPedido') == "guardado") {
+                  storage.remove('itemsPedido');
+                }
+                Navigator.pushReplacementNamed(context, 'home');
               },
             ),
             title: ListTile(
@@ -317,34 +327,31 @@ class _PedidosPageState extends State<PedidosPage>
                       ),
                       Text('Cliente', textAlign: TextAlign.left),
                       SizedBox(
-                        height: 30,
+                        height: 20,
                       ),
                       Text(
                         datosClientesArr[indice]['addressToDef'].toString(),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Text(
-                        'Dirección ',
-                        textAlign: TextAlign.left,
-                      ),
+                      Text('Dirección', textAlign: TextAlign.left),
                       SizedBox(
-                        height: 30,
+                        height: 20,
                       ),
                       Text(
                         datosClientesArr[indice]['location'].toString(),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Text('Ciudad ', textAlign: TextAlign.left),
+                      Text('Ciudad', textAlign: TextAlign.left),
                       SizedBox(
-                        height: 30,
+                        height: 20,
                       ),
                       Text(
                         datosClientesArr[indice]['wayToPay'].toString(),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Text('Forma de Pago ', textAlign: TextAlign.left),
+                      Text('Forma de pago', textAlign: TextAlign.left),
                       SizedBox(
-                        height: 30,
+                        height: 20,
                       ),
                       Text(
                         cupoTxt,
@@ -352,15 +359,40 @@ class _PedidosPageState extends State<PedidosPage>
                       ),
                       Text('Cupo', textAlign: TextAlign.left),
                       SizedBox(
-                        height: 30,
+                        height: 20,
                       ),
                       Text(
                         saldoTxt,
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text('Saldo', textAlign: TextAlign.left),
-                      SizedBox(
-                        height: 30,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.phone_outlined),
+                            onPressed: () {
+                              _launchPhone(datosClientesArr[indice]['cellular']
+                                  .toString());
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.mail_outline),
+                            onPressed: () async {
+                              final Email email = Email(
+                                subject: "Asesor de ventas",
+                                body: "Cordial saludo señor(ar), " +
+                                    datosClientesArr[indice]['cardName'],
+                                recipients: [datosClientesArr[indice]['email']],
+                              );
+                              try {
+                                await FlutterEmailSender.send(email);
+                              } catch (error) {
+                                print('Error al abrir el correo: $error');
+                              }
+                            },
+                          ),
+                        ],
                       ),
                       DropdownButton<String>(
                         isExpanded: true,
@@ -522,10 +554,8 @@ class _MyDialogState extends State<MyDialog> {
   List listaItems = [];
   List _inventario = [];
   GetStorage storage = GetStorage();
-  //bool isDropDownVisible = false;
   bool textoVisible = false;
   TextEditingController cantidadController = TextEditingController();
-  TextEditingController observacionesController = TextEditingController();
   List<dynamic> itemsPedidoLocal = [];
   List<dynamic> itemsPedido = [];
   String dropdownvalueBodega = 'Elija una bodega';
@@ -879,7 +909,6 @@ class _MyDialogState extends State<MyDialog> {
           height: 35,
           child: TextField(
             onChanged: (text) {
-              //TODO: Validar stock, si compañia es IGB o MOTOZONE
               if (empresa != "REDPLAS") {
                 RegExp regex = RegExp(r'0+[1-9]');
                 if (text.length == 0) {
@@ -1628,12 +1657,11 @@ class _TotalPedidoState extends State<TotalPedido> {
   TextEditingController observacionesController = TextEditingController();
   GetStorage storage = GetStorage();
   String empresa = GetStorage().read('empresa');
+  Connectivity _connectivity = Connectivity();
+  bool cargando = false;
   bool btnPedidoActivo = false;
   bool btnGuardarActivo = false;
-  bool cargando = false;
-  final numberFormat = new NumberFormat.simpleCurrency();
-  Connectivity _connectivity = Connectivity();
-  String textoObservaciones = "";
+
   //
   // @override
   // void dispose() {
@@ -1960,7 +1988,6 @@ class _TotalPedidoState extends State<TotalPedido> {
                                   );
                                 },
                               );
-                              //modificar el estado del pedido editado a cerrado
                               setState(
                                 () {
                                   actualizarEstadoPed(
@@ -2285,7 +2312,7 @@ class _TotalPedidoState extends State<TotalPedido> {
         return new Position(
             longitude: 0.0,
             latitude: 0.0,
-            timestamp: null,
+            timestamp: DateTime.now(),
             accuracy: 0.0,
             altitude: 0.0,
             altitudeAccuracy: 0.0,
@@ -2303,7 +2330,7 @@ class _TotalPedidoState extends State<TotalPedido> {
       return new Position(
           longitude: 0.0,
           latitude: 0.0,
-          timestamp: null,
+          timestamp: DateTime.now(),
           accuracy: 0.0,
           altitude: 0.0,
           altitudeAccuracy: 0.0,
@@ -2335,27 +2362,24 @@ class _TotalPedidoState extends State<TotalPedido> {
 
   @override
   Widget build(BuildContext context) {
+    final numberFormat = new NumberFormat.simpleCurrency();
+
     if (GetStorage().read('pedido') != null) {
       Map<String, dynamic> pedidoFinal = GetStorage().read('pedido');
       if (GetStorage().read('pedidoGuardado') != null) {
         Map<String, dynamic> pedidoFinalG = GetStorage().read('pedidoGuardado');
         pedidoFinal['comments'] = pedidoFinalG['comments'] ?? '';
       }
-      //var itemsPedidoLocal = <Map<String, String>>[];
       List<dynamic> itemsPedidoLocal = [];
       List itemsGuardados = [];
       int cantidadItems = 0;
       num subtotal = 0;
-      //int cantidad = 0;
 
       String obs = "";
       if (GetStorage().read('observaciones') != null) {
         obs = GetStorage().read('observaciones');
         observacionesController.text = obs;
       }
-
-      // observacionesController.text = textoObservaciones;
-      //print ("pedido final desde pedidoGuardado");print (pedidoFinal);
 
       if (GetStorage().read('itemsPedido') == null) {
       } else {
@@ -2401,7 +2425,6 @@ class _TotalPedidoState extends State<TotalPedido> {
       double total = subtotal.toDouble() + iva;
       String subtotalTxt = numberFormat.format(subtotal);
       String descuento = pedidoFinal['discountPercent'];
-      //String totalTxt = numberFormat.format(total);
       String estadoPedido = "";
 
       if (subtotalTxt.contains('.')) {
@@ -2424,14 +2447,19 @@ class _TotalPedidoState extends State<TotalPedido> {
         int decimalIndex = totalDocTxt.indexOf('.');
         totalDocTxt = totalDocTxt.substring(0, decimalIndex);
       }
-      if (pedidoFinal['comments'].toString() != null) {
+      String textoObservaciones = "";
+      if (pedidoFinal['comments'] != null) {
         textoObservaciones = pedidoFinal['comments'];
         if (GetStorage().read('estadoPedido') != null) {
           estadoPedido = GetStorage().read('estadoPedido');
         } else {
           estadoPedido = "desconocido";
         }
-        if (estadoPedido != "nuevo") {
+        if (estadoPedido == "nuevo") {
+          storage.remove('observaciones');
+          observacionesController.text;
+        }
+        if (estadoPedido == "guardado") {
           String obs = textoObservaciones;
           observacionesController.text = obs;
         }
@@ -2461,7 +2489,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                           height: 10,
                         ),
                         Text(
-                          "Cantidad de items: " + cantidadItems.toString(),
+                          "Cant de ítems: " + cantidadItems.toString(),
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         SizedBox(
@@ -2493,49 +2521,43 @@ class _TotalPedidoState extends State<TotalPedido> {
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         SizedBox(
-                          height: 20,
+                          height: 10,
+                        ),
+                        Text(
+                          "Observaciones:",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        SizedBox(
+                          width: 400,
+                          child: TextField(
+                            maxLines: 7,
+                            controller: observacionesController,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            onChanged: (text) {
+                              pedidoFinal['comments'] =
+                                  observacionesController.text;
+                              pedidoFinal['id'] = text;
+                              storage.write("observaciones",
+                                  observacionesController.text);
+                            },
+                            style: const TextStyle(color: Colors.black),
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              contentPadding: const EdgeInsets.all(15),
+                              hintStyle: const TextStyle(color: Colors.black),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Text("Observaciones:",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: SizedBox(
-                width: 400,
-                child: TextField(
-                  maxLines: 7,
-                  controller: observacionesController,
-                  keyboardType: TextInputType.multiline,
-                  textInputAction: TextInputAction.newline,
-                  onChanged: (text) {
-                    pedidoFinal['comments'] = observacionesController.text;
-                    pedidoFinal['id'] = text;
-                    storage.write(
-                        "observaciones", observacionesController.text);
-                  },
-                  style: const TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    contentPadding: const EdgeInsets.all(15),
-                    hintStyle: const TextStyle(color: Colors.black),
                   ),
                 ),
               ),
@@ -2558,6 +2580,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                       onPressed: btnPedidoActivo
                           ? null
                           : () async {
+                              storage.write('estadoPedido', 'editado');
                               setState(
                                 () {
                                   btnPedidoActivo = true;
@@ -2645,6 +2668,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                       onPressed: btnGuardarActivo
                           ? null
                           : () async {
+                              storage.write('estadoPedido', 'editado');
                               setState(
                                 () {
                                   btnGuardarActivo = true;

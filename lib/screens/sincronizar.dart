@@ -96,7 +96,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
         return new Position(
             longitude: 0.0,
             latitude: 0.0,
-            timestamp: null,
+            timestamp: DateTime.now(),
             accuracy: 0.0,
             altitude: 0.0,
             altitudeAccuracy: 0.0,
@@ -114,7 +114,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
       return new Position(
           longitude: 0.0,
           latitude: 0.0,
-          timestamp: null,
+          timestamp: DateTime.now(),
           accuracy: 0.0,
           altitude: 0.0,
           altitudeAccuracy: 0.0,

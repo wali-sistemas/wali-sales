@@ -19,7 +19,7 @@ class RegisterScreen extends StatelessWidget {
             children: [
               SizedBox(height: 10),
               Text('Crear cuenta',
-                  style: Theme.of(context).textTheme.headline4),
+                  style: Theme.of(context).textTheme.headlineMedium),
               SizedBox(height: 30),
               ChangeNotifierProvider(
                   create: (_) => LoginFormProvider(), child: _LoginForm())

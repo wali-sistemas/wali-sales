@@ -20,6 +20,8 @@ class CustomSearchDelegateClientes extends SearchDelegate {
   String codigo = GetStorage().read('slpCode');
   GetStorage storage = GetStorage();
   String empresa = GetStorage().read('empresa');
+  Map<String, dynamic> pedidoLocal = {};
+  List<dynamic> itemsPedidoLocal = [];
 
   Future<void> _fetchData() async {
     final String apiUrl =
@@ -65,6 +67,51 @@ class CustomSearchDelegateClientes extends SearchDelegate {
     );
   }
 
+  showAlertDialogItemsInShoppingCart(BuildContext context, String nit) {
+    Widget cancelButton = ElevatedButton(
+      child: Text("NO"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    Widget continueButton = ElevatedButton(
+      child: Text("SI"),
+      onPressed: () {
+        storage.remove("observaciones");
+        storage.remove("pedido");
+        storage.remove("itemsPedido");
+        storage.remove("dirEnvio");
+        storage.remove("pedidoGuardado");
+        storage.write("estadoPedido", "nuevo");
+        storage.write('cardCode', nit);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const PedidosPage(),
+          ),
+        );
+      },
+    );
+    AlertDialog alert = AlertDialog(
+      title: Text("Atención"),
+      content: Text(
+        "Tiene ítems pendientes para otro cliente, si continúa se borrarán e iniciará un pedido nuevo, desea continuar?",
+      ),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
   @override
   Widget buildResults(BuildContext context) {
     if (GetStorage().read('datosClientes') == null) {
@@ -106,14 +153,41 @@ class CustomSearchDelegateClientes extends SearchDelegate {
                   if (GetStorage().read('itemsPedido') == null) {
                     storage.remove('itemsPedido');
                     storage.remove('pedidoGuardado');
+
+                    storage.write('estadoPedido', 'nuevo');
+                    storage.write('nit', _clientesBusqueda2[index]["nit"]);
+                    storage.write(
+                        'cardCode', _clientesBusqueda2[index]["cardCode"]);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PedidosPage(),
+                      ),
+                    );
+                  } else {
+                    pedidoLocal = GetStorage().read('pedido');
+                    itemsPedidoLocal = GetStorage().read('itemsPedido');
+
+                    if (pedidoLocal["cardCode"] !=
+                            _clientesBusqueda2[index]['cardCode'] &&
+                        itemsPedidoLocal.length > 0) {
+                      showAlertDialogItemsInShoppingCart(
+                        context,
+                        _clientesBusqueda2[index]['cardCode'],
+                      );
+                    } else {
+                      storage.write('estadoPedido', 'nuevo');
+                      storage.write('nit', _clientesBusqueda2[index]["nit"]);
+                      storage.write(
+                          'cardCode', _clientesBusqueda2[index]["cardCode"]);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PedidosPage(),
+                        ),
+                      );
+                    }
                   }
-                  storage.write('nit', _clientesBusqueda[index]["nit"]);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PedidosPage(),
-                    ),
-                  );
                 },
                 label: const Text(''),
                 icon: const Icon(Icons.add),
@@ -165,15 +239,40 @@ class CustomSearchDelegateClientes extends SearchDelegate {
             if (GetStorage().read('itemsPedido') == null) {
               storage.remove('itemsPedido');
               storage.remove('pedidoGuardado');
+
+              storage.write('estadoPedido', 'nuevo');
+              storage.write('nit', _clientesBusqueda2[index]["nit"]);
+              storage.write('cardCode', _clientesBusqueda2[index]["cardCode"]);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PedidosPage(),
+                ),
+              );
+            } else {
+              pedidoLocal = GetStorage().read('pedido');
+              itemsPedidoLocal = GetStorage().read('itemsPedido');
+
+              if (pedidoLocal["cardCode"] !=
+                      _clientesBusqueda2[index]['cardCode'] &&
+                  itemsPedidoLocal.length > 0) {
+                showAlertDialogItemsInShoppingCart(
+                  context,
+                  _clientesBusqueda2[index]['cardCode'],
+                );
+              } else {
+                storage.write('estadoPedido', 'nuevo');
+                storage.write('nit', _clientesBusqueda2[index]["nit"]);
+                storage.write(
+                    'cardCode', _clientesBusqueda2[index]["cardCode"]);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PedidosPage(),
+                  ),
+                );
+              }
             }
-            storage.write('nit', _clientesBusqueda2[index]["nit"]);
-            storage.write('cardCode', _clientesBusqueda2[index]["cardCode"]);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const PedidosPage(),
-              ),
-            );
           },
           label: const Text(''),
           icon: const Icon(Icons.add),

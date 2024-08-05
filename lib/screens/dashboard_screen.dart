@@ -26,9 +26,9 @@ class _DashboardPageState extends State<DashboardPage> {
   };
 
   final colorList = <Color>[
-    const Color(0xfffdcb6e),
-    const Color(0xff0984e3),
-    const Color(0xfffd79a8),
+    const Color.fromRGBO(242, 83, 75, 1),
+    const Color.fromRGBO(51, 51, 51, 1),
+    const Color.fromRGBO(201, 204, 209, 1),
     const Color(0xffe17055),
     const Color(0xff6c5ce7),
   ];
@@ -41,7 +41,9 @@ class _DashboardPageState extends State<DashboardPage> {
   double ventasT = 0;
   int base = 0;
   int impacto = 0;
-  double efectividad = 0.0;
+  double efectividad = 0;
+  int nroOrderSaved = 0;
+  double valorOrderSaved = 0;
   var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
 
   Future<Map<String, dynamic>> _datosDashboard2() async {
@@ -59,12 +61,6 @@ class _DashboardPageState extends State<DashboardPage> {
     Map<String, dynamic> data = {};
     if (!resp["content"].toString().contains("Ocurrio un error")) {
       return resp;
-
-      // if (GetStorage().read('presupuesto') == null) {
-      //   storage.write('presupuesto', resp["content"]);
-      //   return resp;
-      //}
-      //else { Map<String, dynamic>  _presupuesto=GetStorage().read('presupuesto'); return _presupuesto;}
     } else {
       data = {
         "code": 0,
@@ -98,18 +94,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp1 = jsonDecode(response.body);
-    //print("REspuesta Barras: --------------------");
-    //print(resp1.toString());
     Map<String, dynamic> data = {};
     if (!resp1["content"].toString().contains("Ocurrio un error") ||
         !resp1["content"].toString().contains("No se encontraron")) {
       return resp1;
-
-      // if (GetStorage().read('presupuesto') == null) {
-      //   storage.write('presupuesto', resp["content"]);
-      //   return resp;
-      //}
-      //else { Map<String, dynamic>  _presupuesto=GetStorage().read('presupuesto'); return _presupuesto;}
     } else {
       data = {
         "code": 0,
@@ -129,8 +117,33 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  showAlertDialog(BuildContext context) {
-    // set up the buttons
+  Future<Map<String, dynamic>> _getSavedOrdersReport() async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/report-saved-order/' +
+            empresa! +
+            '?slpcode=' +
+            usuario!;
+    final response = await http.get(Uri.parse(apiUrl));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+    Map<String, dynamic> data = {};
+
+    if (resp["code"] == 0) {
+      data = {
+        "code": 0,
+        "content": [
+          {
+            "nroOrder": resp["content"][0],
+            "valorOrder": resp["content"][1],
+          }
+        ]
+      };
+      return data;
+    } else {
+      return resp;
+    }
+  }
+
+  void showAlertDialog(BuildContext context) {
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
       onPressed: () {
@@ -141,14 +154,8 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Text("SI"),
       onPressed: () {
         SystemNavigator.pop();
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => LoginScreen()),
-        // );
       },
     );
-
-    // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text("Atención"),
       content: Text("Está seguro que desea salir de la aplicación?"),
@@ -157,8 +164,6 @@ class _DashboardPageState extends State<DashboardPage> {
         continueButton,
       ],
     );
-
-    // show the dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -183,8 +188,7 @@ class _DashboardPageState extends State<DashboardPage> {
       final savedFile = File('$downloadDirectory/nuevaversion.apk');
 
       final response = await http.head(Uri.parse(apkUrl));
-      //print("Directorio: ");
-      //print(appDirectory);
+
       if (response.statusCode == 200) {
         final contentLength = response.headers['content-length'];
         final remoteFileSize = int.tryParse(contentLength ?? '0') ?? 0;
@@ -218,38 +222,77 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    String monthName = "";
+    switch (now.month) {
+      case 01:
+        monthName = "Enero";
+        break;
+      case 02:
+        monthName = "Febrero";
+        break;
+      case 03:
+        monthName = "Marzo";
+        break;
+      case 04:
+        monthName = "Abril";
+        break;
+      case 05:
+        monthName = "Mayo";
+        break;
+      case 06:
+        monthName = "Junio";
+        break;
+      case 07:
+        monthName = "Julio";
+        break;
+      case 08:
+        monthName = "Agosto";
+        break;
+      case 09:
+        monthName = "Septiembre";
+        break;
+      case 10:
+        monthName = "Octubre";
+        break;
+      case 11:
+        monthName = "Noviembre";
+        break;
+      case 12:
+        monthName = "Diciembre";
+        break;
+      default:
+        monthName = "Sin Definir";
+    }
     return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Color.fromRGBO(30, 129, 235, 1),
-          leading: GestureDetector(
-            child: Icon(
-              Icons.arrow_back_ios,
-              color: Colors.white,
-            ),
-            onTap: () {
-              showAlertDialog(context);
-            },
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        leading: GestureDetector(
+          child: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
           ),
-          actions: [
-            CarritoPedido(),
-          ],
-          title: const Text(
-            'Dashboard',
-            style: TextStyle(color: Colors.white),
-          ),
+          onTap: () {
+            showAlertDialog(context);
+          },
         ),
-        body: SingleChildScrollView(
-          child: Column(children: [
+        actions: [
+          CarritoPedido(),
+        ],
+        title: const Text(
+          'Dashboard',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: FutureBuilder<Map<String, dynamic>>(
                 future: _datosDashboard2(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    //print("datos ---------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>--------------------");
-                    //print (snapshot.data!["content"][0]["ventas"]);
-                    //print (snapshot.data!["content"][0]["slpName"]);
                     double ventasPendientes = 0.0;
                     double presupuestoPendiente = 0.0;
                     ventasT = snapshot.data!["content"][0]["ventas"];
@@ -261,7 +304,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         "emailAsesor", snapshot.data!["content"][0]["mail"]);
                     storage.write(
                         "zona", snapshot.data!["content"][0]["whsDefTire"]);
-
                     storage.write("urlFoto",
                         snapshot.data!["content"][0]["urlSlpPicture"]);
                     if (presupuestoT == 0 ||
@@ -283,106 +325,248 @@ class _DashboardPageState extends State<DashboardPage> {
                           presupuestoT.toDouble() - ventasT;
                       dataMap["Pend. por facturar"] = presupuestoP.toDouble();
                     }
-                    String presupuestoTstr = numberFormat.format(presupuestoT);
 
+                    String presupuestoTstr = numberFormat.format(presupuestoT);
                     if (presupuestoTstr.length > 2)
                       presupuestoTstr =
                           "\$" + presupuestoTstr.replaceAll(".00", "");
-                    //presupuestoTstr=presupuestoTstr.substring(0,presupuestoTstr.length-3);
+
                     String ventastStr = numberFormat.format(ventasT);
                     if (ventastStr.contains('.')) {
                       int decimalIndex = ventastStr.indexOf('.');
                       ventastStr = "\$" + ventastStr.substring(0, decimalIndex);
                     }
-                    String presupuestoPstr = numberFormat.format(presupuestoP);
 
+                    String presupuestoPstr = numberFormat.format(presupuestoP);
                     if (presupuestoPstr.contains('.')) {
                       int decimalIndex = presupuestoPstr.indexOf('.');
                       presupuestoPstr =
                           "\$" + presupuestoPstr.substring(0, decimalIndex);
                     }
-
-                    return Column(children: [
-                      SizedBox(height: 50),
-                      Text(
-                        "Presupuesto",
-                        style: TextStyle(
-                          fontSize: 20,
+                    return Column(
+                      children: [
+                        SizedBox(height: 5),
+                        Text(
+                          "Presupuesto de ventas",
+                          style: TextStyle(
+                            fontSize: 20,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        presupuestoTstr,
-                        style: TextStyle(
-                          fontSize: 20,
+                        Text(
+                          monthName + " - " + now.year.toString(),
+                          style: TextStyle(
+                            fontSize: 15,
+                          ),
                         ),
-                      ),
-                      Text("Presupuesto total"),
-                      SizedBox(height: 50),
-                      Center(
-                        child: Text(
-                          'Ventas $ventasPendientes %    Pendiente \n                        por facturar  $presupuestoPendiente %',
-                          style: TextStyle(fontSize: 20),
+                        SizedBox(height: 0),
+                        Text(
+                          presupuestoTstr,
+                          style: TextStyle(
+                            fontSize: 20,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 20),
-                      PieChart(
-                        dataMap: dataMap,
-                        chartType: ChartType.ring,
-                        baseChartColor: Colors.grey[50]!.withOpacity(0.15),
-                        colorList: colorList,
-                        chartValuesOptions: ChartValuesOptions(
-                          showChartValues: false,
-                          showChartValuesInPercentage: false,
-                        ),
-                        //totalValue: 100,
-                      ),
-                      SizedBox(height: 50),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 25),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Expanded(
-                              child: Text(ventastStr + '\n    Ventas',
-                                  style: TextStyle(fontSize: 18)),
-                            ),
-                            Expanded(
-                              child: Text(
-                                presupuestoPstr + '\nPend. por facturar',
-                                style: TextStyle(
-                                  fontSize: 18,
+                        Divider(),
+                        SizedBox(height: 10),
+                        Center(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            child: Center(
+                                              child: Text(
+                                                '%$ventasPendientes',
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            child: Center(
+                                              child: Text(
+                                                'Ventas',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                          ],
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            child: Center(
+                                              child: Text(
+                                                '%$presupuestoPendiente',
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            child: Center(
+                                              child: Text(
+                                                'Pendiente por facturar',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ]);
+                        SizedBox(height: 20),
+                        PieChart(
+                          dataMap: dataMap,
+                          chartType: ChartType.ring,
+                          baseChartColor: Colors.grey[50]!.withOpacity(0.15),
+                          colorList: colorList,
+                          chartValuesOptions: ChartValuesOptions(
+                            showChartValues: false,
+                            showChartValuesInPercentage: false,
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        Center(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            child: Center(
+                                              child: Text(
+                                                '$ventastStr',
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            child: Center(
+                                              child: Text(
+                                                'Ventas',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            child: Center(
+                                              child: Text(
+                                                '$presupuestoPstr',
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            child: Center(
+                                              child: Text(
+                                                'Pendiente por facturar',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(),
+                        Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Center(
+                                  child: Column(
+                                children: [
+                                  Text(
+                                    'Efectividad de clientes',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                  Text(
+                                    '%$efectividad',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                ],
+                              )),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
                   } else if (snapshot.hasError) {
                     return Text('Error al tratar de realizar la consulta');
                   }
-
-                  // By default, show a loading spinner.
                   return const CircularProgressIndicator();
                 },
               ),
             ),
-            SizedBox(
-              height: 30,
-            ),
             Container(
               margin: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width * 0.1),
+                horizontal: MediaQuery.of(context).size.width * 0.1,
+              ),
               child: FutureBuilder<Map<String, dynamic>>(
                 future: _datosBarras(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    //print("datos ---------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>--------------------");
-                    //print(snapshot.data!["content"].toString());
-                    //print (snapshot.data!["content"][0]["ventas"]);
-                    //print (snapshot.data!["content"][0]["slpName"]);
                     if (snapshot.data!["content"]
                             .toString()
                             .contains("Ocurrio un error") ||
@@ -393,22 +577,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       impacto = snapshot.data!["content"]["impact"];
                       efectividad = snapshot.data!["content"]["effectiveness"];
                     }
-
-                    // if(presupuestoTstr.length>2)
-                    //   presupuestoTstr="\$"+presupuestoTstr.replaceAll(".00", "");
-                    // //presupuestoTstr=presupuestoTstr.substring(0,presupuestoTstr.length-3);
-                    // String ventastStr=numberFormat.format(ventasT);
-                    // if (ventastStr.contains('.')) {
-                    //   int decimalIndex = ventastStr.indexOf('.');
-                    //   ventastStr="\$"+ventastStr.substring(0, decimalIndex);
-                    // }
-                    // String presupuestoPstr=numberFormat.format(presupuestoP);
-                    //
-                    // if (presupuestoPstr.contains('.')) {
-                    //   int decimalIndex = presupuestoPstr.indexOf('.');
-                    //   presupuestoPstr="\$"+presupuestoPstr.substring(0, decimalIndex);
-                    // }
-
                     return Row(
                       children: [
                         Expanded(
@@ -416,28 +584,23 @@ class _DashboardPageState extends State<DashboardPage> {
                             textBaseline: TextBaseline.ideographic,
                             crossAxisAlignment: CrossAxisAlignment.baseline,
                             children: [
-                              SizedBox(height: 16),
-                              Center(
-                                child: Text(
-                                  '           Efectividad',
-                                  style: TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              SizedBox(height: 45),
+                              SizedBox(height: 10),
                               Row(
                                 textBaseline: TextBaseline.ideographic,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   BarraGrafica(
-                                      color: Colors.blue,
-                                      valor: base.toDouble(),
-                                      etiqueta: base.toString()),
-                                  SizedBox(width: 16),
+                                    color: Color.fromRGBO(0, 55, 114, 1),
+                                    valor: base.toDouble(),
+                                    etiqueta: base.toString(),
+                                  ),
+                                  SizedBox(width: 10),
                                   BarraGrafica(
-                                      color: Colors.yellow,
-                                      valor: impacto.toDouble(),
-                                      etiqueta: impacto.toString()),
+                                    color: Color.fromRGBO(51, 51, 51, 1),
+                                    valor: impacto.toDouble(),
+                                    etiqueta: impacto.toString(),
+                                  ),
                                 ],
                               ),
                             ],
@@ -446,42 +609,158 @@ class _DashboardPageState extends State<DashboardPage> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '$efectividad %',
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            EtiquetaBullet(
+                              color: Color.fromRGBO(0, 55, 114, 1),
+                              texto: 'Clientes efectivos',
                             ),
-                            SizedBox(height: 16),
                             EtiquetaBullet(
-                                color: Colors.yellow,
-                                texto: 'Clientes efectivos'),
-                            SizedBox(height: 16),
-                            EtiquetaBullet(
-                                color: Colors.blue,
-                                texto: 'Presupuesto \nde clientes'),
+                              color: Color.fromRGBO(51, 51, 51, 1),
+                              texto: 'Presupuestado',
+                            ),
                           ],
                         ),
-                        SizedBox(height: 16),
                       ],
                     );
                   } else if (snapshot.hasError) {
                     return Text('Error al tratar de realizar la consulta');
                   }
-
-                  // By default, show a loading spinner.
                   return const CircularProgressIndicator();
                 },
               ),
             ),
             Container(
               margin: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width * 0.1),
+                horizontal: MediaQuery.of(context).size.width * 0.1,
+              ),
               width: double.infinity,
-              height: 2,
-              color: Colors.red,
+              height: 0.2,
+              color: Colors.black,
             ),
-          ]),
-        ));
+            SizedBox(
+              height: 5,
+            ),
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Center(
+                      child: Column(
+                    children: [
+                      Text(
+                        'Ordenes guardadas',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ],
+                  )),
+                ],
+              ),
+            ),
+            Container(
+              child: FutureBuilder<Map<String, dynamic>>(
+                future: _getSavedOrdersReport(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    String valorOrderSavedStr = "\$0";
+                    if (snapshot.data!["code"] == 0) {
+                      nroOrderSaved = snapshot.data!["content"][0]["nroOrder"];
+                      valorOrderSaved =
+                          snapshot.data!["content"][0]["valorOrder"];
+
+                      valorOrderSavedStr = numberFormat.format(valorOrderSaved);
+                      if (valorOrderSavedStr.contains('.')) {
+                        int decimalIndex = valorOrderSavedStr.indexOf('.');
+                        valorOrderSavedStr = "\$" +
+                            valorOrderSavedStr.substring(0, decimalIndex);
+                      }
+                    }
+                    return Center(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        child: Center(
+                                          child: Text(
+                                            '$nroOrderSaved',
+                                            style: TextStyle(fontSize: 20),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        child: Center(
+                                          child: Text(
+                                            '#',
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        child: Center(
+                                          child: Text(
+                                            '$valorOrderSavedStr',
+                                            style: TextStyle(fontSize: 20),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        child: Center(
+                                          child: Text(
+                                            'Total',
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Text('Error al tratar de realizar la consulta');
+                  }
+                  return const CircularProgressIndicator();
+                },
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -528,8 +807,13 @@ class EtiquetaBullet extends StatelessWidget {
           ),
         ),
         SizedBox(width: 8),
-        Text(texto,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        Text(
+          texto,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }

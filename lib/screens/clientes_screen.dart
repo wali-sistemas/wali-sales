@@ -50,11 +50,6 @@ class _ClientesPageState extends State<ClientesPage> {
     } else {
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
-      String texto = "No se encontraron clientes para el asesor " +
-          codigo +
-          " en la empresa " +
-          empresa;
-
       final codigoError = resp["code"];
       if (codigoError == -1 ||
           response.statusCode != 200 ||
@@ -249,7 +244,7 @@ class _ClientesPageState extends State<ClientesPage> {
     ));
   }
 
-  showAlertDialogItemsInShoppingCart(BuildContext context, String nit) {
+  void showAlertDialogItemsInShoppingCart(BuildContext context, String nit) {
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
       onPressed: () {
