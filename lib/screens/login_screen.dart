@@ -66,7 +66,7 @@ class _LoginFormState extends State<_LoginForm> {
   String dropdownvalue = 'Elija una empresa';
   String? usuario = "";
   String? clave = "";
-  String versionApp = "10.9";
+  String versionApp = "11.0";
   //bool activeLogin = true;
   var loginForm;
   TextEditingController usuarioController = TextEditingController();
