@@ -3,8 +3,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
-//import 'package:location/location.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:productos_app/services/notifications_extranet_service.dart';
 import 'package:productos_app/widgets/carrito.dart';
 
 class SincronizarPage extends StatefulWidget {
@@ -66,8 +66,6 @@ class _SincronizarPageState extends State<SincronizarPage> {
         setState(
           () {
             _ventas = data;
-
-            /// GUARDAR
             storage.write('ventas', _ventas);
           },
         );
@@ -75,19 +73,6 @@ class _SincronizarPageState extends State<SincronizarPage> {
       }
     }
   }
-
-  /*Future<LocationData> activeteLocation() async {
-    Location location = Location();
-    bool serviceEnabled;
-    LocationData locationData;
-    serviceEnabled = await location.serviceEnabled();
-    if (serviceEnabled) {
-      locationData = await location.getLocation();
-      return locationData;
-    } else {
-      return new LocationData.fromMap({"latitude": 0.0, "longitude": 0.0});
-    }
-  }*/
 
   Future<Position> activeteLocation() async {
     try {
@@ -172,8 +157,6 @@ class _SincronizarPageState extends State<SincronizarPage> {
         setState(
           () {
             _stockFull = data;
-
-            /// GUARDAR
             storage.write('stockFull', _stockFull);
           },
         );
@@ -203,8 +186,6 @@ class _SincronizarPageState extends State<SincronizarPage> {
         setState(
           () {
             _items = data;
-
-            /// GUARDAR
             storage.write('items', _items);
           },
         );
@@ -236,8 +217,6 @@ class _SincronizarPageState extends State<SincronizarPage> {
         setState(
           () {
             _clientes = data;
-
-            /// GUARDAR EN LOCAL STORAGE
             storage.write('datosClientes', _clientes);
           },
         );
@@ -357,8 +336,6 @@ class _SincronizarPageState extends State<SincronizarPage> {
                       btnGpsEnable = true;
                     },
                   );
-                  /*Location location = Location();
-                  location.getLocation();*/
                   Geolocator.getCurrentPosition(
                     desiredAccuracy: LocationAccuracy.high,
                   );
@@ -497,9 +474,10 @@ class _SincronizarPageState extends State<SincronizarPage> {
                           if (isSincItems == "Error de red") {
                             errorREd = ", error de red, verifique conectividad";
                             showAlertError(
-                                context,
-                                "No se pudo sincronizar Items" + errorREd,
-                                "Items");
+                              context,
+                              "No se pudo sincronizar Items" + errorREd,
+                              "Items",
+                            );
                           }
                         }
                       }
@@ -548,9 +526,10 @@ class _SincronizarPageState extends State<SincronizarPage> {
                           if (isSincStock == "Error de red") {
                             errorREd = ", error de red, verifique conectividad";
                             showAlertError(
-                                context,
-                                "No se pudo sincronizar Stock" + errorREd,
-                                "Stock");
+                              context,
+                              "No se pudo sincronizar Stock" + errorREd,
+                              "Stock",
+                            );
                           }
                         }
                       }
@@ -599,9 +578,10 @@ class _SincronizarPageState extends State<SincronizarPage> {
                           if (isSincVentas == "Error de red") {
                             errorREd = ", error de red, verifique conectividad";
                             showAlertError(
-                                context,
-                                "No se pudo sincronizar Ventas" + errorREd,
-                                "Ventas");
+                              context,
+                              "No se pudo sincronizar Ventas" + errorREd,
+                              "Ventas",
+                            );
                           }
                         }
                       }

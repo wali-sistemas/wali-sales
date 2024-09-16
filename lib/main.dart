@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:productos_app/screens/dashboard_screen.dart';
+import 'package:productos_app/services/notifications_extranet_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:productos_app/screens/screens.dart';
@@ -10,6 +12,7 @@ import 'package:productos_app/services/services.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FlutterDownloader.initialize(debug: true, ignoreSsl: true);
+  await initNotificationsExtranet();
   runApp(AppState());
 }
 
@@ -44,10 +47,13 @@ class MyApp extends StatelessWidget {
       },
       scaffoldMessengerKey: NotificationsService.messengerKey,
       theme: ThemeData.light().copyWith(
-          scaffoldBackgroundColor: Colors.grey[300],
-          appBarTheme: AppBarTheme(elevation: 0, color: Colors.indigo),
-          floatingActionButtonTheme: FloatingActionButtonThemeData(
-              backgroundColor: Colors.indigo, elevation: 0)),
+        scaffoldBackgroundColor: Colors.grey[300],
+        appBarTheme: AppBarTheme(elevation: 0, color: Colors.indigo),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: Colors.indigo,
+          elevation: 0,
+        ),
+      ),
     );
   }
 }

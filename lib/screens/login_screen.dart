@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:productos_app/providers/login_form_provider.dart';
 import 'package:productos_app/services/services.dart';
@@ -66,8 +64,10 @@ class _LoginFormState extends State<_LoginForm> {
   String dropdownvalue = 'Elija una empresa';
   String? usuario = "";
   String? clave = "";
-  String versionApp = "11.0";
-  //bool activeLogin = true;
+  String versionApp = "11.1";
+  String isSincStock = "";
+  String isSincItems = "";
+  List _items = [];
   var loginForm;
   TextEditingController usuarioController = TextEditingController();
   TextEditingController claveController = TextEditingController();
@@ -76,6 +76,49 @@ class _LoginFormState extends State<_LoginForm> {
   void initState() {
     super.initState();
     loadInitialData();
+  }
+
+  Future<void> sincronizarStock() async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/IGB?itemcode=0&whscode=0&slpcode=0';
+    final response = await http.get(Uri.parse(apiUrl));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+    final codigoError = resp["code"];
+    if (codigoError == -1) {
+      isSincStock = "Error";
+    } else {
+      final data = resp["content"];
+      if (!mounted) return;
+      setState(
+        () {
+          storage.write('stockFull', data);
+        },
+      );
+      isSincStock = "Ok";
+    }
+  }
+
+  Future<void> sincronizarItems(String company, String slpcode) async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
+            company +
+            "?slpcode=" +
+            slpcode;
+    final response = await http.get(Uri.parse(apiUrl));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+    final codigoError = resp["code"];
+    if (codigoError == -1) {
+      isSincItems = "Error";
+    } else {
+      final data = resp["content"];
+      if (!mounted) return;
+      setState(
+        () {
+          storage.write('items', data);
+        },
+      );
+      isSincItems = "Ok";
+    }
   }
 
   Future<Position> activeteLocation() async {
@@ -211,7 +254,6 @@ class _LoginFormState extends State<_LoginForm> {
                 controller: usuarioController,
                 autocorrect: false,
                 keyboardType: TextInputType.emailAddress,
-                //initialValue: usuario,
                 decoration: InputDecoration(
                   hintText: 'Digite usuario',
                   labelText: 'Usuario',
@@ -219,16 +261,6 @@ class _LoginFormState extends State<_LoginForm> {
                   prefixIconColor: Color.fromRGBO(30, 129, 235, 1),
                 ),
                 onChanged: (value) => loginForm.email = value,
-                /*validator: ( value ) {
-
-                  //String pattern = r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-                 // RegExp regExp  = new RegExp(pattern);
-
-                  return regExp.hasMatch(value ?? '')
-                    ? null
-                    : 'El valor ingresado no luce como un usuario';
-
-              },*/
               ),
             ),
             SizedBox(height: 15),
@@ -236,7 +268,6 @@ class _LoginFormState extends State<_LoginForm> {
               padding: EdgeInsets.symmetric(horizontal: 45, vertical: 15),
               child: TextFormField(
                 controller: claveController,
-                //initialValue: clave,
                 autocorrect: false,
                 obscureText: true,
                 keyboardType: TextInputType.emailAddress,
@@ -311,15 +342,8 @@ class _LoginFormState extends State<_LoginForm> {
                         final authService =
                             Provider.of<AuthService>(context, listen: false);
                         loginForm.isLoading = true;
-                        // if (usuario!.isNotEmpty || usuario!=null) loginForm.email!=usuario;
-                        // if (clave!.isNotEmpty || clave!=null) loginForm.password!=clave;
-                        //print("usuario2");
-                        //print(loginForm.email);
-                        //print("clave2");
-                        //print(loginForm.password);
                         final String? errorMessage = await authService.login2(
                             loginForm.email, loginForm.password);
-                        //si errorMessage = null el usuario ingresó usuario y clave ok
                         if (errorMessage == null) {
                           storage.write("usuario", loginForm.email);
                           storage.write("clave", loginForm.password);
@@ -327,22 +351,22 @@ class _LoginFormState extends State<_LoginForm> {
                           if (locationData.latitude == 0.0 ||
                               locationData.longitude == 0.0) {
                             NotificationsService.showSnackbar(
-                                "Active la ubicación del móvil para poder continuar.");
+                              "Active la ubicación del móvil para poder continuar.",
+                            );
                             Geolocator.getCurrentPosition(
                               desiredAccuracy: LocationAccuracy.high,
                             );
-                            /*Location location = Location();
-                            location.getLocation();*/
                             loginForm.isLoading = false;
                           } else {
                             try {
                               http.Response response =
                                   await createRecordGeoLocation(
-                                      locationData.latitude.toString(),
-                                      locationData.longitude.toString(),
-                                      loginForm.email,
-                                      GetStorage().read('empresa'),
-                                      'L');
+                                locationData.latitude.toString(),
+                                locationData.longitude.toString(),
+                                loginForm.email,
+                                GetStorage().read('empresa'),
+                                'L',
+                              );
                               Map<String, dynamic> res =
                                   jsonDecode(response.body);
                               if (res['code'] == 0) {
@@ -350,15 +374,23 @@ class _LoginFormState extends State<_LoginForm> {
                                   GetStorage().read('empresa'),
                                   loginForm.email,
                                 );
+                                //TODO: sincronizar stock y ítems al iniciar sesión
+                                sincronizarStock();
+                                sincronizarItems(
+                                  GetStorage().read('empresa'),
+                                  loginForm.email,
+                                );
                                 Navigator.pushReplacementNamed(context, 'home');
                               } else {
                                 NotificationsService.showSnackbar(
-                                    res['content']);
+                                  res['content'],
+                                );
                                 loginForm.isLoading = false;
                               }
                             } catch (e) {
                               NotificationsService.showSnackbar(
-                                  "Lo sentimos, ocurrió un error inesperado.");
+                                "Lo sentimos, ocurrió un error inesperado.",
+                              );
                               loginForm.isLoading = false;
                             }
                           }

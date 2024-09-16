@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,6 +11,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:productos_app/widgets/carrito.dart';
+import 'package:productos_app/services/notifications_extranet_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({Key? key}) : super(key: key);
@@ -19,6 +21,20 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  Timer? timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ejecuta el método después de 15 segundos.
+    Timer.periodic(
+      Duration(seconds: 15),
+      (Timer t) {
+        sendNotification();
+      },
+    );
+  }
+
   var dataMap = <String, double>{
     "Ventas": 0,
     "Presupuesto": 0,
@@ -45,6 +61,17 @@ class _DashboardPageState extends State<DashboardPage> {
   int nroOrderSaved = 0;
   double valorOrderSaved = 0;
   var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
+
+  void sendNotification() async {
+    dynamic response = await _findOrderExtranetInprogress();
+
+    if (response != null) {
+      WidgetsFlutterBinding.ensureInitialized();
+      showNotification(response);
+      //TODO: actualiza rel estado de la orden 'NOTIFICADO APP'
+      _updateStatusNotificationOrderExtranet(response["docNum"]);
+    }
+  }
 
   Future<Map<String, dynamic>> _datosDashboard2() async {
     final String apiUrl =
@@ -140,6 +167,36 @@ class _DashboardPageState extends State<DashboardPage> {
       return data;
     } else {
       return resp;
+    }
+  }
+
+  Future<dynamic> _findOrderExtranetInprogress() async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/find-order-extranet-inprogress/' +
+            empresa! +
+            "/" +
+            usuario!;
+    final response = await http.get(Uri.parse(apiUrl));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+
+    if (resp["code"] == 0) {
+      return resp["content"];
+    } else {
+      return null;
+    }
+  }
+
+  Future<void> _updateStatusNotificationOrderExtranet(String docNum) async {
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/update-status-order-extranet/' +
+            empresa! +
+            "/" +
+            docNum;
+    final response = await http.put(Uri.parse(apiUrl));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+
+    if (resp["code"] == 0) {
+      resp["content"];
     }
   }
 

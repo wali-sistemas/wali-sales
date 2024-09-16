@@ -16,6 +16,7 @@ import 'package:productos_app/models/DatabaseHelper.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class PedidosPage extends StatefulWidget {
   const PedidosPage({Key? key}) : super(key: key);
@@ -93,6 +94,19 @@ class _PedidosPageState extends State<PedidosPage>
       await launch(telefonoUrl);
     } else {
       throw 'No se pudo abrir la aplicación de teléfono.';
+    }
+  }
+
+  void _launchWhatsApp(String cellular) async {
+    final url = 'https://wa.me/';
+    if (await launchUrl(Uri.parse(
+        'whatsapp://send?text=Hola, Sr(Sra) soy su asesor de venta:&phone=+57' +
+            cellular))) {
+      await launchUrl(Uri.parse(
+          'whatsapp://send?text=Hola, Sr(Sra) soy su asesor de venta:&phone=+57' +
+              cellular));
+    } else {
+      throw Exception('No se pudo abrir WhatsApp');
     }
   }
 
@@ -369,6 +383,19 @@ class _PedidosPageState extends State<PedidosPage>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
+                          GestureDetector(
+                            onTap: () async {
+                              _launchWhatsApp(datosClientesArr[indice]
+                                      ['cellular']
+                                  .toString());
+                            },
+                            child: Row(
+                              children: [
+                                FaIcon(FontAwesomeIcons.whatsapp),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 20),
                           IconButton(
                             icon: Icon(Icons.phone_outlined),
                             onPressed: () {
@@ -754,9 +781,10 @@ class _MyDialogState extends State<MyDialog> {
       index = GetStorage().read('index');
     }
 
-    if (GetStorage().read('empresa') == 'IGB' &&
-        itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-        itemsGuardados[index]["marca"] == 'TIMSUN') {
+    if (/*GetStorage().read('empresa') == 'IGB' &&*/
+        itemsGuardados[index]["grupo"] == 'LLANTAS' ||
+            (itemsGuardados[index]["marca"] == 'TIMSUN' &&
+                itemsGuardados[index]["marca"] == 'XCELINK')) {
       isVisibleBod = true;
     }
 
