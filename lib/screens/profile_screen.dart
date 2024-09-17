@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:productos_app/screens/login_screen.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:productos_app/widgets/widgets.dart';
@@ -18,9 +19,12 @@ class ProfilePage extends StatelessWidget {
     final response = await http.get(Uri.parse(pdfUrl));
 
     if (response.statusCode == 200) {
+      DateTime now = DateTime.now();
+
       final Uint8List pdfBytes = response.bodyBytes;
-      //final directory = await Directory.systemTemp.createTemp();
-      final pdfFile = File('/storage/emulated/0/Download/instructivo1.pdf');
+      final pdfFile = File('/storage/emulated/0/Download/instructivo ' +
+          DateFormat('yyyyMMdd hhmm').format(now) +
+          '.pdf');
       await pdfFile.writeAsBytes(pdfBytes);
       //print("Archivo descargado");
       //print('/storage/emulated/0/Download/instructivo.pdf');
