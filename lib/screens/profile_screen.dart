@@ -138,7 +138,7 @@ class ProfilePage extends StatelessWidget {
                             width: 100, height: 100),
                         SizedBox(height: 5),
                         Text("Versión 11.1"),
-                        Text("WALI COLMBIA SAS"),
+                        Text("WALI COLOMBIA SAS"),
                         Text("Todos los derechos reservados"),
                         SizedBox(height: 10),
                         GestureDetector(
