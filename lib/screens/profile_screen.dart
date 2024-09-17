@@ -34,9 +34,9 @@ class ProfilePage extends StatelessWidget {
     final url = 'https://wa.me/';
     //var urlEnc = Uri.encodeFull(url);
     if (await launchUrl(Uri.parse(
-        'whatsapp://send?text=Hola, requiero soporte de Wali Sales acerca de:&phone=+573104226264'))) {
+        'whatsapp://send?text=Hola, requiero soporte de Wali Sales acerca de:&phone=+573227656966'))) {
       await launchUrl(Uri.parse(
-          'whatsapp://send?text=Hola, requiero soporte de Wali Sales acerca de:&phone=+573104226264'));
+          'whatsapp://send?text=Hola, requiero soporte de Wali Sales acerca de:&phone=+573227656966'));
     } else {
       throw Exception('No se pudo abrir WhatsApp');
     }

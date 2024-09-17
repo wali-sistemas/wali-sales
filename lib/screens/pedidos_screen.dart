@@ -885,7 +885,11 @@ class _MyDialogState extends State<MyDialog> {
                       var whsCode = '';
                       switch (dropdownvalueBodega) {
                         case 'CARTAGENA':
-                          whsCode = '05';
+                          if (empresa == 'VARROC') {
+                            whsCode = '13';
+                          } else {
+                            whsCode = '05';
+                          }
                           break;
                         case 'CALI':
                           whsCode = '26';
