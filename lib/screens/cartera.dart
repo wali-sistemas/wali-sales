@@ -15,10 +15,10 @@ import 'package:flutter_email_sender/flutter_email_sender.dart';
 class CarteraPage extends StatefulWidget {
   const CarteraPage({Key? key}) : super(key: key);
   @override
-  State<CarteraPage> createState() => _carteraPageState();
+  State<CarteraPage> createState() => CarteraPageState();
 }
 
-class _carteraPageState extends State<CarteraPage> {
+class CarteraPageState extends State<CarteraPage> {
   List _cartera = [];
   String codigo = GetStorage().read('slpCode');
   GetStorage storage = GetStorage();
@@ -689,7 +689,6 @@ class _carteraPageState extends State<CarteraPage> {
                                   '].pdf'
                             ],
                           );
-
                           try {
                             await FlutterEmailSender.send(email);
                           } catch (error) {
@@ -728,7 +727,8 @@ class _carteraPageState extends State<CarteraPage> {
     AlertDialog alert = AlertDialog(
       title: Text("Atención"),
       content: Text(
-          "Tiene ítmes pendientes para otro cliente, si continúa se borrarán e inciará un pedido nuevo, desea continuar?"),
+        "Tiene ítmes pendientes para otro cliente, si continúa se borrarán e inciará un pedido nuevo, desea continuar?",
+      ),
       actions: [
         cancelButton,
         continueButton,
@@ -744,8 +744,13 @@ class _carteraPageState extends State<CarteraPage> {
   }
 }
 
-///// detalle portafolio
-class CarteraDetalle extends StatelessWidget {
+class CarteraDetalle extends StatefulWidget {
+  const CarteraDetalle({Key? key}) : super(key: key);
+  @override
+  State<CarteraDetalle> createState() => CarteraDetalleState();
+}
+
+class CarteraDetalleState extends State<CarteraDetalle> {
   Map<String, dynamic> clienteDetalle = {};
   @override
   Widget build(BuildContext context) {
@@ -793,263 +798,380 @@ class CarteraDetalle extends StatelessWidget {
       ),
     );
   }
-}
 
-Widget tituloDetalle(BuildContext context) {
-  Map<String, dynamic> clienteDetalle = GetStorage().read('clienteDetalle');
-  return Card(
-    child: Container(
-      height: 100,
-      color: Colors.white,
-      child: ListTile(
-        title: Center(
-          child: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black,
-              ),
-              children: [
-                TextSpan(
-                  text: clienteDetalle["cardName"].toString() + '\n',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+  Widget tituloDetalle(BuildContext context) {
+    Map<String, dynamic> clienteDetalle = GetStorage().read('clienteDetalle');
+    return Card(
+      child: Container(
+        height: 100,
+        color: Colors.white,
+        child: ListTile(
+          title: Center(
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+                children: [
+                  TextSpan(
+                    text: clienteDetalle["cardName"].toString() + '\n',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: clienteDetalle["cardCode"].toString() + '\n',
-                ),
-              ],
+                  TextSpan(
+                    text: clienteDetalle["cardCode"].toString() + '\n',
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-Widget carteraDetalle(BuildContext context) {
-  Map<String, dynamic> clienteDetalle = GetStorage().read('clienteDetalle');
+  Widget carteraDetalle(BuildContext context) {
+    Map<String, dynamic> clienteDetalle = GetStorage().read('clienteDetalle');
+    var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
+    List detallPortafolio = clienteDetalle["detailPortfolio"];
 
-  var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
-
-  List detallPortafolio = clienteDetalle["detailPortfolio"];
-  return SafeArea(
-    child: ListView.builder(
-      itemCount: detallPortafolio.length,
-      itemBuilder: (context, index) {
-        String saldo = numberFormat
-            .format(clienteDetalle["detailPortfolio"][index]["balance"]);
-        if (saldo.contains('.')) {
-          int decimalIndex = saldo.indexOf('.');
-          saldo = "\$" + saldo.substring(0, decimalIndex);
-        }
-
-        String valor = numberFormat
-            .format(clienteDetalle["detailPortfolio"][index]["docTotal"]);
-        if (valor.contains('.')) {
-          int decimalIndex = valor.indexOf('.');
-          valor = "\$" + valor.substring(0, decimalIndex);
-        }
-
-        return Card(
-          child: Container(
-            color: Colors.white,
-            child: Column(
-              children: [
-                Align(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 15.0),
-                    child: ListTile(
-                      title: RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            fontSize: 17,
-                            color: Colors.black,
-                            height: 1.5,
+    return SafeArea(
+      child: ListView.builder(
+        itemCount: detallPortafolio.length,
+        itemBuilder: (context, index) {
+          bool showButtonCalculator =
+              clienteDetalle["detailPortfolio"][index]["activeCalc"] == 'Y'
+                  ? true
+                  : false;
+          String saldo = numberFormat
+              .format(clienteDetalle["detailPortfolio"][index]["balance"]);
+          if (saldo.contains('.')) {
+            int decimalIndex = saldo.indexOf('.');
+            saldo = "\$" + saldo.substring(0, decimalIndex);
+          }
+          String valor = numberFormat
+              .format(clienteDetalle["detailPortfolio"][index]["docTotal"]);
+          if (valor.contains('.')) {
+            int decimalIndex = valor.indexOf('.');
+            valor = "\$" + valor.substring(0, decimalIndex);
+          }
+          return Card(
+            child: Container(
+              color: Colors.white,
+              child: Column(
+                children: [
+                  Align(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 15.0),
+                      child: ListTile(
+                        title: RichText(
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 17,
+                              color: Colors.black,
+                              height: 1.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: '\nTipo de documento: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: clienteDetalle["detailPortfolio"][index]
+                                            ["docType"]
+                                        .toString() +
+                                    '\n',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'Nro de documento: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: clienteDetalle["detailPortfolio"][index]
+                                            ["docNum"]
+                                        .toString() +
+                                    '\n',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'Creado: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: clienteDetalle["detailPortfolio"][index]
+                                            ["docDate"]
+                                        .toString() +
+                                    '\n',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'Vencimiento: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: clienteDetalle["detailPortfolio"][index]
+                                            ["docDueDate"]
+                                        .toString() +
+                                    '\n',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'Saldo Pendiente: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: saldo + '\n',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'Valor Factura: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: valor + '\n',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'Días vencidos: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: clienteDetalle["detailPortfolio"][index]
+                                        ["expiredDays"]
+                                    .toString(),
+                                style: TextStyle(
+                                  fontSize: 17,
+                                ),
+                              ),
+                            ],
                           ),
-                          children: [
-                            TextSpan(
-                              text: '\nTipo de documento: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: clienteDetalle["detailPortfolio"][index]
-                                          ["docType"]
-                                      .toString() +
-                                  '\n',
-                              style: TextStyle(
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Nro de documento: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: clienteDetalle["detailPortfolio"][index]
-                                          ["docNum"]
-                                      .toString() +
-                                  '\n',
-                              style: TextStyle(
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Creado: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: clienteDetalle["detailPortfolio"][index]
-                                          ["docDate"]
-                                      .toString() +
-                                  '\n',
-                              style: TextStyle(
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Vencimiento: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: clienteDetalle["detailPortfolio"][index]
-                                          ["docDueDate"]
-                                      .toString() +
-                                  '\n',
-                              style: TextStyle(
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Saldo Pendiente: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: saldo + '\n',
-                              style: TextStyle(
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Valor Factura: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: valor + '\n',
-                              style: TextStyle(
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Días vencidos: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                              ),
-                            ),
-                            TextSpan(
-                              text: clienteDetalle["detailPortfolio"][index]
-                                      ["expiredDays"]
-                                  .toString(),
-                              style: TextStyle(
-                                fontSize: 17,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ),
                   ),
-                ),
-                Align(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.picture_as_pdf_outlined),
-                        onPressed: () {
-                          launch(clienteDetalle["detailPortfolio"][index]
-                                  ["urlFE"]
-                              .toString());
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.mail_outline),
-                        onPressed: () async {
-                          final Email email = Email(
-                            subject: "Detalle de cartera " +
-                                clienteDetalle["detailPortfolio"][index]
-                                    ["docType"] +
-                                " #" +
-                                clienteDetalle["detailPortfolio"][index]
-                                        ["docNum"]
-                                    .toString(),
-                            body: "Tipo de documento: " +
-                                clienteDetalle["detailPortfolio"][index]
-                                        ["docType"]
-                                    .toString() +
-                                '\nNro de documento: ' +
-                                clienteDetalle["detailPortfolio"][index]
-                                        ["docNum"]
-                                    .toString() +
-                                '\nFecha de creación: ' +
-                                clienteDetalle["detailPortfolio"][index]
-                                        ["docDate"]
-                                    .toString() +
-                                '\nFecha de vencimiento: ' +
-                                clienteDetalle["detailPortfolio"][index]
-                                        ["docDueDate"]
-                                    .toString() +
-                                '\nSaldo pendiente: ' +
-                                saldo +
-                                '\nValor factura: ' +
-                                valor +
-                                '\nDías vencidos: ' +
-                                clienteDetalle["detailPortfolio"][index]
-                                        ["expiredDays"]
-                                    .toString() +
-                                "\n\nFactura electrónica:\n\nPara visualizar el documento por favor copie la siguiente url en su navegador favorito:\n\n" +
-                                clienteDetalle["detailPortfolio"][index]
-                                        ["urlFE"]
-                                    .toString(),
-                            recipients: [clienteDetalle["emailFE"].toString()],
-                          );
-
-                          try {
-                            await FlutterEmailSender.send(email);
-                          } catch (error) {
-                            print('Error al enviar el correo: $error');
-                          }
-                        },
-                      )
-                    ],
+                  Align(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        showButtonCalculator
+                            ? IconButton(
+                                icon: Icon(Icons.calculate_rounded),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) {
+                                      return CalculatorDialogWidget(
+                                        totalBruto:
+                                            clienteDetalle["detailPortfolio"]
+                                                    [index]["totalBruto"]
+                                                .toDouble(),
+                                        docTotal:
+                                            clienteDetalle["detailPortfolio"]
+                                                    [index]["docTotal"]
+                                                .toDouble(),
+                                      );
+                                    },
+                                  );
+                                },
+                              )
+                            : SizedBox.shrink(),
+                        IconButton(
+                          icon: Icon(Icons.picture_as_pdf_outlined),
+                          onPressed: () {
+                            launch(clienteDetalle["detailPortfolio"][index]
+                                    ["urlFE"]
+                                .toString());
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.mail_outline),
+                          onPressed: () async {
+                            final Email email = Email(
+                              subject: "Detalle de cartera " +
+                                  clienteDetalle["detailPortfolio"][index]
+                                      ["docType"] +
+                                  " #" +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["docNum"]
+                                      .toString(),
+                              body: "Tipo de documento: " +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["docType"]
+                                      .toString() +
+                                  '\nNro de documento: ' +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["docNum"]
+                                      .toString() +
+                                  '\nFecha de creación: ' +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["docDate"]
+                                      .toString() +
+                                  '\nFecha de vencimiento: ' +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["docDueDate"]
+                                      .toString() +
+                                  '\nSaldo pendiente: ' +
+                                  saldo +
+                                  '\nValor factura: ' +
+                                  valor +
+                                  '\nDías vencidos: ' +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["expiredDays"]
+                                      .toString() +
+                                  "\n\nFactura electrónica:\n\nPara visualizar el documento por favor copie la siguiente url en su navegador favorito:\n\n" +
+                                  clienteDetalle["detailPortfolio"][index]
+                                          ["urlFE"]
+                                      .toString(),
+                              recipients: [
+                                clienteDetalle["emailFE"].toString()
+                              ],
+                            );
+                            try {
+                              await FlutterEmailSender.send(email);
+                            } catch (error) {
+                              print('Error al enviar el correo: $error');
+                            }
+                          },
+                        )
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class CalculatorDialogWidget extends StatefulWidget {
+  final double totalBruto;
+  final double docTotal;
+  CalculatorDialogWidget({required this.totalBruto, required this.docTotal});
+  @override
+  CalculatorDialogState createState() => new CalculatorDialogState();
+}
+
+class CalculatorDialogState extends State<CalculatorDialogWidget> {
+  String discount = "";
+  FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.requestFocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget buttons = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        ElevatedButton(
+          child: Icon(
+            Icons.close_rounded,
+            color: Colors.black87,
           ),
-        );
-      },
-    ),
-  );
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        ElevatedButton(
+          child: Icon(
+            Icons.point_of_sale_rounded,
+            color: Colors.black87,
+          ),
+          onPressed: () {
+            setState(
+              () {
+                String totalBruto = NumberFormat('#,##0.00', 'en_Us').format(
+                    widget.docTotal -
+                        (widget.totalBruto * (double.parse(discount) / 100)));
+
+                if (totalBruto.contains('.')) {
+                  int decimalIndex = totalBruto.indexOf('.');
+                  totalBruto = "\$" + totalBruto.substring(0, decimalIndex);
+                }
+                discount = totalBruto;
+              },
+            );
+          },
+        ),
+      ],
+    );
+
+    return AlertDialog(
+      title: Text(
+        "Calcular descuento financiero",
+        style: TextStyle(fontSize: 16),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: "Ingrese porcentaje",
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (value) {
+              discount = value;
+            },
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          TextField(
+            decoration: InputDecoration(
+              labelText: discount.toString(),
+              border: OutlineInputBorder(),
+            ),
+            enabled: false,
+          )
+        ],
+      ),
+      actions: [
+        buttons,
+      ],
+    );
+  }
 }

@@ -1937,7 +1937,8 @@ class _TotalPedidoState extends State<TotalPedido> {
       BuildContext context,
       Map<String, dynamic> pedidoFinal,
       bool btnConfirmarEnvio,
-      String message) {
+      String message,
+      Position locationData) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -2010,25 +2011,45 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 jsonDecode(response.body);
                             if (response.statusCode == 200 &&
                                 resultado['content'] != "") {
-                              Navigator.pop(context);
-                              setState(
-                                () {
-                                  showAlertPedidoEnviado(
-                                    context,
-                                    "Pedido Guardado: " +
-                                        resultado['content'].toString(),
-                                  );
-                                },
-                              );
-                              setState(
-                                () {
-                                  actualizarEstadoPed(
-                                    GetStorage().read('pedidoGuardado')['id'],
-                                    0,
-                                    'C',
-                                  );
-                                },
-                              );
+                              //registrar localización en la tabla "@HIST_COORDENADAS"
+                              http.Response response =
+                                  await createRecordGeoLocation(
+                                      locationData.latitude.toString(),
+                                      locationData.longitude.toString(),
+                                      GetStorage().read('usuario'),
+                                      empresa,
+                                      'G');
+                              Map<String, dynamic> res =
+                                  jsonDecode(response.body);
+
+                              if (res['code'] == 0) {
+                                Navigator.pop(context);
+                                setState(
+                                  () {
+                                    showAlertPedidoEnviado(
+                                      context,
+                                      "Pedido Guardado: " +
+                                          resultado['content'].toString(),
+                                    );
+                                  },
+                                );
+                                setState(
+                                  () {
+                                    actualizarEstadoPed(
+                                      GetStorage().read('pedidoGuardado')['id'],
+                                      0,
+                                      'C',
+                                    );
+                                  },
+                                );
+                              } else {
+                                Get.snackbar(
+                                  'Error',
+                                  'El servicio no responde, contacte al administrador',
+                                  colorText: Colors.red,
+                                  backgroundColor: Colors.white,
+                                );
+                              }
                             } else {
                               showAlertError(
                                 context,
@@ -2047,17 +2068,6 @@ class _TotalPedidoState extends State<TotalPedido> {
                               },
                             );
                           }
-                          /*storage.remove("pedido");
-                        storage.remove("itemsPedido");
-                        storage.remove("dirEnvio");
-                        storage.remove("pedidoGuardado");
-                        storage.write('estadoPedido', 'nuevo');*/
-                          //await Future.delayed(Duration(seconds: 5));
-                          //btnGuardadActivo = true;
-                          /*Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => HomePage()),
-                        );*/
                         }
                       : null,
                   child: Text("Si"),
@@ -2082,7 +2092,8 @@ class _TotalPedidoState extends State<TotalPedido> {
       BuildContext context,
       Map<String, dynamic> pedidoFinal,
       bool btnConfirmarEnvio,
-      String message) {
+      String message,
+      Position locationData) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -2134,38 +2145,59 @@ class _TotalPedidoState extends State<TotalPedido> {
 
                             if (response.statusCode == 200 &&
                                 resultado['content'] != "") {
-                              Navigator.pop(context);
-                              setState(
-                                () {
-                                  showAlertPedidoEnviado(
-                                    context,
-                                    "Pedido: " +
-                                        resultado['content'].toString(),
-                                  );
-                                },
-                              );
-                              Map<String, dynamic> actualizarPedidoGuardado =
-                                  {};
-                              if (GetStorage()
-                                      .read('actualizarPedidoGuardado') !=
-                                  null) {
-                                actualizarPedidoGuardado = GetStorage()
-                                    .read('actualizarPedidoGuardado');
+                              //registrar localización en la tabla "@HIST_COORDENADAS"
+                              http.Response response =
+                                  await createRecordGeoLocation(
+                                      locationData.latitude.toString(),
+                                      locationData.longitude.toString(),
+                                      GetStorage().read('usuario'),
+                                      empresa,
+                                      'G');
+                              Map<String, dynamic> res =
+                                  jsonDecode(response.body);
+
+                              if (res['code'] == 0) {
+                                Navigator.pop(context);
                                 setState(
                                   () {
-                                    actualizarEstadoPed(
-                                      int.parse(actualizarPedidoGuardado["id"]),
-                                      resultado['content'],
-                                      'F',
+                                    showAlertPedidoEnviado(
+                                      context,
+                                      "Pedido: " +
+                                          resultado['content'].toString(),
                                     );
                                   },
                                 );
+                                Map<String, dynamic> actualizarPedidoGuardado =
+                                    {};
+                                if (GetStorage()
+                                        .read('actualizarPedidoGuardado') !=
+                                    null) {
+                                  actualizarPedidoGuardado = GetStorage()
+                                      .read('actualizarPedidoGuardado');
+                                  setState(
+                                    () {
+                                      actualizarEstadoPed(
+                                        int.parse(
+                                            actualizarPedidoGuardado["id"]),
+                                        resultado['content'],
+                                        'F',
+                                      );
+                                    },
+                                  );
+                                }
+                                storage.remove("pedido");
+                                storage.remove("itemsPedido");
+                                storage.remove("dirEnvio");
+                                storage.remove("pedidoGuardado");
+                                storage.write('estadoPedido', 'nuevo');
+                              } else {
+                                Get.snackbar(
+                                  'Error',
+                                  'El servicio no responde, contacte al administrador',
+                                  colorText: Colors.red,
+                                  backgroundColor: Colors.white,
+                                );
                               }
-                              storage.remove("pedido");
-                              storage.remove("itemsPedido");
-                              storage.remove("dirEnvio");
-                              storage.remove("pedidoGuardado");
-                              storage.write('estadoPedido', 'nuevo');
                             } else {
                               Get.snackbar(
                                 'Error',
@@ -2646,33 +2678,13 @@ class _TotalPedidoState extends State<TotalPedido> {
                                     desiredAccuracy: LocationAccuracy.high,
                                   );
                                 } else {
-                                  try {
-                                    http.Response response =
-                                        await createRecordGeoLocation(
-                                            locationData.latitude.toString(),
-                                            locationData.longitude.toString(),
-                                            GetStorage().read('usuario'),
-                                            empresa,
-                                            'P');
-                                    Map<String, dynamic> res =
-                                        jsonDecode(response.body);
-                                    if (res['code'] == 0) {
-                                      showAlertConfirmOrder(
-                                        context,
-                                        pedidoFinal,
-                                        true,
-                                        "¿Está seguro que deseea enviar el pedido?",
-                                      );
-                                    } else {
-                                      showAlertErrorDir(
-                                          context, res['content']);
-                                    }
-                                  } catch (e) {
-                                    showAlertErrorDir(
-                                      context,
-                                      "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente",
-                                    );
-                                  }
+                                  showAlertConfirmOrder(
+                                    context,
+                                    pedidoFinal,
+                                    true,
+                                    "¿Está seguro que deseea enviar el pedido?",
+                                    locationData,
+                                  );
                                 }
                               }
                             },
@@ -2734,32 +2746,13 @@ class _TotalPedidoState extends State<TotalPedido> {
                                     desiredAccuracy: LocationAccuracy.high,
                                   );
                                 } else {
-                                  try {
-                                    http.Response response =
-                                        await createRecordGeoLocation(
-                                            locationData.latitude.toString(),
-                                            locationData.longitude.toString(),
-                                            GetStorage().read('usuario'),
-                                            empresa,
-                                            'G');
-                                    Map<String, dynamic> res =
-                                        jsonDecode(response.body);
-                                    if (res['code'] == 0) {
-                                      showAlertConfirmOrderForSave(
-                                          context,
-                                          pedidoFinal,
-                                          true,
-                                          "¿Está seguro que deseea guardar el pedido?");
-                                    } else {
-                                      showAlertErrorDir(
-                                          context, res['content']);
-                                    }
-                                  } catch (e) {
-                                    showAlertErrorDir(
-                                      context,
-                                      "Lo sentimos, ocurrió un error inesperado. Inténtelo nuevamente",
-                                    );
-                                  }
+                                  showAlertConfirmOrderForSave(
+                                    context,
+                                    pedidoFinal,
+                                    true,
+                                    "¿Está seguro que deseea guardar el pedido?",
+                                    locationData,
+                                  );
                                 }
                               }
                             },
