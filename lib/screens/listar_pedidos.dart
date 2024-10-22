@@ -10,7 +10,7 @@ import 'package:productos_app/screens/home_screen.dart';
 import 'package:productos_app/screens/buscador_pedidos.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:productos_app/widgets/carrito.dart';
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:productos_app/models/DatabaseHelper.dart';
 
 class ListarPedidosPage extends StatefulWidget {

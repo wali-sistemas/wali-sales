@@ -7,7 +7,7 @@ import 'package:productos_app/screens/buscador_cartera.dart';
 import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
 import 'package:productos_app/screens/home_screen.dart';
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
@@ -974,10 +974,26 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                               ),
                               TextSpan(
                                 text: clienteDetalle["detailPortfolio"][index]
-                                        ["expiredDays"]
-                                    .toString(),
+                                            ["expiredDays"]
+                                        .toString() +
+                                    '\n',
                                 style: TextStyle(
                                   fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'Comentario: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              TextSpan(
+                                text: clienteDetalle["detailPortfolio"][index]
+                                        ["comment"]
+                                    .toString(),
+                                style: TextStyle(
+                                  fontSize: 15,
                                 ),
                               ),
                             ],

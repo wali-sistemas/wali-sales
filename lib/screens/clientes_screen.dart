@@ -6,7 +6,7 @@ import 'package:productos_app/screens/pedidos_screen.dart';
 import 'buscador_clientes.dart';
 import 'package:productos_app/screens/home_screen.dart';
 import 'package:productos_app/widgets/carrito.dart';
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ClientesPage extends StatefulWidget {
   const ClientesPage({Key? key}) : super(key: key);
