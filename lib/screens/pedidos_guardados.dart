@@ -150,7 +150,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text("No"),
+              child: Text("NO"),
             ),
             ElevatedButton(
               onPressed: () {
@@ -170,7 +170,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
                   (Route<dynamic> route) => false,
                 );
               },
-              child: Text("Si"),
+              child: Text("SI"),
             ),
           ],
         );

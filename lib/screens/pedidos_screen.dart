@@ -1319,7 +1319,7 @@ class _DetallePedidoState extends State<DetallePedido> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text("No"),
+              child: Text("NO"),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1336,7 +1336,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                   (Route<dynamic> route) => false,
                 );
               },
-              child: Text("Si"),
+              child: Text("SI"),
             ),
           ],
         );
@@ -1357,7 +1357,7 @@ class _DetallePedidoState extends State<DetallePedido> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text("No"),
+              child: Text("NO"),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1374,7 +1374,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                 );
                 Navigator.pop(context);
               },
-              child: Text("Si"),
+              child: Text("SI"),
             ),
           ],
         );
@@ -1945,13 +1945,14 @@ class _TotalPedidoState extends State<TotalPedido> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
+            bool isProcessing = false;
             return AlertDialog(
               title: Text("Atención"),
               content: Text(message),
               actions: [
                 ElevatedButton(
                   onPressed: btnConfirmarEnvio
-                      ? () async {
+                      ? () {
                           setState(
                             () {
                               btnConfirmarEnvio = false;
@@ -1960,13 +1961,14 @@ class _TotalPedidoState extends State<TotalPedido> {
                           Navigator.pop(context);
                         }
                       : null,
-                  child: Text("No"),
+                  child: Text("NO"),
                 ),
                 ElevatedButton(
-                  onPressed: btnConfirmarEnvio
+                  onPressed: btnConfirmarEnvio && !isProcessing
                       ? () async {
                           setState(
                             () {
+                              isProcessing = true;
                               btnConfirmarEnvio = false;
                               message = 'Guardando pedido. Por favor espere...';
                             },
@@ -1978,7 +1980,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                           double descD = double.parse(descS);
                           String totS = pedidoFinal["docTotal"];
                           double totD = double.parse(totS);
-                          /////// guardar
+
                           Pedido pedidoF = Pedido(
                             cardCode: pedidoFinal["cardCode"],
                             cardName: pedidoFinal["cardName"],
@@ -1993,25 +1995,26 @@ class _TotalPedidoState extends State<TotalPedido> {
                             lineNum: pedidoFinal["lineNum"],
                             detailSalesOrder: "Detalle del pedido",
                           );
-                          //observacionesController.text='';
-                          // if (buscarClientePedido(pedidoFinal["cardName"])==false)
-                          // {print ("No esta el pedido, insertando...");insertPedidoDb(pedidoF);}
-                          // else {print ("Ya está el pedido, actualizando ...");}
+
+                          // Guardar el pedido en la base de datos local
                           insertPedidoDb(pedidoF);
                           listarPedidos();
+
                           setState(
                             () {
                               cargando = true;
                             },
                           );
+
                           try {
                             http.Response response =
                                 await _guardarPedido(context, pedidoFinal);
                             Map<String, dynamic> resultado =
                                 jsonDecode(response.body);
+
                             if (response.statusCode == 200 &&
                                 resultado['content'] != "") {
-                              //registrar localización en la tabla "@HIST_COORDENADAS"
+                              // Registrar localización
                               http.Response response =
                                   await createRecordGeoLocation(
                                       locationData.latitude.toString(),
@@ -2021,7 +2024,6 @@ class _TotalPedidoState extends State<TotalPedido> {
                                       'G');
                               Map<String, dynamic> res =
                                   jsonDecode(response.body);
-
                               if (res['code'] == 0) {
                                 Navigator.pop(context);
                                 setState(
@@ -2067,11 +2069,17 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 );
                               },
                             );
+                          } finally {
+                            setState(
+                              () {
+                                isProcessing = false;
+                              },
+                            );
                           }
                         }
                       : null,
-                  child: Text("Si"),
-                )
+                  child: Text("SI"),
+                ),
               ],
             );
           },
@@ -2100,22 +2108,24 @@ class _TotalPedidoState extends State<TotalPedido> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
+            bool isProcessing = false;
             return AlertDialog(
               title: Text("Atención"),
               content: Text(message),
               actions: [
                 ElevatedButton(
-                  onPressed: btnConfirmarEnvio
-                      ? () async {
+                  onPressed: btnConfirmarEnvio && !isProcessing
+                      ? () {
                           setState(
                             () {
+                              isProcessing = true;
                               btnConfirmarEnvio = false;
                             },
                           );
                           Navigator.pop(context);
                         }
                       : null,
-                  child: Text("No"),
+                  child: Text("NO"),
                 ),
                 ElevatedButton(
                   onPressed: btnConfirmarEnvio
@@ -2138,72 +2148,89 @@ class _TotalPedidoState extends State<TotalPedido> {
                               },
                             );
 
-                            http.Response response =
-                                await _enviarPedido(context, pedidoFinal);
-                            Map<String, dynamic> resultado =
-                                jsonDecode(response.body);
-
-                            if (response.statusCode == 200 &&
-                                resultado['content'] != "") {
-                              //registrar localización en la tabla "@HIST_COORDENADAS"
+                            try {
                               http.Response response =
-                                  await createRecordGeoLocation(
-                                      locationData.latitude.toString(),
-                                      locationData.longitude.toString(),
-                                      GetStorage().read('usuario'),
-                                      empresa,
-                                      'G');
-                              Map<String, dynamic> res =
+                                  await _enviarPedido(context, pedidoFinal);
+                              Map<String, dynamic> resultado =
                                   jsonDecode(response.body);
-
-                              if (res['code'] == 0) {
-                                Navigator.pop(context);
-                                setState(
-                                  () {
-                                    showAlertPedidoEnviado(
-                                      context,
-                                      "Pedido: " +
-                                          resultado['content'].toString(),
-                                    );
-                                  },
-                                );
-                                Map<String, dynamic> actualizarPedidoGuardado =
-                                    {};
-                                if (GetStorage()
-                                        .read('actualizarPedidoGuardado') !=
-                                    null) {
-                                  actualizarPedidoGuardado = GetStorage()
-                                      .read('actualizarPedidoGuardado');
+                              if (response.statusCode == 200 &&
+                                  resultado['content'] != "") {
+                                //registrar localización en la tabla "@HIST_COORDENADAS"
+                                http.Response response =
+                                    await createRecordGeoLocation(
+                                        locationData.latitude.toString(),
+                                        locationData.longitude.toString(),
+                                        GetStorage().read('usuario'),
+                                        empresa,
+                                        'G');
+                                Map<String, dynamic> res =
+                                    jsonDecode(response.body);
+                                if (res['code'] == 0) {
+                                  Navigator.pop(context);
                                   setState(
                                     () {
-                                      actualizarEstadoPed(
-                                        int.parse(
-                                            actualizarPedidoGuardado["id"]),
-                                        resultado['content'],
-                                        'F',
+                                      showAlertPedidoEnviado(
+                                        context,
+                                        "Pedido: " +
+                                            resultado['content'].toString(),
                                       );
                                     },
                                   );
+                                  Map<String, dynamic>
+                                      actualizarPedidoGuardado = {};
+                                  if (GetStorage()
+                                          .read('actualizarPedidoGuardado') !=
+                                      null) {
+                                    actualizarPedidoGuardado = GetStorage()
+                                        .read('actualizarPedidoGuardado');
+                                    setState(
+                                      () {
+                                        actualizarEstadoPed(
+                                          int.parse(
+                                              actualizarPedidoGuardado["id"]),
+                                          resultado['content'],
+                                          'F',
+                                        );
+                                      },
+                                    );
+                                  }
+                                  storage.remove("pedido");
+                                  storage.remove("itemsPedido");
+                                  storage.remove("dirEnvio");
+                                  storage.remove("pedidoGuardado");
+                                  storage.write('estadoPedido', 'nuevo');
+                                } else {
+                                  Get.snackbar(
+                                    'Error',
+                                    'El servicio no responde, contacte al administrador',
+                                    colorText: Colors.red,
+                                    backgroundColor: Colors.white,
+                                  );
                                 }
-                                storage.remove("pedido");
-                                storage.remove("itemsPedido");
-                                storage.remove("dirEnvio");
-                                storage.remove("pedidoGuardado");
-                                storage.write('estadoPedido', 'nuevo');
                               } else {
                                 Get.snackbar(
                                   'Error',
-                                  'El servicio no responde, contacte al administrador',
+                                  'No se pudo crear el pedido',
                                   colorText: Colors.red,
                                   backgroundColor: Colors.white,
                                 );
                               }
-                            } else {
-                              Get.snackbar(
-                                'Error',
-                                'No se pudo crear el pedido',
-                                colorText: Colors.red,
-                                backgroundColor: Colors.white,
+                            } catch (e) {
+                              setState(
+                                () {
+                                  Get.snackbar(
+                                    'Error',
+                                    'El servicio no responde, contacte al administrador',
+                                    colorText: Colors.red,
+                                    backgroundColor: Colors.white,
+                                  );
+                                },
+                              );
+                            } finally {
+                              setState(
+                                () {
+                                  isProcessing = false;
+                                },
                               );
                             }
                           } else {
@@ -2214,7 +2241,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                           }
                         }
                       : null,
-                  child: Text("Si"),
+                  child: Text("SI"),
                 )
               ],
             );
