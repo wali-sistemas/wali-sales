@@ -2513,10 +2513,13 @@ class _TotalPedidoState extends State<TotalPedido> {
       );
 
       String ivaTxt = numberFormat.format(iva);
-      double total = subtotal.toDouble() + iva;
+      double totalMasIva = subtotal.toDouble() + iva;
       String subtotalTxt = numberFormat.format(subtotal);
       String descuento = pedidoFinal['discountPercent'];
       String estadoPedido = "";
+      double total = subtotal -
+          (subtotal * (double.parse(descuento).toInt() / 100)) +
+          (iva - (iva * (double.parse(descuento).toInt() / 100)));
 
       if (subtotalTxt.contains('.')) {
         int decimalIndex = subtotalTxt.indexOf('.');
@@ -2532,8 +2535,8 @@ class _TotalPedidoState extends State<TotalPedido> {
         ivaTxt = ivaTxt.substring(0, decimalIndex);
       }
       String totalDocTxt = numberFormat.format(subtotal -
-          (subtotal * (int.parse(descuento) / 100)) +
-          (iva - (iva * (int.parse(descuento) / 100))));
+          (subtotal * (double.parse(descuento).toInt() / 100)) +
+          (iva - (iva * (double.parse(descuento).toInt() / 100))));
       if (totalDocTxt.contains('.')) {
         int decimalIndex = totalDocTxt.indexOf('.');
         totalDocTxt = totalDocTxt.substring(0, decimalIndex);
@@ -2555,8 +2558,8 @@ class _TotalPedidoState extends State<TotalPedido> {
           observacionesController.text = obs;
         }
       }
-
       pedidoFinal['docTotal'] = total.toString();
+
       return SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
