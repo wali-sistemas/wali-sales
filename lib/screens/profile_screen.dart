@@ -35,14 +35,17 @@ class ProfilePage extends StatelessWidget {
   }
 
   void _launchWhatsApp() async {
-    final url = 'https://wa.me/';
-    //var urlEnc = Uri.encodeFull(url);
-    if (await launchUrl(Uri.parse(
-        'whatsapp://send?text=Hola, requiero soporte de Wali Sales acerca de:&phone=+573227656966'))) {
-      await launchUrl(Uri.parse(
-          'whatsapp://send?text=Hola, requiero soporte de Wali Sales acerca de:&phone=+573227656966'));
-    } else {
-      throw Exception('No se pudo abrir WhatsApp');
+    try {
+      final Uri whatsappUri = Uri.parse(
+          'https://wa.me/+573227656966?text=${Uri.encodeComponent("Hola, requiero soporte de Wali Sales acerca de:")}');
+
+      if (await canLaunchUrl(whatsappUri)) {
+        await launchUrl(whatsappUri);
+      } else {
+        throw Exception('No se pudo abrir WhatsApp');
+      }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 

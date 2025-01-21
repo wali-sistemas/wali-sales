@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'dart:io';
@@ -98,15 +99,17 @@ class _PedidosPageState extends State<PedidosPage>
   }
 
   void _launchWhatsApp(String cellular) async {
-    final url = 'https://wa.me/';
-    if (await launchUrl(Uri.parse(
-        'whatsapp://send?text=Hola, Sr(Sra) soy su asesor de venta:&phone=+57' +
-            cellular))) {
-      await launchUrl(Uri.parse(
-          'whatsapp://send?text=Hola, Sr(Sra) soy su asesor de venta:&phone=+57' +
-              cellular));
-    } else {
-      throw Exception('No se pudo abrir WhatsApp');
+    try {
+      final Uri whatsappUri = Uri.parse(
+          'https://wa.me/+57$cellular?text=${Uri.encodeComponent("Hola, Sr(Sra) soy su asesor de venta.")}');
+
+      if (await canLaunchUrl(whatsappUri)) {
+        await launchUrl(whatsappUri);
+      } else {
+        throw Exception('No se pudo abrir WhatsApp');
+      }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 
@@ -414,8 +417,8 @@ class _PedidosPageState extends State<PedidosPage>
                               );
                               try {
                                 await FlutterEmailSender.send(email);
-                              } catch (error) {
-                                print('Error al abrir el correo: $error');
+                              } catch (e) {
+                                print('Error al abrir el correo: $e');
                               }
                             },
                           ),
@@ -758,7 +761,7 @@ class _MyDialogState extends State<MyDialog> {
 
   @override
   Widget build(BuildContext context) {
-    var bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
+    var bodegas = [''];
     bool isVisibleBod = false;
     bool alertItemAdd = false;
     int cantItemAdd = 0;
@@ -780,11 +783,17 @@ class _MyDialogState extends State<MyDialog> {
     } else {
       index = GetStorage().read('index');
     }
-
-    if (/*GetStorage().read('empresa') == 'IGB' &&*/
-        itemsGuardados[index]["grupo"] == 'LLANTAS' ||
-            (itemsGuardados[index]["marca"] == 'TIMSUN' &&
-                itemsGuardados[index]["marca"] == 'XCELINK')) {
+    //Activar seleccion de bodega para las llantas
+    if (itemsGuardados[index]["grupo"] == 'LLANTAS' ||
+        (itemsGuardados[index]["marca"] == 'TIMSUN' &&
+            itemsGuardados[index]["marca"] == 'XCELINK')) {
+      bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
+      isVisibleBod = true;
+    }
+    //Activar seleccion de bodega para los lubricantes de REVO bodega 35-MAGNUN BOGOTA y 01-CEDI MEDELLÍN
+    if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
+        itemsGuardados[index]["marca"] == 'REVO') {
+      bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
       isVisibleBod = true;
     }
 
@@ -855,12 +864,8 @@ class _MyDialogState extends State<MyDialog> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              if (alertItemAdd)
-                //mostar cantidad agregada al detalle
-                Text(cantItemAdd.toString() + ' '),
-              if (alertItemAdd)
-                //mostar si esta agregado al detalle
-                Icon(Icons.verified_outlined),
+              if (alertItemAdd) Text(cantItemAdd.toString() + ' '),
+              if (alertItemAdd) Icon(Icons.verified_outlined),
               Text('          Sku: ' + itemsGuardados[index]['itemCode']),
             ],
           ),
@@ -893,6 +898,12 @@ class _MyDialogState extends State<MyDialog> {
                           break;
                         case 'CALI':
                           whsCode = '26';
+                          break;
+                        case 'MEDELLÍN':
+                          whsCode = '01';
+                          break;
+                        case 'BOGOTÁ':
+                          whsCode = '35';
                           break;
                         default:
                           whsCode = '01';
