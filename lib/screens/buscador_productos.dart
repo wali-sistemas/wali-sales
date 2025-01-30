@@ -113,7 +113,7 @@ class CustomSearchDelegate extends SearchDelegate {
                     fontSize: 15,
                   ),
                 ),
-                subtitle: Text("Código: " + _itemsBuscador[indexB]['itemCode']),
+                subtitle: Text("Sku: " + _itemsBuscador[indexB]['itemCode']),
                 leading: GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -439,7 +439,7 @@ class _MyDialogState extends State<MyDialog> {
 
   @override
   Widget build(BuildContext context) {
-    var bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
+    var bodegas = [''];
     bool isVisibleBod = false;
 
     if (GetStorage().read('items') == null) {
@@ -459,10 +459,17 @@ class _MyDialogState extends State<MyDialog> {
     } else {
       index = GetStorage().read('index');
     }
-
-    if (GetStorage().read('empresa') == 'IGB' &&
-        itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-        itemsGuardados[index]["marca"] == 'TIMSUN') {
+    //Activar seleccion de bodega para las llantas
+    if (itemsGuardados[index]["grupo"] == 'LLANTAS' ||
+        (itemsGuardados[index]["marca"] == 'TIMSUN' &&
+            itemsGuardados[index]["marca"] == 'XCELINK')) {
+      bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
+      isVisibleBod = true;
+    }
+    //Activar seleccion de bodega para los lubricantes de REVO bodega 35-MAGNUN BOGOTA y 01-CEDI MEDELLÍN
+    if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
+        itemsGuardados[index]["marca"] == 'REVO') {
+      bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
       isVisibleBod = true;
     }
 
@@ -545,10 +552,20 @@ class _MyDialogState extends State<MyDialog> {
                       var whsCode = '';
                       switch (dropdownvalueBodega) {
                         case 'CARTAGENA':
-                          whsCode = '05';
+                          if (empresa == 'VARROC') {
+                            whsCode = '13';
+                          } else {
+                            whsCode = '05';
+                          }
                           break;
                         case 'CALI':
                           whsCode = '26';
+                          break;
+                        case 'MEDELLÍN':
+                          whsCode = '01';
+                          break;
+                        case 'BOGOTÁ':
+                          whsCode = '35';
                           break;
                         default:
                           whsCode = '01';

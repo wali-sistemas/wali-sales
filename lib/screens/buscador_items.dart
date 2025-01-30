@@ -132,12 +132,19 @@ class CustomSearchDelegate extends SearchDelegate {
                     fontSize: 15,
                   ),
                 ),
-                subtitle: Text("Código: " + _itemsBuscador[indexB]['itemCode']),
+                subtitle: Text("Sku: " + _itemsBuscador[indexB]['itemCode']),
                 leading: GestureDetector(
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) {
-                      return DetailScreen(_itemsBuscador[indexB]['pictureUrl']);
-                    }));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) {
+                          return DetailScreen(
+                            _itemsBuscador[indexB]['pictureUrl'],
+                          );
+                        },
+                      ),
+                    );
                   }, // Image tapped
                   child: //Image.network(_items[index]['pictureUrl'], width: 40,height: 40),
                       CachedNetworkImage(
@@ -268,7 +275,10 @@ class CustomSearchDelegate extends SearchDelegate {
                 '\n' +
                 _itemsBuscador2[index]["itemCode"],
             style: TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
           ),
         ),
       ),

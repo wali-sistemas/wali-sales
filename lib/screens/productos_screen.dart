@@ -88,121 +88,73 @@ class _ProductosPageState extends State<ProductosPage> {
   }
 
   Widget items(BuildContext context) {
-    _listarItems();
-    return SafeArea(
-      child: ListView.builder(
-        itemCount: _items.length,
-        itemBuilder: (context, index) {
-          return Card(
-            child: Row(
-              children: [
-                Container(
-                  color: Color.fromRGBO(250, 251, 253, 1),
-                  child: ListTile(
-                    title: Text(
-                      _items[index]['itemName'],
-                      style: TextStyle(
-                        fontSize: 15,
-                      ),
-                    ),
-                    subtitle: Text(
-                      "Sku: " + _items[index]['itemCode'],
-                      style: TextStyle(
-                        fontSize: 13,
-                      ),
-                    ),
-                    leading: GestureDetector(
-                      onTap: () {
-                        urlImagenItem = _items[index]['pictureUrl'];
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) {
-                              return DetailScreen(_items[index]['pictureUrl']);
-                            },
-                          ),
-                        );
-                      },
-                      child: CachedNetworkImage(
-                        imageUrl: _items[index]['pictureUrl'],
-                        placeholder: (context, url) =>
-                            CircularProgressIndicator(),
-                        errorWidget: (context, url, error) =>
-                            Icon(Icons.wallpaper),
-                      ),
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) {
-                            storage.write("index", index);
-                            return MyDialog();
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-          /*child: Padding(
-              padding: EdgeInsets.all(1),
-              child: Container(
-                color: Color.fromRGBO(250, 251, 253, 1),
-                child: ListTile(
-                  title: Text(
-                    _items[index]['itemName'],
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
-                  subtitle: Text(
-                    "Sku: " + _items[index]['itemCode'],
-                    style: TextStyle(
-                      fontSize: 13,
-                    ),
-                  ),
-                  leading: GestureDetector(
-                    onTap: () {
-                      urlImagenItem = _items[index]['pictureUrl'];
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) {
-                            return DetailScreen(_items[index]['pictureUrl']);
-                          },
+    return FutureBuilder(
+      future: _listarItems(),
+      builder: (context, snapshot) {
+        return SafeArea(
+          child: ListView.builder(
+            itemCount: _items.length,
+            itemBuilder: (context, index) {
+              return Card(
+                child: Padding(
+                  padding: EdgeInsets.all(1),
+                  child: Container(
+                    color: Color.fromRGBO(250, 251, 253, 1),
+                    child: ListTile(
+                      title: Text(
+                        _items[index]['itemName'],
+                        style: TextStyle(
+                          fontSize: 15,
                         ),
-                      );
-                    },
-                    child: CachedNetworkImage(
-                      imageUrl: _items[index]['pictureUrl'],
-                      placeholder: (context, url) =>
-                          CircularProgressIndicator(),
-                      errorWidget: (context, url, error) =>
-                          Icon(Icons.wallpaper),
+                      ),
+                      subtitle: Text(
+                        "Sku: " + _items[index]['itemCode'],
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                      leading: GestureDetector(
+                        onTap: () {
+                          urlImagenItem = _items[index]['pictureUrl'];
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) {
+                                return DetailScreen(
+                                  _items[index]['pictureUrl'],
+                                );
+                              },
+                            ),
+                          );
+                        },
+                        child: CachedNetworkImage(
+                          imageUrl: _items[index]['pictureUrl'],
+                          placeholder: (context, url) =>
+                              CircularProgressIndicator(),
+                          errorWidget: (context, url, error) =>
+                              Icon(Icons.wallpaper),
+                        ),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) {
+                              storage.write("index", index);
+                              return MyDialog();
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) {
-                          storage.write("index", index);
-                          return MyDialog();
-                        },
-                      );
-                    },
-                  ),
                 ),
-              ),
-            ),
-          );*/
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -217,14 +169,16 @@ class _ProductosPageState extends State<ProductosPage> {
       Map<String, dynamic> resp = jsonDecode(response.body);
       final data = resp["content"];
       if (!mounted) return;
-      setState(() {
-        _items = data;
+      setState(
+        () {
+          _items = data;
 
-        /// GUARDAR EN SHAREDPREFERENCES MIENTRAS SE HACE CON SQL
-        //String itemsG = jsonEncode(_items);
-        storage.write('items', _items);
-        //_guardarItems();
-      });
+          /// GUARDAR EN SHAREDPREFERENCES MIENTRAS SE HACE CON SQL
+          //String itemsG = jsonEncode(_items);
+          storage.write('items', _items);
+          //_guardarItems();
+        },
+      );
     } else {
       _items = GetStorage().read('items');
     }
@@ -435,7 +389,7 @@ class _MyDialogState extends State<MyDialog> {
 
   @override
   Widget build(BuildContext context) {
-    var bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
+    var bodegas = [''];
     bool isVisibleBod = false;
 
     if (GetStorage().read('items') == null) {
@@ -455,10 +409,17 @@ class _MyDialogState extends State<MyDialog> {
     } else {
       index = GetStorage().read('index');
     }
-
-    if (GetStorage().read('empresa') == 'IGB' &&
-        itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-        itemsGuardados[index]["marca"] == 'TIMSUN') {
+    //Activar seleccion de bodega para las llantas
+    if (itemsGuardados[index]["grupo"] == 'LLANTAS' ||
+        (itemsGuardados[index]["marca"] == 'TIMSUN' &&
+            itemsGuardados[index]["marca"] == 'XCELINK')) {
+      bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
+      isVisibleBod = true;
+    }
+    //Activar seleccion de bodega para los lubricantes de REVO bodega 35-MAGNUN BOGOTA y 01-CEDI MEDELLÍN
+    if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
+        itemsGuardados[index]["marca"] == 'REVO') {
+      bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
       isVisibleBod = true;
     }
 
@@ -541,10 +502,20 @@ class _MyDialogState extends State<MyDialog> {
                       var whsCode = '';
                       switch (dropdownvalueBodega) {
                         case 'CARTAGENA':
-                          whsCode = '05';
+                          if (empresa == 'VARROC') {
+                            whsCode = '13';
+                          } else {
+                            whsCode = '05';
+                          }
                           break;
                         case 'CALI':
                           whsCode = '26';
+                          break;
+                        case 'MEDELLÍN':
+                          whsCode = '01';
+                          break;
+                        case 'BOGOTÁ':
+                          whsCode = '35';
                           break;
                         default:
                           whsCode = '01';

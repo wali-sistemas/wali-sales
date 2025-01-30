@@ -474,67 +474,72 @@ class _PedidosPageState extends State<PedidosPage>
 
   @override
   Widget items(BuildContext context) {
-    _listarItems();
-    return SafeArea(
-      child: ListView.builder(
-        itemCount: _items.length,
-        itemBuilder: (context, index) {
-          return Card(
-            child: Padding(
-              padding: EdgeInsets.all(1),
-              child: Container(
-                color: Color.fromRGBO(250, 251, 253, 1),
-                child: ListTile(
-                  title: Text(
-                    _items[index]['itemName'],
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
-                  subtitle: Text(
-                    "Sku: " + _items[index]['itemCode'],
-                    style: TextStyle(
-                      fontSize: 13,
-                    ),
-                  ),
-                  leading: GestureDetector(
-                    onTap: () {
-                      urlImagenItem = _items[index]['pictureUrl'];
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) {
-                            return DetailScreen(_items[index]['pictureUrl']);
-                          },
+    return FutureBuilder(
+      future: _listarItems(),
+      builder: (context, snapshot) {
+        return SafeArea(
+          child: ListView.builder(
+            itemCount: _items.length,
+            itemBuilder: (context, index) {
+              return Card(
+                child: Padding(
+                  padding: EdgeInsets.all(1),
+                  child: Container(
+                    color: Color.fromRGBO(250, 251, 253, 1),
+                    child: ListTile(
+                      title: Text(
+                        _items[index]['itemName'],
+                        style: TextStyle(
+                          fontSize: 15,
                         ),
-                      );
-                    },
-                    child: CachedNetworkImage(
-                      imageUrl: _items[index]['pictureUrl'],
-                      placeholder: (context, url) =>
-                          CircularProgressIndicator(),
-                      errorWidget: (context, url, error) =>
-                          Icon(Icons.wallpaper),
-                    ),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) {
-                          storage.write("index", index);
-                          return MyDialog();
+                      ),
+                      subtitle: Text(
+                        "Sku: " + _items[index]['itemCode'],
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                      leading: GestureDetector(
+                        onTap: () {
+                          urlImagenItem = _items[index]['pictureUrl'];
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) {
+                                return DetailScreen(
+                                    _items[index]['pictureUrl']);
+                              },
+                            ),
+                          );
                         },
-                      );
-                    },
+                        child: CachedNetworkImage(
+                          imageUrl: _items[index]['pictureUrl'],
+                          placeholder: (context, url) =>
+                              CircularProgressIndicator(),
+                          errorWidget: (context, url, error) =>
+                              Icon(Icons.wallpaper),
+                        ),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) {
+                              storage.write("index", index);
+                              return MyDialog();
+                            },
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
