@@ -132,9 +132,9 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
       //if (GetStorage().read('ventas') == null) {
       final String apiUrl =
           'http://wali.igbcolombia.com:8080/manager/res/app/list-order/' +
-              empresa! +
+              empresa +
               '?slpcode=' +
-              usuario! +
+              usuario +
               '&year=' +
               year +
               '&month=' +

@@ -30,8 +30,8 @@ class RegisterScreen extends StatelessWidget {
               onPressed: () => Navigator.pushReplacementNamed(context, 'login'),
               style: ButtonStyle(
                   overlayColor:
-                      MaterialStateProperty.all(Colors.indigo.withOpacity(0.1)),
-                  shape: MaterialStateProperty.all(StadiumBorder())),
+                      WidgetStateProperty.all(Colors.indigo.withOpacity(0.1)),
+                  shape: WidgetStateProperty.all(StadiumBorder())),
               child: Text(
                 '¿Ya tienes una cuenta?',
                 style: TextStyle(fontSize: 18, color: Colors.black87),

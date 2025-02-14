@@ -363,9 +363,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         "zona", snapshot.data!["content"][0]["whsDefTire"]);
                     storage.write("urlFoto",
                         snapshot.data!["content"][0]["urlSlpPicture"]);
-                    if (presupuestoT == 0 ||
-                        presupuestoT.isNaN ||
-                        presupuestoT == null) {
+                    if (presupuestoT == 0 || presupuestoT.isNaN) {
                       dataMap["Ventas"] = 0;
                       dataMap["Presupuesto"] = 0;
                       dataMap["Pend. por facturar"] = 0;

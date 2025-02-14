@@ -96,13 +96,11 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     final response = await http.get(Uri.parse(apiUrl));
     data = jsonDecode(response.body);
 
-    if (data != null) {
-      for (String obj in data) {
-        DateFormat dateFormat = DateFormat("yyyy-MM-dd");
-        DateTime f = dateFormat.parse(obj);
+    for (String obj in data) {
+      DateFormat dateFormat = DateFormat("yyyy-MM-dd");
+      DateTime f = dateFormat.parse(obj);
 
-        _markedDays.add(f);
-      }
+      _markedDays.add(f);
     }
   }
 
@@ -181,9 +179,9 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
   Future<List<dynamic>> getOrdenesGuardadasServidor() async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/list-order-saves/' +
-            empresa! +
+            empresa +
             '?slpcode=' +
-            usuario! +
+            usuario +
             '&year=' +
             year.toString() +
             '&month=' +
@@ -209,11 +207,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     //   data={"code":-1,"content":"Ocurrio un error"};
     //
     // }
-    if (data != null) {
-      return data;
-    } else {
-      return [];
-    }
+    return data;
   }
 
   void _mostrarPedidos() {

@@ -19,11 +19,11 @@ class LoginScreen extends StatelessWidget {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(height: 270),
+                SizedBox(height: 250),
                 CardContainer(
                   child: Column(
                     children: [
-                      SizedBox(height: 10),
+                      SizedBox(height: 5),
                       ChangeNotifierProvider(
                         create: (_) => LoginFormProvider(),
                         child: _LoginForm(),
@@ -31,7 +31,7 @@ class LoginScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 50),
+                //SizedBox(height: 50),
                 /*TextButton(
                 onPressed: () => Navigator.pushReplacementNamed(context, 'register'), 
                 style: ButtonStyle(
@@ -40,7 +40,7 @@ class LoginScreen extends StatelessWidget {
                 ),
                 child: Text('Crear una nueva cuenta', style: TextStyle( fontSize: 18, color: Colors.black87 ),)
               ),*/
-                SizedBox(height: 50),
+                //SizedBox(height: 50),
               ],
             ),
           ),
@@ -64,7 +64,7 @@ class _LoginFormState extends State<_LoginForm> {
   String dropdownvalue = 'Elija una empresa';
   String? usuario = "";
   String? clave = "";
-  String versionApp = "11.5";
+  String versionApp = "11.6";
   String isSincStock = "";
   String isSincItems = "";
   List _items = [];
@@ -281,7 +281,7 @@ class _LoginFormState extends State<_LoginForm> {
                 validator: (value) {
                   return (value != null && value.length >= 3)
                       ? null
-                      : 'Debe de ser mínimo de 10 caracteres';
+                      : 'Mínimo de 10 caracteres';
                 },
               ),
             ),

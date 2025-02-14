@@ -302,7 +302,7 @@ class _MyDialogState extends State<MyDialog> {
   }
 
   bool areAllCharactersNumbers(String text) {
-    if (text == null || text.isEmpty) {
+    if (text.isEmpty) {
       return false;
     }
 
@@ -320,7 +320,7 @@ class _MyDialogState extends State<MyDialog> {
     DatabaseHelper dbHelper = DatabaseHelper();
     int insertedItemId = await dbHelper.insertItem(newItem);
     idLocal = insertedItemId;
-    if (insertedItemId != null && insertedItemId > 0) {
+    if (insertedItemId > 0) {
       //print("El item ha sido insertado con éxito con el ID: $insertedItemId");
     }
   }
@@ -374,7 +374,7 @@ class _MyDialogState extends State<MyDialog> {
     DatabaseHelper dbHelper = DatabaseHelper();
     int insertedPedidoId = await dbHelper.insertPedido(newPedido);
 
-    if (insertedPedidoId != null && insertedPedidoId > 0) {
+    if (insertedPedidoId > 0) {
       //print("El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
     } else {
       //print("Error al insertar el pedido en la base de datos");

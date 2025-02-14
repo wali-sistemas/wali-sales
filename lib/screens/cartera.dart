@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:get_storage/get_storage.dart';
@@ -171,7 +173,7 @@ class CarteraPageState extends State<CarteraPage> {
       headers: <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
-          'id': id,
+          "id": id,
           "copias": 0,
           "documento": document,
           "companyName": empresa,
@@ -365,43 +367,43 @@ class CarteraPageState extends State<CarteraPage> {
           String emailCL = "";
 
           if (resultado != null) {
-            ageSinVencer = numberFormat.format(resultado!["ageSinVencer"]);
+            ageSinVencer = numberFormat.format(resultado["ageSinVencer"]);
             if (ageSinVencer.contains('.')) {
               int decimalIndex = ageSinVencer.indexOf('.');
               ageSinVencer = "\$" + ageSinVencer.substring(0, decimalIndex);
             }
 
-            age0a30 = numberFormat.format(resultado!["age0a30"]);
+            age0a30 = numberFormat.format(resultado["age0a30"]);
             if (age0a30.contains('.')) {
               int decimalIndex = age0a30.indexOf('.');
               age0a30 = "\$" + age0a30.substring(0, decimalIndex);
             }
 
-            age30a60 = numberFormat.format(resultado!["age30a60"]);
+            age30a60 = numberFormat.format(resultado["age30a60"]);
             if (age30a60.contains('.')) {
               int decimalIndex = age30a60.indexOf('.');
               age30a60 = "\$" + age30a60.substring(0, decimalIndex);
             }
 
-            age61a90 = numberFormat.format(resultado!["age61a90"]);
+            age61a90 = numberFormat.format(resultado["age61a90"]);
             if (age61a90.contains('.')) {
               int decimalIndex = age61a90.indexOf('.');
               age61a90 = "\$" + age61a90.substring(0, decimalIndex);
             }
 
-            age91a120 = numberFormat.format(resultado!["age91a120"]);
+            age91a120 = numberFormat.format(resultado["age91a120"]);
             if (age91a120.contains('.')) {
               int decimalIndex = age91a120.indexOf('.');
               age91a120 = "\$" + age91a120.substring(0, decimalIndex);
             }
 
-            ageMas120 = numberFormat.format(resultado!["ageMas120"]);
+            ageMas120 = numberFormat.format(resultado["ageMas120"]);
             if (ageMas120.contains('.')) {
               int decimalIndex = ageMas120.indexOf('.');
               ageMas120 = "\$" + ageMas120.substring(0, decimalIndex);
             }
 
-            totalCarteraS = numberFormat.format(resultado!["subTotal"]);
+            totalCarteraS = numberFormat.format(resultado["subTotal"]);
             if (totalCarteraS.contains('.')) {
               int decimalIndex = totalCarteraS.indexOf('.');
               totalCarteraS = "\$" + totalCarteraS.substring(0, decimalIndex);
@@ -413,8 +415,8 @@ class CarteraPageState extends State<CarteraPage> {
               cupo = "\$" + cupo.substring(0, decimalIndex);
             }
 
-            phone = resultado!["phone"].toString();
-            emailCL = resultado!["email"].toString();
+            phone = resultado["phone"].toString();
+            emailCL = resultado["email"].toString();
           }
 
           return Card(
@@ -598,6 +600,12 @@ class CarteraPageState extends State<CarteraPage> {
                       IconButton(
                         icon: Icon(Icons.wallet_outlined),
                         onPressed: () {
+                          //Vaciar valores del descuento ingresado
+                          for (var detail in _cartera[index]
+                              ["detailPortfolio"]) {
+                            detail["discApplied"] = "0";
+                          }
+
                           storage.write('clienteDetalle', _cartera[index]);
                           Navigator.push(
                             context,
@@ -635,7 +643,8 @@ class CarteraPageState extends State<CarteraPage> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                      'Estado de cuenta guardada en descargas'),
+                                    'Estado de cuenta guardada en descargas',
+                                  ),
                                   duration: Duration(seconds: 3),
                                 ),
                               );
@@ -744,6 +753,70 @@ class CarteraPageState extends State<CarteraPage> {
   }
 }
 
+Future<http.Response> _generateReportDiscount(
+    List<Map<String, dynamic>> detailCartera,
+    String cardCode,
+    String cardName) {
+  final String url =
+      'http://wali.igbcolombia.com:8080/apiRest/wali/reports/financial-discounts?schema=' +
+          GetStorage().read('empresa');
+
+  List<Map<String, dynamic>> dataList = [];
+  for (var data in detailCartera) {
+    String valorDescTxt = NumberFormat('#,##0.00', 'en_Us')
+        .format((int.parse(data["discApplied"]) / 100) * data["docTotal"])
+        .toString();
+    if (valorDescTxt.contains('.')) {
+      int decimalIndex = valorDescTxt.indexOf('.');
+      valorDescTxt = "\$" + valorDescTxt.substring(0, decimalIndex);
+    }
+
+    String valorPagoTxt = NumberFormat('#,##0.00', 'en_Us')
+        .format(data["docTotal"] -
+            (int.parse(data["discApplied"]) / 100) * data["docTotal"])
+        .toString();
+    if (valorPagoTxt.contains('.')) {
+      int decimalIndex = valorPagoTxt.indexOf('.');
+      valorPagoTxt = "\$" + valorPagoTxt.substring(0, decimalIndex);
+    }
+
+    String valorDocTxt =
+        NumberFormat('#,##0.00', 'en_Us').format(data["docTotal"]).toString();
+    if (valorDocTxt.contains('.')) {
+      int decimalIndex = valorDocTxt.indexOf('.');
+      valorDocTxt = "\$" + valorDocTxt.substring(0, decimalIndex);
+    }
+
+    Map<String, dynamic> detail = {
+      "NombreCliente": cardName,
+      "Nit": cardCode,
+      "Telefono": "",
+      "Direccion": "",
+      "Tipo": "Factura",
+      "NoDoc": data["docNum"].toString(),
+      "FDoc": data["docDate"],
+      "FVen": data["docDueDate"],
+      "Dias": data["expiredDays"].toString(),
+      "ValorDoc": valorDocTxt,
+      "ValorPago": valorPagoTxt,
+      "ValorDesc": valorDescTxt,
+      "companyName": GetStorage().read('empresa') == "IGB"
+          ? "1"
+          : GetStorage().read('empresa') == "VARROC"
+              ? "2"
+              : "3",
+      "Disc": data["discApplied"].toString()
+    };
+    dataList.add(detail);
+  }
+
+  return http.post(
+    Uri.parse(url),
+    headers: <String, String>{'Content-Type': 'application/json'},
+    body: jsonEncode(dataList),
+  );
+}
+
 class CarteraDetalle extends StatefulWidget {
   const CarteraDetalle({Key? key}) : super(key: key);
   @override
@@ -752,8 +825,18 @@ class CarteraDetalle extends StatefulWidget {
 
 class CarteraDetalleState extends State<CarteraDetalle> {
   Map<String, dynamic> clienteDetalle = {};
+  bool generateDiscountReport = false;
+
   @override
   Widget build(BuildContext context) {
+    clienteDetalle = GetStorage().read('clienteDetalle');
+
+    for (var detalle in clienteDetalle["detailPortfolio"]) {
+      if (detalle["activeCalc"] == "Y") {
+        generateDiscountReport = true;
+        break;
+      }
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(30, 129, 235, 1),
@@ -769,6 +852,56 @@ class CarteraDetalleState extends State<CarteraDetalle> {
         /*actions: [
           CarritoPedido(),
         ],*/
+        actions: [
+          if (generateDiscountReport)
+            IconButton(
+              color: Colors.white,
+              icon: Icon(Icons.calculate_rounded),
+              onPressed: () async {
+                List<Map<String, dynamic>> detailCartera = [];
+                for (var detail in clienteDetalle["detailPortfolio"]) {
+                  detailCartera.add(detail);
+                }
+
+                try {
+                  http.Response response = await _generateReportDiscount(
+                    detailCartera,
+                    clienteDetalle["cardCode"].toString(),
+                    clienteDetalle["cardName"].toString(),
+                  );
+
+                  Map<String, dynamic> resultado = jsonDecode(response.body);
+
+                  if (response.statusCode == 200 &&
+                      resultado['content'] != "") {
+                    //Vaciar valores del descuento ingresado
+                    for (var detail in clienteDetalle["detailPortfolio"]) {
+                      detail["discApplied"] = "0";
+                    }
+                    launch(resultado['content'].toString());
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'No se pudo generar el reporte, error de red, verifique conectividad por favor',
+                        ),
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Error al generar el reporte de cartera general',
+                      ),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
+              },
+            ),
+        ],
         title: Text(
           'Detalle de cartera',
           style: TextStyle(color: Colors.white),
@@ -1007,25 +1140,49 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         showButtonCalculator
-                            ? IconButton(
-                                icon: Icon(Icons.calculate_rounded),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) {
-                                      return CalculatorDialogWidget(
-                                        totalBruto:
-                                            clienteDetalle["detailPortfolio"]
-                                                    [index]["totalBruto"]
-                                                .toDouble(),
-                                        docTotal:
-                                            clienteDetalle["detailPortfolio"]
-                                                    [index]["docTotal"]
-                                                .toDouble(),
-                                      );
-                                    },
-                                  );
-                                },
+                            ? Container(
+                                width: 245,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        keyboardType: TextInputType.number,
+                                        maxLength: 3,
+                                        decoration: InputDecoration(
+                                          border: UnderlineInputBorder(),
+                                          labelText: 'Ingrese % descuento',
+                                          labelStyle: TextStyle(fontSize: 13),
+                                          floatingLabelBehavior:
+                                              FloatingLabelBehavior.auto,
+                                        ),
+                                        onChanged: (value) {
+                                          clienteDetalle["detailPortfolio"]
+                                              [index]["discApplied"] = value;
+                                        },
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.calculate_rounded),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (_) {
+                                            return CalculatorDialogWidget(
+                                              totalBruto: clienteDetalle[
+                                                          "detailPortfolio"]
+                                                      [index]["totalBruto"]
+                                                  .toDouble(),
+                                              docTotal: clienteDetalle[
+                                                          "detailPortfolio"]
+                                                      [index]["docTotal"]
+                                                  .toDouble(),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
                               )
                             : SizedBox.shrink(),
                         IconButton(
@@ -1165,8 +1322,9 @@ class CalculatorDialogState extends State<CalculatorDialogWidget> {
         children: [
           TextField(
             keyboardType: TextInputType.number,
+            maxLength: 3,
             decoration: InputDecoration(
-              labelText: "Ingrese porcentaje",
+              labelText: "Ingrese % descuento",
               border: OutlineInputBorder(),
             ),
             onChanged: (value) {
