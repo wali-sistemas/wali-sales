@@ -90,11 +90,12 @@ class _PedidosPageState extends State<PedidosPage>
   }
 
   Future<void> _launchPhone(String phone) async {
-    final telefonoUrl = 'tel:$phone';
-    if (await canLaunch(telefonoUrl)) {
-      await launch(telefonoUrl);
+    final Uri telefonoUrl = Uri.parse('tel:$phone');
+
+    if (await canLaunchUrl(telefonoUrl)) {
+      await launchUrl(telefonoUrl);
     } else {
-      throw 'No se pudo abrir la aplicación de teléfono.';
+      throw Exception('No se pudo abrir la aplicación de teléfono.');
     }
   }
 

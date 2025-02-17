@@ -156,11 +156,12 @@ class CarteraPageState extends State<CarteraPage> {
   }
 
   Future<void> _launchPhone(String phone) async {
-    final telefonoUrl = 'tel:$phone';
-    if (await canLaunch(telefonoUrl)) {
-      await launch(telefonoUrl);
+    final Uri telefonoUrl = Uri.parse('tel:$phone');
+
+    if (await canLaunchUrl(telefonoUrl)) {
+      await launchUrl(telefonoUrl);
     } else {
-      throw 'No se pudo abrir la aplicación de teléfono.';
+      throw Exception('No se pudo abrir la aplicación de teléfono.');
     }
   }
 
@@ -878,7 +879,13 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                     for (var detail in clienteDetalle["detailPortfolio"]) {
                       detail["discApplied"] = "0";
                     }
-                    launch(resultado['content'].toString());
+                    final Uri url = Uri.parse(resultado['content'].toString());
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url,
+                          mode: LaunchMode.externalApplication);
+                    } else {
+                      print("No se pudo abrir el PDF en el navegador.");
+                    }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -1188,9 +1195,11 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                         IconButton(
                           icon: Icon(Icons.picture_as_pdf_outlined),
                           onPressed: () {
-                            launch(clienteDetalle["detailPortfolio"][index]
-                                    ["urlFE"]
-                                .toString());
+                            final Uri url = Uri.parse(
+                                clienteDetalle["detailPortfolio"][index]
+                                        ["urlFE"]
+                                    .toString());
+                            launchUrl(url);
                           },
                         ),
                         IconButton(
