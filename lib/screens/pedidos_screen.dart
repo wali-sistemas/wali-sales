@@ -118,6 +118,7 @@ class _PedidosPageState extends State<PedidosPage>
   Widget build(BuildContext context) {
     super.build(context);
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: DefaultTabController(
         length: 4,
         child: Scaffold(
