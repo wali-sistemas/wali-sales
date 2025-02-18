@@ -884,7 +884,7 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                       await launchUrl(url,
                           mode: LaunchMode.externalApplication);
                     } else {
-                      print("No se pudo abrir el PDF en el navegador.");
+                      launchUrl(url);
                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1196,9 +1196,9 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                           icon: Icon(Icons.picture_as_pdf_outlined),
                           onPressed: () {
                             final Uri url = Uri.parse(
-                                clienteDetalle["detailPortfolio"][index]
-                                        ["urlFE"]
-                                    .toString());
+                              clienteDetalle["detailPortfolio"][index]["urlFE"]
+                                  .toString(),
+                            );
                             launchUrl(url);
                           },
                         ),
