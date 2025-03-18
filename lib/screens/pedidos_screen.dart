@@ -349,6 +349,14 @@ class _PedidosPageState extends State<PedidosPage>
                         height: 20,
                       ),
                       Text(
+                        datosClientesArr[indice]['cellular'].toString(),
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text('Teléfono', textAlign: TextAlign.left),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Text(
                         datosClientesArr[indice]['addressToDef'].toString(),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),

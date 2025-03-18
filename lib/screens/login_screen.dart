@@ -64,7 +64,7 @@ class _LoginFormState extends State<_LoginForm> {
   String dropdownvalue = 'Elija una empresa';
   String? usuario = "";
   String? clave = "";
-  String versionApp = "11.6";
+  String versionApp = "11.7";
   String isSincStock = "";
   String isSincItems = "";
   List _items = [];
@@ -405,7 +405,7 @@ class _LoginFormState extends State<_LoginForm> {
             Column(
               children: [
                 Text(
-                  "Copyright © WaliColombia | 2024 Version " + versionApp,
+                  "Copyright © WaliColombia | 2025 Version " + versionApp,
                   style: TextStyle(fontSize: 10),
                 ),
               ],

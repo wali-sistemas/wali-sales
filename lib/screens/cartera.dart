@@ -205,8 +205,6 @@ class CarteraPageState extends State<CarteraPage> {
     }
   }
 
-  ///////////////////////-----
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -332,19 +330,20 @@ class CarteraPageState extends State<CarteraPage> {
         height: 50,
         color: Colors.white,
         child: ListTile(
-            title: Center(
-          child: Text(
-            'Clientes: ' +
-                _cartera.length.toString() +
-                '  ' +
-                'Total: ' +
-                totalCartGen +
-                '\n',
-            style: TextStyle(
-              fontSize: 18,
+          title: Center(
+            child: Text(
+              'Clientes: ' +
+                  _cartera.length.toString() +
+                  '  ' +
+                  'Total: ' +
+                  totalCartGen +
+                  '\n',
+              style: TextStyle(
+                fontSize: 18,
+              ),
             ),
           ),
-        )),
+        ),
       ),
     );
   }
@@ -533,9 +532,16 @@ class CarteraPageState extends State<CarteraPage> {
                                             .toString() +
                                         '  -  Cupo Disponible: ' +
                                         cupo.toString() +
-                                        '\n\n',
+                                        '\n',
                                     style: TextStyle(
                                       fontSize: 14,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Tel: ' + phone + '\n\n',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   TextSpan(
@@ -765,7 +771,7 @@ Future<http.Response> _generateReportDiscount(
   List<Map<String, dynamic>> dataList = [];
   for (var data in detailCartera) {
     String valorDescTxt = NumberFormat('#,##0.00', 'en_Us')
-        .format((int.parse(data["discApplied"]) / 100) * data["docTotal"])
+        .format(data["totalBruto"] * int.parse(data["discApplied"]) / 100)
         .toString();
     if (valorDescTxt.contains('.')) {
       int decimalIndex = valorDescTxt.indexOf('.');
@@ -774,7 +780,7 @@ Future<http.Response> _generateReportDiscount(
 
     String valorPagoTxt = NumberFormat('#,##0.00', 'en_Us')
         .format(data["docTotal"] -
-            (int.parse(data["discApplied"]) / 100) * data["docTotal"])
+            (data["totalBruto"] * int.parse(data["discApplied"]) / 100))
         .toString();
     if (valorPagoTxt.contains('.')) {
       int decimalIndex = valorPagoTxt.indexOf('.');
