@@ -110,7 +110,7 @@ class _PedidosPageState extends State<PedidosPage>
         throw Exception('No se pudo abrir WhatsApp');
       }
     } catch (e) {
-      print('Error: $e');
+      //print('Error: $e');
     }
   }
 
@@ -428,7 +428,7 @@ class _PedidosPageState extends State<PedidosPage>
                               try {
                                 await FlutterEmailSender.send(email);
                               } catch (e) {
-                                print('Error al abrir el correo: $e');
+                                //print('Error al abrir el correo: $e');
                               }
                             },
                           ),
@@ -525,10 +525,14 @@ class _PedidosPageState extends State<PedidosPage>
                         },
                         child: CachedNetworkImage(
                           imageUrl: _items[index]['pictureUrl'],
+                          maxHeightDiskCache: 300,
+                          maxWidthDiskCache: 300,
+                          memCacheHeight: 300,
+                          memCacheWidth: 300,
                           placeholder: (context, url) =>
                               CircularProgressIndicator(),
                           errorWidget: (context, url, error) =>
-                              Icon(Icons.wallpaper),
+                              Icon(Icons.image_not_supported_outlined),
                         ),
                       ),
                       trailing: IconButton(
@@ -573,6 +577,7 @@ class MyDialog extends StatefulWidget {
 class DetailScreen extends StatelessWidget {
   final String image;
   const DetailScreen(this.image, {Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -584,8 +589,16 @@ class DetailScreen extends StatelessWidget {
         child: Center(
           child: Hero(
             tag: 'imageHero',
-            child: Image.network(
-              image,
+            child: CachedNetworkImage(
+              imageUrl: image,
+              maxHeightDiskCache: 300,
+              maxWidthDiskCache: 300,
+              memCacheHeight: 300,
+              memCacheWidth: 300,
+              placeholder: (context, url) => const CircularProgressIndicator(),
+              errorWidget: (context, url, error) =>
+                  const Icon(Icons.image_not_supported_outlined),
+              fit: BoxFit.contain,
             ),
           ),
         ),
@@ -801,9 +814,8 @@ class _MyDialogState extends State<MyDialog> {
       index = GetStorage().read('index');
     }
     //Activar seleccion de bodega para las llantas
-    if (itemsGuardados[index]["grupo"] == 'LLANTAS' ||
-        (itemsGuardados[index]["marca"] == 'TIMSUN' &&
-            itemsGuardados[index]["marca"] == 'XCELINK')) {
+    if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
+        itemsGuardados[index]["marca"] == 'XCELINK') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
       isVisibleBod = true;
     }
@@ -811,6 +823,12 @@ class _MyDialogState extends State<MyDialog> {
     if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
         itemsGuardados[index]["marca"] == 'REVO') {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
+      isVisibleBod = true;
+    }
+    //Activar seleccion de bodega para las llantas TIMSUN bodega 35-MAGNUN BOGOTA, 26-MAGNUN CALI y 05-MAGNUM CARTAGENA
+    if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
+        itemsGuardados[index]["marca"] == 'TIMSUN') {
+      bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ'];
       isVisibleBod = true;
     }
 

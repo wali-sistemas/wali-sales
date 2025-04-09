@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:productos_app/widgets/carrito.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SincronizarPage extends StatefulWidget {
   @override
@@ -32,6 +35,11 @@ class _SincronizarPageState extends State<SincronizarPage> {
   bool btnStockEnable = true;
   bool btnVentaEnable = true;
   bool btnGpsEnable = true;
+
+  @override
+  void initState() {
+    clearAppData(context);
+  }
 
   Future<bool> checkConnectivity() async {
     var connectivityResult = await _connectivity.checkConnectivity();
@@ -349,6 +357,33 @@ class _SincronizarPageState extends State<SincronizarPage> {
     );
   }
 
+  Future<void> clearAppData(BuildContext context) async {
+    try {
+      // 1. Limpiar caché de imágenes
+      await DefaultCacheManager().emptyCache();
+      // 2. Limpiar preferencias compartidas
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      // 3. Limpiar archivos temporales
+      final tempDir = await getTemporaryDirectory();
+      if (await tempDir.exists()) {
+        tempDir.deleteSync(recursive: true);
+      }
+      // 4. Feedback visual
+      /*ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Eliminación exitosa de datos y caché'),
+        ),
+      );*/
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error al limpiar datos y caché'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -413,6 +448,8 @@ class _SincronizarPageState extends State<SincronizarPage> {
                             btnClientEnable = false;
                           },
                         );
+                        //Eliminar datos y caché para sincronizar
+                        clearAppData(context);
                         await sincClientes();
                         String errorREd = "";
                         if (isSincCustomer == "Ok") {

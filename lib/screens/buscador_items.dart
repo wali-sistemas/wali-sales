@@ -145,15 +145,18 @@ class CustomSearchDelegate extends SearchDelegate {
                         },
                       ),
                     );
-                  }, // Image tapped
-                  child: //Image.network(_items[index]['pictureUrl'], width: 40,height: 40),
-                      CachedNetworkImage(
+                  },
+                  child: CachedNetworkImage(
                     imageUrl: _itemsBuscador[indexB]['pictureUrl'],
                     placeholder: (context, url) => CircularProgressIndicator(),
-                    errorWidget: (context, url, error) => Icon(Icons.error),
+                    errorWidget: (context, url, error) =>
+                        Icon(Icons.image_not_supported_outlined),
+                    maxHeightDiskCache: 300,
+                    maxWidthDiskCache: 300,
+                    memCacheHeight: 300,
+                    memCacheWidth: 300,
                   ),
                 ),
-                //Image.network(_itemsBuscador[indexB]['pictureUrl']),
                 trailing: TextButton.icon(
                   onPressed: () {
                     ///BUSCAR ITEM SELLECCIONADO

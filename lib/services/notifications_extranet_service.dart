@@ -26,7 +26,7 @@ Future<void> initNotificationsExtranet() async {
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   } else {
-    print("Permiso de notificaciones denegado.");
+    //print("Permiso de notificaciones denegado.");
   }
 }
 

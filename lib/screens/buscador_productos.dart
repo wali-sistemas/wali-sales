@@ -130,7 +130,12 @@ class CustomSearchDelegate extends SearchDelegate {
                   child: CachedNetworkImage(
                     imageUrl: _itemsBuscador[indexB]['pictureUrl'],
                     placeholder: (context, url) => CircularProgressIndicator(),
-                    errorWidget: (context, url, error) => Icon(Icons.error),
+                    errorWidget: (context, url, error) =>
+                        Icon(Icons.image_not_supported_outlined),
+                    maxHeightDiskCache: 300,
+                    maxWidthDiskCache: 300,
+                    memCacheHeight: 300,
+                    memCacheWidth: 300,
                   ),
                 ),
                 trailing: TextButton.icon(

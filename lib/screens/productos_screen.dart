@@ -130,10 +130,14 @@ class _ProductosPageState extends State<ProductosPage> {
                         },
                         child: CachedNetworkImage(
                           imageUrl: _items[index]['pictureUrl'],
+                          maxHeightDiskCache: 300,
+                          maxWidthDiskCache: 300,
+                          memCacheHeight: 300,
+                          memCacheWidth: 300,
                           placeholder: (context, url) =>
                               CircularProgressIndicator(),
                           errorWidget: (context, url, error) =>
-                              Icon(Icons.wallpaper),
+                              Icon(Icons.image_not_supported_outlined),
                         ),
                       ),
                       trailing: IconButton(
@@ -189,6 +193,7 @@ class _ProductosPageState extends State<ProductosPage> {
 class DetailScreen extends StatelessWidget {
   final String image;
   const DetailScreen(this.image, {Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -200,8 +205,16 @@ class DetailScreen extends StatelessWidget {
         child: Center(
           child: Hero(
             tag: 'imageHero',
-            child: Image.network(
-              image,
+            child: CachedNetworkImage(
+              imageUrl: image,
+              maxHeightDiskCache: 300,
+              maxWidthDiskCache: 300,
+              memCacheHeight: 300,
+              memCacheWidth: 300,
+              placeholder: (context, url) => const CircularProgressIndicator(),
+              errorWidget: (context, url, error) =>
+                  const Icon(Icons.image_not_supported_outlined),
+              fit: BoxFit.contain,
             ),
           ),
         ),

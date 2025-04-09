@@ -45,7 +45,7 @@ class ProfilePage extends StatelessWidget {
         throw Exception('No se pudo abrir WhatsApp');
       }
     } catch (e) {
-      print('Error: $e');
+      /*print('Error: $e');*/
     }
   }
 

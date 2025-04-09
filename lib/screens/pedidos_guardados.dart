@@ -462,12 +462,6 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
                                 child: IconButton(
                                   icon: Icon(Icons.add),
                                   onPressed: () {
-                                    print("***********************");
-                                    print(GetStorage().read('itemsPedido'));
-                                    print(snapshot.data![index]["cardCode"]);
-                                    print(snapshot.data);
-                                    print("***********************");
-
                                     if (GetStorage().read('itemsPedido') ==
                                         null) {
                                       if (GetStorage().read('pedido') == null) {

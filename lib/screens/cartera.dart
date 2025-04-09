@@ -708,7 +708,7 @@ class CarteraPageState extends State<CarteraPage> {
                           try {
                             await FlutterEmailSender.send(email);
                           } catch (error) {
-                            print('Error al enviar el correo: $error');
+                            /*print('Error al enviar el correo: $error');*/
                           }
                         },
                       )
@@ -1254,7 +1254,7 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                             try {
                               await FlutterEmailSender.send(email);
                             } catch (error) {
-                              print('Error al enviar el correo: $error');
+                              /*print('Error al enviar el correo: $error');*/
                             }
                           },
                         )
