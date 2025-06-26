@@ -227,6 +227,7 @@ class ProfilePage extends StatelessWidget {
         storage.remove('datosClientes');
         storage.remove('empresa');
         storage.remove('observaciones');
+        storage.remove('chat_history');
         //storage.remove('items');
         Navigator.push(
           context,

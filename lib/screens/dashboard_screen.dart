@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import 'package:productos_app/screens/login_screen.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:productos_app/services/notifications_extranet_service.dart';
 
@@ -210,7 +211,17 @@ class _DashboardPageState extends State<DashboardPage> {
     Widget continueButton = ElevatedButton(
       child: Text("SI"),
       onPressed: () {
-        SystemNavigator.pop();
+        storage.remove('emailAsesor');
+        storage.remove('nombreAsesor');
+        storage.remove('datosClientes');
+        storage.remove('empresa');
+        storage.remove('observaciones');
+        storage.remove('chat_history');
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
       },
     );
     AlertDialog alert = AlertDialog(

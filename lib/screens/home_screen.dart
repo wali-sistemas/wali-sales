@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   HomeController con = Get.put(HomeController());
   GetStorage storage = GetStorage();
   String? usuario = GetStorage().read('usuario');
+  String empresa = GetStorage().read('empresa');
   int _selectedScreenIndex = 0;
   Timer? _timer;
 
@@ -188,39 +189,41 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ],
                             ),
-                            Row(
-                              children: [
-                                SizedBox(width: 10),
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ListarPedidosPage(),
-                                      ),
-                                    );
-                                  },
-                                  icon:
-                                      Icon(Icons.mark_unread_chat_alt_rounded),
-                                ),
-                                SizedBox(width: 10),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => AIChatScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Chatbot AI',
-                                    style: TextStyle(fontSize: 16),
+                            if (empresa == 'IGB')
+                              Row(
+                                children: [
+                                  SizedBox(width: 10),
+                                  IconButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              ListarPedidosPage(),
+                                        ),
+                                      );
+                                    },
+                                    icon: Icon(
+                                      Icons.mark_unread_chat_alt_rounded,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                  SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => AIChatScreen(),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      'Chatbot AI',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ],
+                              ),
                           ],
                         ),
                       ),

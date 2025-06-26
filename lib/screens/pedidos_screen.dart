@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -323,6 +321,12 @@ class _PedidosPageState extends State<PedidosPage>
       cupoTxt = cupoTxt.substring(0, decimalIndex);
     }
 
+    String pointsTxt = numberFormat.format(datosClientesArr[indice]['points']);
+    if (pointsTxt.contains('.')) {
+      int decimalIndex = pointsTxt.indexOf('.');
+      pointsTxt = pointsTxt.substring(0, decimalIndex);
+    }
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,6 +397,17 @@ class _PedidosPageState extends State<PedidosPage>
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text('Saldo', textAlign: TextAlign.left),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Text(
+                        pointsTxt,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      if (empresa == "IGB")
+                        Text('Puntos los Calidosos', textAlign: TextAlign.left),
+                      if (empresa == "VARROC")
+                        Text('Puntos en CLUB VIP', textAlign: TextAlign.left),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -825,10 +840,10 @@ class _MyDialogState extends State<MyDialog> {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
       isVisibleBod = true;
     }
-    //Activar seleccion de bodega para las llantas TIMSUN bodega 35-MAGNUN BOGOTA, 26-MAGNUN CALI y 05-MAGNUM CARTAGENA
+    //Activar seleccion de bodega para las llantas TIMSUN bodega 35-MAGNUN BOGOTA, 26-MAGNUN CALI, 05-MAGNUM CARTAGENA y 45-MAGNUM MEDELLÍN
     if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
         itemsGuardados[index]["marca"] == 'TIMSUN') {
-      bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ'];
+      bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ', 'MEDELLÍN'];
       isVisibleBod = true;
     }
 

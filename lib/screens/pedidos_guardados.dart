@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:productos_app/screens/home_screen.dart';
-//import 'package:productos_app/screens/buscador_pedidos.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';

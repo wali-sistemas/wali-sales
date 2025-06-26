@@ -49,26 +49,23 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
     year = now.year.toString();
     mes = now.month.toString();
     dia = now.day.toString();
+
+    _fetchData(year, mes, dia);
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime selectedMes) {
-    String diaSel = "";
-    String mesSel = "";
-    String yearSel = "";
-    setState(() {
-      _selectedDay = selectedDay;
-      dia = selectedDay.day.toString();
-      mes = selectedDay.month.toString();
-      year = selectedDay.year.toString();
-      //print("Dia seleccionado: $diaSel");
-      _showCalendar =
-          false; // Oculta el calendario después de seleccionar un día
-      if (GetStorage().read('ventas') != null) {
-        //print(GetStorage().read('ventas'));
-        //storage.remove("ventas");
-      }
-    });
-    //_fetchData("2023", mesSel, diaSel);
+    setState(
+      () {
+        _selectedDay = selectedDay;
+        dia = selectedDay.day.toString();
+        mes = selectedDay.month.toString();
+        year = selectedDay.year.toString();
+        //Consultar datos por ano, mes y día seleccionado
+        _fetchData(year, mes, dia);
+        //Ocultar calendario
+        _showCalendar = false;
+      },
+    );
   }
 
   Future<bool> checkConnectivity() async {
@@ -108,7 +105,6 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
 
     if (response.statusCode == 200) {
       final Uint8List pdfBytes = response.bodyBytes;
-      final directory = await Directory.systemTemp.createTemp();
       final pdfFile = File('/storage/emulated/0/Download/Detalle-Orden[' +
           docNum +
           '-' +
@@ -120,11 +116,11 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
     }
   }
 
-  void _mostrarPedidos() {
+  /*void _mostrarPedidos() {
     setState(() {
       _showPedidos = !_showPedidos;
     });
-  }
+  }*/
 
   Future<void> _fetchData(String year, String mes, String dia) async {
     bool isConnected = await checkConnectivity();
@@ -141,16 +137,13 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
               mes +
               '&day=' +
               dia;
-      //print(apiUrl);
       final response = await http.get(Uri.parse(apiUrl));
       Map<String, dynamic> resp = jsonDecode(response.body);
       final codigoError = resp["code"];
       if (codigoError == -1) {
-        //print("codigoError: $codigoError");
         _ventas = [];
       } else {
         final data = resp["content"];
-        //print(data.toString());
         if (!mounted) return;
         setState(
           () {
@@ -284,8 +277,6 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
   }
 
   Widget pedidos(BuildContext context) {
-    // if (_ventas.isNotEmpty)
-    _fetchData(year, mes, dia);
     return Expanded(
       child: ListView.builder(
         itemCount: _ventas.length,
@@ -358,7 +349,8 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                    'Detalle de la orden guardada en descargas'),
+                                  'Detalle de la orden guardada en descargas',
+                                ),
                                 duration: Duration(seconds: 3),
                               ),
                             );
