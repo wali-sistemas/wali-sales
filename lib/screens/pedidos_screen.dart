@@ -840,7 +840,7 @@ class _MyDialogState extends State<MyDialog> {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
       isVisibleBod = true;
     }
-    //Activar seleccion de bodega para las llantas TIMSUN bodega 35-MAGNUN BOGOTA, 26-MAGNUN CALI, 05-MAGNUM CARTAGENA y 45-MAGNUM MEDELLÍN
+    //Activar seleccion de bodega para las llantas TIMSUN bodega 35-MAGNUN BOGOTA, 26-MAGNUN CALI, 05-MAGNUM CARTAGENA y 45-ALMAVIVA MEDELLÍN
     if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
         itemsGuardados[index]["marca"] == 'TIMSUN') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ', 'MEDELLÍN'];
@@ -950,7 +950,7 @@ class _MyDialogState extends State<MyDialog> {
                           whsCode = '26';
                           break;
                         case 'MEDELLÍN':
-                          whsCode = '01';
+                          whsCode = '45';
                           break;
                         case 'BOGOTÁ':
                           whsCode = '35';

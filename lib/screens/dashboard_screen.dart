@@ -9,7 +9,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart';
 import 'package:productos_app/screens/login_screen.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:productos_app/services/notifications_extranet_service.dart';
