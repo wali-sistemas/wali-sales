@@ -189,41 +189,41 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ],
                             ),
-                            if (empresa == 'IGB')
-                              Row(
-                                children: [
-                                  SizedBox(width: 10),
-                                  IconButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              ListarPedidosPage(),
-                                        ),
-                                      );
-                                    },
-                                    icon: Icon(
-                                      Icons.mark_unread_chat_alt_rounded,
-                                    ),
+                            //if (empresa == 'IGB')
+                            Row(
+                              children: [
+                                SizedBox(width: 10),
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ListarPedidosPage(),
+                                      ),
+                                    );
+                                  },
+                                  icon: Icon(
+                                    Icons.mark_unread_chat_alt_rounded,
                                   ),
-                                  SizedBox(width: 10),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => AIChatScreen(),
-                                        ),
-                                      );
-                                    },
-                                    child: Text(
-                                      'Chatbot AI',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
+                                ),
+                                SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AIChatScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    'Chatbot AI',
+                                    style: TextStyle(fontSize: 16),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),

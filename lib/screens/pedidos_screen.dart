@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:productos_app/screens/buscador_clientes.dart';
 import 'package:productos_app/screens/screens.dart';
 import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
@@ -342,11 +343,25 @@ class _PedidosPageState extends State<PedidosPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text(
-                        datosClientesArr[indice]['nit'].toString() +
-                            ' - ' +
-                            datosClientesArr[indice]['cardName'].toString(),
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      TextButton.icon(
+                        icon: Icon(Icons.edit_rounded),
+                        label: Text(
+                          datosClientesArr[indice]['nit'] +
+                              "-" +
+                              datosClientesArr[indice]['cardName'],
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        onPressed: () {
+                          print("Entro al onpressed");
+
+                          showSearch(
+                            context: context,
+                            delegate: CustomSearchDelegateClientes(),
+                          );
+                        },
                       ),
                       Text('Cliente', textAlign: TextAlign.left),
                       SizedBox(
@@ -950,7 +965,14 @@ class _MyDialogState extends State<MyDialog> {
                           whsCode = '26';
                           break;
                         case 'MEDELLÍN':
-                          whsCode = '45';
+                          if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
+                              itemsGuardados[index]["marca"] == 'TIMSUN') {
+                            whsCode = '45';
+                          } else if (itemsGuardados[index]["subgrupo"] ==
+                                  'LUBRICANTES' &&
+                              itemsGuardados[index]["marca"] == 'REVO') {
+                            whsCode = '01';
+                          }
                           break;
                         case 'BOGOTÁ':
                           whsCode = '35';

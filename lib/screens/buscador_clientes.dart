@@ -77,6 +77,10 @@ class CustomSearchDelegateClientes extends SearchDelegate {
     Widget continueButton = ElevatedButton(
       child: Text("SI"),
       onPressed: () {
+        print("**********************");
+        print(GetStorage().read('estadoPedido'));
+        print("**********************");
+
         storage.remove("observaciones");
         storage.remove("pedido");
         storage.remove("itemsPedido");

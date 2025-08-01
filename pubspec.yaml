@@ -39,6 +39,7 @@ dependencies:
   flutter_email_sender: ^7.0.0
   flutter_local_notifications: ^18.0.1
   speech_to_text: ^7.0.0
+  fl_chart: ^0.70.0
 
 dev_dependencies:
   flutter_test:

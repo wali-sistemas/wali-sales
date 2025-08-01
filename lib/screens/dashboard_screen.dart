@@ -1,10 +1,7 @@
 import 'dart:async';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
-import 'package:pie_chart/pie_chart.dart';
+import 'package:pie_chart/pie_chart.dart' as pc;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
@@ -68,7 +65,7 @@ class _DashboardPageState extends State<DashboardPage> {
     if (response != null) {
       WidgetsFlutterBinding.ensureInitialized();
       showNotification(response);
-      //TODO: actualiza rel estado de la orden 'NOTIFICADO APP'
+      //actualiza el estado de la orden 'NOTIFICADO APP'
       _updateStatusNotificationOrderExtranet(response["docNum"]);
     }
   }
@@ -200,6 +197,22 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  Future<dynamic> _findSalesBudgetByBrandAndSeller() async {
+    final String apiUrl =
+        'http://192.168.10.69:8080/manager/res/app/list-budget-brand/' +
+            empresa! +
+            '?slpcode=' +
+            usuario!;
+    final response = await http.get(Uri.parse(apiUrl));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+
+    if (resp["code"] == 0) {
+      return resp["content"];
+    } else {
+      return null;
+    }
+  }
+
   void showAlertDialog(BuildContext context) {
     Widget cancelButton = ElevatedButton(
       child: Text("NO"),
@@ -239,51 +252,21 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  String apkUrl = 'https://administradores.cito.club/t/nuevaversion.apk';
-
-  Future<void> checkAndUpdateApk() async {
-    final status = await Permission.storage.request();
-    if (status.isGranted) {
-      final appDirectory = await getExternalStorageDirectory();
-
-      final downloadDirectory = '${appDirectory?.path}/Download';
-      //Directory dir = Directory('/storage/emulated/0/Download');
-      final savedDir = Directory(downloadDirectory);
-      if (!savedDir.existsSync()) {
-        savedDir.createSync(recursive: true);
-      }
-      final savedFile = File('$downloadDirectory/nuevaversion.apk');
-
-      final response = await http.head(Uri.parse(apkUrl));
-
-      if (response.statusCode == 200) {
-        final contentLength = response.headers['content-length'];
-        final remoteFileSize = int.tryParse(contentLength ?? '0') ?? 0;
-        final localFileSize =
-            savedFile.existsSync() ? await savedFile.length() : 0;
-
-        if (localFileSize != remoteFileSize) {
-          // Descargar el nuevo archivo APK
-          await FlutterDownloader.enqueue(
-            url: apkUrl,
-            savedDir: downloadDirectory,
-            fileName: 'nuevaversion.apk',
-            showNotification: true,
-            openFileFromNotification: true,
-          );
-        }
-      } else {
-        _showSnackBar(context, "No se encontró nueva versión");
-      }
-    }
-  }
-
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: Duration(seconds: 3), // Duración de la notificación
-      ),
+  BarChartGroupData makeGroupData(int x, double x1, double x2) {
+    return BarChartGroupData(
+      x: x,
+      barsSpace: 8,
+      barRods: [
+        BarChartRodData(
+          toY: 100,
+          width: 35,
+          borderRadius: BorderRadius.circular(4),
+          rodStackItems: [
+            BarChartRodStackItem(0, x1, Color.fromRGBO(15, 178, 242, 1)),
+            BarChartRodStackItem(x1, x1 + x2, Color.fromRGBO(207, 240, 252, 1)),
+          ],
+        ),
+      ],
     );
   }
 
@@ -430,7 +413,6 @@ class _DashboardPageState extends State<DashboardPage> {
                             fontSize: 20,
                           ),
                         ),
-                        Divider(),
                         SizedBox(height: 10),
                         Center(
                           child: Row(
@@ -507,12 +489,12 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         ),
                         SizedBox(height: 20),
-                        PieChart(
+                        pc.PieChart(
                           dataMap: dataMap,
-                          chartType: ChartType.ring,
+                          chartType: pc.ChartType.ring,
                           baseChartColor: Colors.grey[50]!.withOpacity(0.15),
                           colorList: colorList,
-                          chartValuesOptions: ChartValuesOptions(
+                          chartValuesOptions: pc.ChartValuesOptions(
                             showChartValues: false,
                             showChartValuesInPercentage: false,
                           ),
@@ -592,29 +574,6 @@ class _DashboardPageState extends State<DashboardPage> {
                             ],
                           ),
                         ),
-                        Divider(),
-                        Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Center(
-                                  child: Column(
-                                children: [
-                                  Text(
-                                    'Efectividad de clientes',
-                                    style: TextStyle(fontSize: 20),
-                                  ),
-                                  Text(
-                                    '%$efectividad',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ],
-                              )),
-                            ],
-                          ),
-                        ),
                       ],
                     );
                   } else if (snapshot.hasError) {
@@ -622,6 +581,30 @@ class _DashboardPageState extends State<DashboardPage> {
                   }
                   return const CircularProgressIndicator();
                 },
+              ),
+            ),
+            Divider(),
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Efectividad de clientes',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Text(
+                          '%$efectividad',
+                          style: TextStyle(
+                            fontSize: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             Container(
@@ -693,30 +676,22 @@ class _DashboardPageState extends State<DashboardPage> {
                 },
               ),
             ),
-            Container(
-              margin: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width * 0.1,
-              ),
-              width: double.infinity,
-              height: 0.2,
-              color: Colors.black,
-            ),
-            SizedBox(
-              height: 5,
-            ),
+            Divider(),
+            SizedBox(height: 5),
             Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Center(
-                      child: Column(
-                    children: [
-                      Text(
-                        'Ordenes guardadas',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                    ],
-                  )),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Ordenes guardadas',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -730,7 +705,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       nroOrderSaved = snapshot.data!["content"][0]["nroOrder"];
                       valorOrderSaved =
                           snapshot.data!["content"][0]["valorOrder"];
-
                       valorOrderSavedStr = numberFormat.format(valorOrderSaved);
                       if (valorOrderSavedStr.contains('.')) {
                         int decimalIndex = valorOrderSavedStr.indexOf('.');
@@ -819,9 +793,570 @@ class _DashboardPageState extends State<DashboardPage> {
                 },
               ),
             ),
-            SizedBox(
-              height: 10,
+            Divider(),
+            SizedBox(height: 5),
+            Container(
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            'Presupuesto por marcas',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
+            SizedBox(height: 5),
+            Container(
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        EtiquetaBullet(
+                          color: Color.fromRGBO(15, 178, 242, 1),
+                          texto: 'Facturado',
+                        ),
+                      ],
+                    ),
+                    SizedBox(width: 20),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        EtiquetaBullet(
+                          color: Color.fromRGBO(207, 240, 252, 1),
+                          texto: 'Presupuesto',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            if (empresa == "IGB")
+              Container(
+                child: FutureBuilder<dynamic>(
+                  future: _findSalesBudgetByBrandAndSeller(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Container(
+                        height: 500,
+                        padding: EdgeInsets.all(15),
+                        child: RotatedBox(
+                          quarterTurns: 1,
+                          child: BarChart(
+                            BarChartData(
+                              alignment: BarChartAlignment.spaceAround,
+                              barGroups: [
+                                makeGroupData(
+                                  0,
+                                  snapshot.data![0]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  1,
+                                  snapshot.data![1]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  2,
+                                  snapshot.data![2]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  3,
+                                  snapshot.data![3]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  4,
+                                  snapshot.data![4]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  5,
+                                  snapshot.data![5]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  6,
+                                  snapshot.data![6]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  7,
+                                  snapshot.data![7]["percent"].toDouble(),
+                                  100,
+                                ),
+                              ],
+                              titlesData: FlTitlesData(
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: false,
+                                  ),
+                                ),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 150,
+                                    getTitlesWidget: (value, meta) {
+                                      switch (value.toInt()) {
+                                        case 0:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  snapshot.data![0]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![0]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 1:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![1]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![1]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 2:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![2]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![2]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 3:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![3]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![3]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 4:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![4]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![4]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 5:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![5]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![5]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 6:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![6]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![6]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 7:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![7]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![7]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        default:
+                                          return const SizedBox();
+                                      }
+                                    },
+                                  ),
+                                ),
+                                rightTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                topTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                              ),
+                              gridData: FlGridData(show: false),
+                              borderData: FlBorderData(show: false),
+                              barTouchData: BarTouchData(enabled: true),
+                            ),
+                          ),
+                        ),
+                      );
+                    } else if (snapshot.hasError) {
+                      return const Text(
+                        'Error al tratar de realizar la consulta',
+                      );
+                    } else if (snapshot.data == null) {
+                      return const Text(
+                        'En el momento no tiene presupuesto de marca asignado',
+                        textAlign: TextAlign.center,
+                      );
+                    }
+                    return const CircularProgressIndicator();
+                  },
+                ),
+              ),
+            if (empresa == "VARROC")
+              Container(
+                child: FutureBuilder<dynamic>(
+                  future: _findSalesBudgetByBrandAndSeller(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Container(
+                        height: 300,
+                        padding: EdgeInsets.all(15),
+                        child: RotatedBox(
+                          quarterTurns: 1,
+                          child: BarChart(
+                            BarChartData(
+                              alignment: BarChartAlignment.spaceAround,
+                              barGroups: [
+                                makeGroupData(
+                                  0,
+                                  snapshot.data![0]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  1,
+                                  snapshot.data![1]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  2,
+                                  snapshot.data![2]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  3,
+                                  snapshot.data![3]["percent"].toDouble(),
+                                  100,
+                                ),
+                              ],
+                              titlesData: FlTitlesData(
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: false,
+                                  ),
+                                ),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 150,
+                                    getTitlesWidget: (value, meta) {
+                                      switch (value.toInt()) {
+                                        case 0:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  snapshot.data![0]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![0]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 1:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![1]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![1]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 2:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![2]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![2]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 3:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  snapshot.data![3]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![3]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        default:
+                                          return const SizedBox();
+                                      }
+                                    },
+                                  ),
+                                ),
+                                rightTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                topTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                              ),
+                              gridData: FlGridData(show: false),
+                              borderData: FlBorderData(show: false),
+                              barTouchData: BarTouchData(enabled: true),
+                            ),
+                          ),
+                        ),
+                      );
+                    } else if (snapshot.hasError) {
+                      return const Text(
+                        'Error al tratar de realizar la consulta',
+                      );
+                    } else if (snapshot.data == null) {
+                      return const Text(
+                        'En el momento no tiene presupuesto de marca asignado',
+                        textAlign: TextAlign.center,
+                      );
+                    }
+                    return const CircularProgressIndicator();
+                  },
+                ),
+              ),
+            SizedBox(height: 30),
           ],
         ),
       ),

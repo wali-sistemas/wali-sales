@@ -117,10 +117,17 @@ class _AIChatScreenState extends State<AIChatScreen> {
       }
     }
 
+    var companyName = "";
+    if (empresa == "VARROC") {
+      companyName = "MOTOZONE";
+    } else {
+      companyName = empresa;
+    }
+
     setState(() {
       chatHistory.add({
         'assistant':
-            'Hola $nombreAsesor, soy la inteligencia artificial entrenada para $empresa, y estoy aquí para brindarte una mejor atención y experiencia. Ey! ten en cuenta que solo doy información de productos con inventario.\nPor favor, indícame claramente en qué puedo ayudarte.'
+            'Hola $nombreAsesor, soy la inteligencia artificial entrenada para $companyName, y estoy aquí para brindarte una mejor atención y experiencia. Ey! ten en cuenta que solo doy información de productos con inventario.\nPor favor, indícame claramente en qué puedo ayudarte.'
       });
     });
 
@@ -311,101 +318,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
         isLoading = false;
       });
     }
-
-    /*if (response.statusCode == 200) {
-        final String decodedBody = utf8.decode(response.bodyBytes);
-        print('Respuesta del servidor: $decodedBody'); // Para depuración
-
-        try {
-          // Intentar decodificar como JSON
-          final Map<String, dynamic> jsonResponse = json.decode(decodedBody);
-
-          if (jsonResponse.containsKey('respuesta')) {
-            // Si la respuesta es un string simple
-            if (jsonResponse['respuesta'] is String) {
-              chatHistory.add({'assistant': jsonResponse['respuesta']});
-            }
-            // Si la respuesta es un objeto JSON
-            else if (jsonResponse['respuesta'] is Map) {
-              final Map<String, dynamic> respuesta = jsonResponse['respuesta'];
-
-              // Agregar mensaje con el resultado de la agregación si existe
-              if (respuesta.containsKey('resultado') &&
-                  respuesta['resultado'] != null &&
-                  !respuesta.containsKey('productos')) {
-                chatHistory.add({'assistant': '${respuesta['resultado']}'});
-              }
-
-              // Agregar mensaje con la cantidad de productos si existe
-              if (respuesta.containsKey('cantidad_productos')) {
-                chatHistory.add({
-                  'assistant':
-                      'Se encontraron ${respuesta['cantidad_productos']} productos:'
-                });
-              }
-
-              // Procesar los productos si existen
-              if (respuesta.containsKey('productos') &&
-                  respuesta['productos'] is List) {
-                final List<dynamic> productosList = respuesta['productos'];
-                for (var producto in productosList) {
-                  chatHistory.add({
-                    'product': {
-                      'code': producto['itemCode'],
-                      'name': producto['itemName'],
-                      'stock': producto['stockFull'],
-                      'image': producto['urlPicture'],
-                      'price': producto['price'],
-                    }
-                  });
-                }
-              }
-            }
-          } else {
-            setState(() {
-              chatHistory.add(
-                  {'assistant': 'No se pudo obtener una respuesta válida.'});
-            });
-          }
-        } catch (e) {
-          print('Error al procesar la respuesta JSON: $e');
-          // Si falla el parseo JSON, intentar mostrar la respuesta como texto plano
-          setState(() {
-            chatHistory.add({'assistant': decodedBody});
-          });
-        }
-
-        // Guardar el chat actualizado
-        storage.write('chat_history', chatHistory);
-        // Scroll al último mensaje
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToBottom();
-        });
-      } else {
-        print('Error en la respuesta: ${response.statusCode}');
-        print('Cuerpo de la respuesta: ${response.body}');
-        setState(() {
-          chatHistory.add({
-            'assistant':
-                'Error en la respuesta del servidor. Por favor, intenta de nuevo.'
-          });
-        });
-      }
-    } catch (e) {
-      print('Error en la solicitud: $e');
-      setState(() {
-        chatHistory.add({
-          'assistant':
-              'Error de conexión. Por favor, verifica tu conexión a internet.'
-        });
-      });
-    } finally {
-      setState(
-        () {
-          isLoading = false;
-        },
-      );
-    }*/
   }
 
   @override
@@ -419,11 +331,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
             color: Colors.white,
           ),
           onTap: () {
-            storage.remove('observaciones');
-            storage.remove("pedido");
-            storage.remove("itemsPedido");
-            storage.remove("dirEnvio");
-
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -438,7 +345,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
         ),
         backgroundColor: Color.fromRGBO(30, 129, 235, 1),
         actions: [
-          // Agregar botón para limpiar historial
           IconButton(
             color: Colors.white,
             icon: Icon(Icons.delete_outline),
@@ -555,7 +461,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
                       }
                       _controller.clear();
                     }
-                    // Scroll al último mensaje
                     WidgetsBinding.instance.addPostFrameCallback(
                       (_) {
                         _scrollToBottom();
