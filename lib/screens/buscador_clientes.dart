@@ -77,10 +77,6 @@ class CustomSearchDelegateClientes extends SearchDelegate {
     Widget continueButton = ElevatedButton(
       child: Text("SI"),
       onPressed: () {
-        print("**********************");
-        print(GetStorage().read('estadoPedido'));
-        print("**********************");
-
         storage.remove("observaciones");
         storage.remove("pedido");
         storage.remove("itemsPedido");
@@ -254,18 +250,14 @@ class CustomSearchDelegateClientes extends SearchDelegate {
                 ),
               );
             } else {
+              print("*******************************");
+              print(GetStorage().read('estadoPedido') == 'guardado');
+              print("*******************************");
+
               pedidoLocal = GetStorage().read('pedido');
               itemsPedidoLocal = GetStorage().read('itemsPedido');
 
-              if (pedidoLocal["cardCode"] !=
-                      _clientesBusqueda2[index]['cardCode'] &&
-                  itemsPedidoLocal.length > 0) {
-                showAlertDialogItemsInShoppingCart(
-                  context,
-                  _clientesBusqueda2[index]['cardCode'],
-                );
-              } else {
-                storage.write('estadoPedido', 'nuevo');
+              if (GetStorage().read('estadoPedido') == 'guardado') {
                 storage.write('nit', _clientesBusqueda2[index]["nit"]);
                 storage.write(
                     'cardCode', _clientesBusqueda2[index]["cardCode"]);
@@ -275,10 +267,30 @@ class CustomSearchDelegateClientes extends SearchDelegate {
                     builder: (context) => const PedidosPage(),
                   ),
                 );
+              } else {
+                if (pedidoLocal["cardCode"] !=
+                        _clientesBusqueda2[index]['cardCode'] &&
+                    itemsPedidoLocal.length > 0) {
+                  showAlertDialogItemsInShoppingCart(
+                    context,
+                    _clientesBusqueda2[index]['cardCode'],
+                  );
+                } else {
+                  storage.write('estadoPedido', 'nuevo');
+                  storage.write('nit', _clientesBusqueda2[index]["nit"]);
+                  storage.write(
+                      'cardCode', _clientesBusqueda2[index]["cardCode"]);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PedidosPage(),
+                    ),
+                  );
+                }
               }
             }
           },
-          label: const Text(''),
+          label: const Text('hola'),
           icon: const Icon(Icons.add),
         ),
         title: RichText(

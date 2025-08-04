@@ -344,7 +344,32 @@ class _PedidosPageState extends State<PedidosPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       TextButton.icon(
-                        icon: Icon(Icons.edit_rounded),
+                        //icon: Icon(Icons.edit_rounded), // Si quieres el ícono, descomenta esta línea
+                        label: Column(
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // Alinea los textos a la izquierda
+                          children: [
+                            Text(
+                              datosClientesArr[indice]['nit'] +
+                                  "-" +
+                                  datosClientesArr[indice]['cardName'],
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Text('Cliente', textAlign: TextAlign.left),
+                          ],
+                        ),
+                        onPressed: () {
+                          showSearch(
+                            context: context,
+                            delegate: CustomSearchDelegateClientes(),
+                          );
+                        },
+                      ),
+                      /*TextButton.icon(
+                        //icon: Icon(Icons.edit_rounded),
                         label: Text(
                           datosClientesArr[indice]['nit'] +
                               "-" +
@@ -355,14 +380,12 @@ class _PedidosPageState extends State<PedidosPage>
                           ),
                         ),
                         onPressed: () {
-                          print("Entro al onpressed");
-
                           showSearch(
                             context: context,
                             delegate: CustomSearchDelegateClientes(),
                           );
                         },
-                      ),
+                      ),*/
                       Text('Cliente', textAlign: TextAlign.left),
                       SizedBox(
                         height: 20,
