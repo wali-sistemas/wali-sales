@@ -190,7 +190,7 @@ class CarteraPageState extends State<CarteraPage> {
 
     if (response.statusCode == 200) {
       final Uint8List pdfBytes = response.bodyBytes;
-      final directory = await Directory.systemTemp.createTemp();
+      //final directory = await Directory.systemTemp.createTemp();
       final pdfFile = File('/storage/emulated/0/Download/' +
           document +
           '-' +
@@ -331,10 +331,9 @@ class CarteraPageState extends State<CarteraPage> {
         child: ListTile(
           title: Center(
             child: Text(
-              'Clientes: ' +
+              'CL(' +
                   _cartera.length.toString() +
-                  '  ' +
-                  'Total: ' +
+                  ') - ' +
                   totalCartGen +
                   '\n',
               style: TextStyle(

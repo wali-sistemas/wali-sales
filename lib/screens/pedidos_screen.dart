@@ -343,50 +343,41 @@ class _PedidosPageState extends State<PedidosPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      TextButton.icon(
-                        //icon: Icon(Icons.edit_rounded), // Si quieres el ícono, descomenta esta línea
-                        label: Column(
-                          crossAxisAlignment: CrossAxisAlignment
-                              .start, // Alinea los textos a la izquierda
+                      GestureDetector(
+                        onTap: () {
+                          showSearch(
+                            context: context,
+                            delegate: CustomSearchDelegateClientes(),
+                          );
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              children: [
+                                Icon(Icons.align_horizontal_left_rounded),
+                                SizedBox(width: 5),
+                                Text(
+                                  datosClientesArr[indice]['nit'],
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
                             Text(
-                              datosClientesArr[indice]['nit'] +
-                                  "-" +
-                                  datosClientesArr[indice]['cardName'],
+                              datosClientesArr[indice]['cardName'],
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
+                                fontSize: 12,
                               ),
                             ),
                             Text('Cliente', textAlign: TextAlign.left),
                           ],
                         ),
-                        onPressed: () {
-                          showSearch(
-                            context: context,
-                            delegate: CustomSearchDelegateClientes(),
-                          );
-                        },
                       ),
-                      /*TextButton.icon(
-                        //icon: Icon(Icons.edit_rounded),
-                        label: Text(
-                          datosClientesArr[indice]['nit'] +
-                              "-" +
-                              datosClientesArr[indice]['cardName'],
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        onPressed: () {
-                          showSearch(
-                            context: context,
-                            delegate: CustomSearchDelegateClientes(),
-                          );
-                        },
-                      ),*/
-                      Text('Cliente', textAlign: TextAlign.left),
                       SizedBox(
                         height: 20,
                       ),

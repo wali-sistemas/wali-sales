@@ -155,9 +155,9 @@ class CustomSearchDelegateClientes extends SearchDelegate {
                     storage.remove('pedidoGuardado');
 
                     storage.write('estadoPedido', 'nuevo');
-                    storage.write('nit', _clientesBusqueda2[index]["nit"]);
+                    storage.write('nit', _clientesBusqueda[index]["nit"]);
                     storage.write(
-                        'cardCode', _clientesBusqueda2[index]["cardCode"]);
+                        'cardCode', _clientesBusqueda[index]["cardCode"]);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -169,17 +169,17 @@ class CustomSearchDelegateClientes extends SearchDelegate {
                     itemsPedidoLocal = GetStorage().read('itemsPedido');
 
                     if (pedidoLocal["cardCode"] !=
-                            _clientesBusqueda2[index]['cardCode'] &&
+                            _clientesBusqueda[index]['cardCode'] &&
                         itemsPedidoLocal.length > 0) {
                       showAlertDialogItemsInShoppingCart(
                         context,
-                        _clientesBusqueda2[index]['cardCode'],
+                        _clientesBusqueda[index]['cardCode'],
                       );
                     } else {
                       storage.write('estadoPedido', 'nuevo');
-                      storage.write('nit', _clientesBusqueda2[index]["nit"]);
+                      storage.write('nit', _clientesBusqueda[index]["nit"]);
                       storage.write(
-                          'cardCode', _clientesBusqueda2[index]["cardCode"]);
+                          'cardCode', _clientesBusqueda[index]["cardCode"]);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -250,10 +250,6 @@ class CustomSearchDelegateClientes extends SearchDelegate {
                 ),
               );
             } else {
-              print("*******************************");
-              print(GetStorage().read('estadoPedido') == 'guardado');
-              print("*******************************");
-
               pedidoLocal = GetStorage().read('pedido');
               itemsPedidoLocal = GetStorage().read('itemsPedido');
 
@@ -290,7 +286,7 @@ class CustomSearchDelegateClientes extends SearchDelegate {
               }
             }
           },
-          label: const Text('hola'),
+          label: const Text(''),
           icon: const Icon(Icons.add),
         ),
         title: RichText(

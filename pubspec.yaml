@@ -6,7 +6,7 @@ description: A new Flutter project.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
-version: 11.9.0
+version: 12.0.0
 
 environment:
   sdk: ">=2.17.0 <4.0.0"
