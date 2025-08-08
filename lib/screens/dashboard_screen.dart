@@ -199,7 +199,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<dynamic> _findSalesBudgetByBrandAndSeller() async {
     final String apiUrl =
-        'http://192.168.10.69:8080/manager/res/app/list-budget-brand/' +
+        'http://wali.igbcolombia.com:8080/manager/res/app/list-budget-brand/' +
             empresa! +
             '?slpcode=' +
             usuario!;
