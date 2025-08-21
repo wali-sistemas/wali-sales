@@ -259,7 +259,7 @@ class _DashboardPageState extends State<DashboardPage> {
       barRods: [
         BarChartRodData(
           toY: 100,
-          width: 35,
+          width: 40,
           borderRadius: BorderRadius.circular(4),
           rodStackItems: [
             BarChartRodStackItem(0, x1, Color.fromRGBO(15, 178, 242, 1)),
@@ -896,11 +896,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                   snapshot.data![6]["percent"].toDouble(),
                                   100,
                                 ),
-                                makeGroupData(
-                                  7,
-                                  snapshot.data![7]["percent"].toDouble(),
-                                  100,
-                                ),
                               ],
                               titlesData: FlTitlesData(
                                 leftTitles: AxisTitles(
@@ -920,6 +915,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
+                                                Text(
+                                                  snapshot.data![0]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
                                                 Text(
                                                   snapshot.data![0]["brand"]
                                                       .toString(),
@@ -948,6 +952,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: Column(
                                               children: [
                                                 Text(
+                                                  snapshot.data![1]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
                                                   snapshot.data![1]["brand"]
                                                       .toString(),
                                                   style: TextStyle(
@@ -974,6 +987,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             quarterTurns: -1,
                                             child: Column(
                                               children: [
+                                                Text(
+                                                  snapshot.data![2]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
                                                 Text(
                                                   snapshot.data![2]["brand"]
                                                       .toString(),
@@ -1002,6 +1024,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: Column(
                                               children: [
                                                 Text(
+                                                  snapshot.data![3]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
                                                   snapshot.data![3]["brand"]
                                                       .toString(),
                                                   style: TextStyle(
@@ -1028,6 +1059,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             quarterTurns: -1,
                                             child: Column(
                                               children: [
+                                                Text(
+                                                  snapshot.data![4]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
                                                 Text(
                                                   snapshot.data![4]["brand"]
                                                       .toString(),
@@ -1056,6 +1096,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: Column(
                                               children: [
                                                 Text(
+                                                  snapshot.data![5]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
                                                   snapshot.data![5]["brand"]
                                                       .toString(),
                                                   style: TextStyle(
@@ -1083,6 +1132,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: Column(
                                               children: [
                                                 Text(
+                                                  snapshot.data![6]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
                                                   snapshot.data![6]["brand"]
                                                       .toString(),
                                                   style: TextStyle(
@@ -1093,33 +1151,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                                 ),
                                                 Text(
                                                   snapshot.data![6]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 7:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![7]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![7]["percent"]
                                                           .toString() +
                                                       '%',
                                                   style: TextStyle(
@@ -1172,7 +1203,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       return Container(
-                        height: 300,
+                        height: 500,
                         padding: EdgeInsets.all(15),
                         child: RotatedBox(
                           quarterTurns: 1,
@@ -1200,6 +1231,16 @@ class _DashboardPageState extends State<DashboardPage> {
                                   snapshot.data![3]["percent"].toDouble(),
                                   100,
                                 ),
+                                makeGroupData(
+                                  4,
+                                  snapshot.data![4]["percent"].toDouble(),
+                                  100,
+                                ),
+                                makeGroupData(
+                                  5,
+                                  snapshot.data![5]["percent"].toDouble(),
+                                  100,
+                                ),
                               ],
                               titlesData: FlTitlesData(
                                 leftTitles: AxisTitles(
@@ -1219,6 +1260,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
+                                                Text(
+                                                  snapshot.data![0]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
                                                 Text(
                                                   snapshot.data![0]["brand"]
                                                       .toString(),
@@ -1247,6 +1297,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: Column(
                                               children: [
                                                 Text(
+                                                  snapshot.data![1]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
                                                   snapshot.data![1]["brand"]
                                                       .toString(),
                                                   style: TextStyle(
@@ -1273,6 +1332,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             quarterTurns: -1,
                                             child: Column(
                                               children: [
+                                                Text(
+                                                  snapshot.data![2]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
                                                 Text(
                                                   snapshot.data![2]["brand"]
                                                       .toString(),
@@ -1301,6 +1369,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: Column(
                                               children: [
                                                 Text(
+                                                  snapshot.data![3]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
                                                   snapshot.data![3]["brand"]
                                                       .toString(),
                                                   style: TextStyle(
@@ -1311,6 +1388,80 @@ class _DashboardPageState extends State<DashboardPage> {
                                                 ),
                                                 Text(
                                                   snapshot.data![3]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 4:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  snapshot.data![4]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![4]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![4]["percent"]
+                                                          .toString() +
+                                                      '%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        case 5:
+                                          return RotatedBox(
+                                            quarterTurns: -1,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  snapshot.data![5]["result"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.blueGrey,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![5]["brand"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  snapshot.data![5]["percent"]
                                                           .toString() +
                                                       '%',
                                                   style: TextStyle(

@@ -189,7 +189,6 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ],
                             ),
-                            //if (empresa == 'IGB')
                             Row(
                               children: [
                                 SizedBox(width: 10),
