@@ -425,9 +425,8 @@ class _MyDialogState extends State<MyDialog> {
       index = GetStorage().read('index');
     }
     //Activar seleccion de bodega para las llantas
-    if (itemsGuardados[index]["grupo"] == 'LLANTAS' ||
-        (itemsGuardados[index]["marca"] == 'TIMSUN' &&
-            itemsGuardados[index]["marca"] == 'XCELINK')) {
+    if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
+        itemsGuardados[index]["marca"] == 'XCELINK') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
       isVisibleBod = true;
     }
@@ -435,6 +434,12 @@ class _MyDialogState extends State<MyDialog> {
     if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
         itemsGuardados[index]["marca"] == 'REVO') {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
+      isVisibleBod = true;
+    }
+    //Activar seleccion de bodega para las llantas TIMSUN bodega 35-MAGNUN BOGOTA, 26-MAGNUN CALI, 05-MAGNUM CARTAGENA y 45-ALMAVIVA MEDELLÍN
+    if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
+        itemsGuardados[index]["marca"] == 'TIMSUN') {
+      bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ', 'MEDELLÍN'];
       isVisibleBod = true;
     }
 
@@ -475,7 +480,8 @@ class _MyDialogState extends State<MyDialog> {
       }
     }
 
-    String precioTxt = numberFormat.format(itemsGuardados[index]['price']);
+    String precioTxt = numberFormat.format(itemsGuardados[index]['price'] +
+        (itemsGuardados[index]['price'] * 0.19));
     if (precioTxt.contains('.')) {
       int decimalIndex = precioTxt.indexOf('.');
       precioTxt = precioTxt.substring(0, decimalIndex);
@@ -501,7 +507,7 @@ class _MyDialogState extends State<MyDialog> {
           child: Text('Stock: ' + fullStock.toString()),
         ),
         SizedBox(
-          child: Text('Precio: ' + precioTxt),
+          child: Text('Precio Incl. IVA 19%: ' + precioTxt),
         ),
         SizedBox(
           width: 250,
@@ -527,7 +533,14 @@ class _MyDialogState extends State<MyDialog> {
                           whsCode = '26';
                           break;
                         case 'MEDELLÍN':
-                          whsCode = '01';
+                          if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
+                              itemsGuardados[index]["marca"] == 'TIMSUN') {
+                            whsCode = '45';
+                          } else if (itemsGuardados[index]["subgrupo"] ==
+                                  'LUBRICANTES' &&
+                              itemsGuardados[index]["marca"] == 'REVO') {
+                            whsCode = '01';
+                          }
                           break;
                         case 'BOGOTÁ':
                           whsCode = '35';

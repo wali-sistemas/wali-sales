@@ -1155,215 +1155,226 @@ class _MyDialogState extends State<MyDialog> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // IconButton(
-            //   icon: const Icon(Icons.search_sharp),
-            //   onPressed: (){setState(() {
-            //     isDropDownVisible= !isDropDownVisible;
-            //
-            //   });},
-            //   //child: const Text('Consultar Bodega'),
-            // ),
-            IconButton(
-              icon: const Icon(Icons.add_shopping_cart_rounded),
-              //child: Text("Agregar al pedido"),
-              onPressed: btnAgregarActivo
-                  ? () {
-                      if (isVisibleBod) {
-                        if (dropdownvalueBodega == '' ||
-                            dropdownvalueBodega == 'Elija una bodega') {
-                          setState(
-                            () {
-                              mensaje = "Elija una bodega";
-                              textoVisible = true;
-                              btnAgregarActivo = true;
-                            },
-                          );
-                        } else {
-                          setState(
-                            () {
-                              //// AGREGAR ITEM AL PEDIDO
-                              itemTemp["quantity"] = cantidadController.text;
-                              itemTemp["itemCode"] =
-                                  itemsGuardados[index]["itemCode"];
-                              itemTemp["itemName"] =
-                                  itemsGuardados[index]["itemName"];
-                              itemTemp["group"] =
-                                  itemsGuardados[index]["grupo"];
-                              if (itemsGuardados[index]["presentation"] !=
-                                  null) {
-                                itemTemp["presentation"] =
-                                    itemsGuardados[index]["presentation"];
-                              } else {
-                                itemTemp["presentation"] = "";
-                              }
-                              itemTemp["price"] =
-                                  itemsGuardados[index]["price"].toString();
-                              itemTemp["discountItem"] = itemsGuardados[index]
-                                      ["discountItem"]
-                                  .toString();
-                              itemTemp["discountPorc"] = itemsGuardados[index]
-                                      ["discountPorc"]
-                                  .toString();
-                              itemTemp["whsCode"] = whsCodeStockItem == null
-                                  ? "01"
-                                  : whsCodeStockItem.toString();
-                              itemTemp["iva"] =
-                                  itemsGuardados[index]["iva"].toString();
-                              itemsPedido.add(itemTemp);
-
-                              int precioI = itemsGuardados[index]["price"];
-                              double precioD = precioI.toDouble();
-                              int discountI =
-                                  itemsGuardados[index]["discountPorc"];
-                              double discountD = discountI.toDouble();
-                              int discountItemI =
-                                  itemsGuardados[index]["discountItem"];
-                              double discountItemD = discountItemI.toDouble();
-                              int ivaI = itemsGuardados[index]["iva"];
-                              double ivaD = ivaI.toDouble();
-                              Item newItem = Item(
-                                idPedido: idPedidoDb,
-                                quantity: int.parse(cantidadController.text),
-                                itemCode: itemsGuardados[index]["itemCode"],
-                                itemName: itemsGuardados[index]["itemName"],
-                                grupo: itemsGuardados[index]["grupo"],
-                                whsCode: whsCodeStockItem,
-                                presentation: itemsGuardados[index]
-                                    ["presentation"],
-                                price: precioD,
-                                discountItem: discountItemD,
-                                discountPorc: discountD,
-                                iva: ivaD,
-                              );
-                              // Insertar el nuevo item en la base de datos
-                              insertItemDb(newItem);
-
-                              ///guardar id en map
-                              // actualizarPedidoGuardado["docNum"]=idLocal.toString();
-                              // storage.write('actualizarPedidoGuardado', actualizarPedidoGuardado);
-                              listarItemDb();
-                              if (GetStorage().read('itemsPedido') == null) {
-                                storage.write('itemsPedido', itemsPedido);
-                              } else {
-                                itemsPedidoLocal =
-                                    GetStorage().read('itemsPedido');
-                                //// VALIDAR SI EL ITME SELECCIONADO YA ESTÁ,ENTONCES SE SUMA LA CANTIDAD
-                                int repetido = 0;
-                                itemsPedidoLocal.forEach(
-                                  (j) {
-                                    if (itemTemp["itemCode"] == j["itemCode"] &&
-                                        itemTemp["whsCode"] == j["whsCode"]) {
-                                      int cant = 0;
-                                      cant = int.parse(j["quantity"]!) +
-                                          int.parse(itemTemp["quantity"]!);
-                                      j["quantity"] = cant.toString();
-                                      repetido = 1;
-                                    }
-                                  },
-                                );
-                                if (repetido == 0) {
-                                  itemsPedidoLocal.add(itemTemp);
-                                }
-                                storage.write('itemsPedido', itemsPedidoLocal);
-                              }
-                              storage.write('index', index);
-                            },
-                          );
-                          Navigator.pop(context);
-                        }
-                      } else {
-                        setState(
-                          () {
-                            //// AGREGAR ITEM AL PEDIDO
-                            itemTemp["quantity"] = cantidadController.text;
-                            itemTemp["itemCode"] =
-                                itemsGuardados[index]["itemCode"];
-                            itemTemp["itemName"] =
-                                itemsGuardados[index]["itemName"];
-                            itemTemp["group"] = itemsGuardados[index]["grupo"];
-                            if (itemsGuardados[index]["presentation"] != null) {
-                              itemTemp["presentation"] =
-                                  itemsGuardados[index]["presentation"];
-                            } else {
-                              itemTemp["presentation"] = "";
-                            }
-                            itemTemp["price"] =
-                                itemsGuardados[index]["price"].toString();
-                            itemTemp["discountItem"] = itemsGuardados[index]
-                                    ["discountItem"]
-                                .toString();
-                            itemTemp["discountPorc"] = itemsGuardados[index]
-                                    ["discountPorc"]
-                                .toString();
-                            itemTemp["whsCode"] = whsCodeStockItem == null
-                                ? "01"
-                                : whsCodeStockItem.toString();
-                            itemTemp["iva"] =
-                                itemsGuardados[index]["iva"].toString();
-                            itemsPedido.add(itemTemp);
-
-                            int precioI = itemsGuardados[index]["price"];
-                            double precioD = precioI.toDouble();
-                            int discountI =
-                                itemsGuardados[index]["discountPorc"];
-                            double discountD = discountI.toDouble();
-                            int discountItemI =
-                                itemsGuardados[index]["discountItem"];
-                            double discountItemD = discountItemI.toDouble();
-                            int ivaI = itemsGuardados[index]["iva"];
-                            double ivaD = ivaI.toDouble();
-                            Item newItem = Item(
-                              idPedido: idPedidoDb,
-                              quantity: int.parse(cantidadController.text),
-                              itemCode: itemsGuardados[index]["itemCode"],
-                              itemName: itemsGuardados[index]["itemName"],
-                              grupo: itemsGuardados[index]["grupo"],
-                              whsCode: whsCodeStockItem,
-                              presentation: itemsGuardados[index]
-                                  ["presentation"],
-                              price: precioD,
-                              discountItem: discountItemD,
-                              discountPorc: discountD,
-                              iva: ivaD,
-                            );
-                            // Insertar el nuevo item en la base de datos
-                            insertItemDb(newItem);
-
-                            ///guardar id en map
-                            // actualizarPedidoGuardado["docNum"]=idLocal.toString();
-                            // storage.write('actualizarPedidoGuardado', actualizarPedidoGuardado);
-                            listarItemDb();
-                            if (GetStorage().read('itemsPedido') == null) {
-                              storage.write('itemsPedido', itemsPedido);
-                            } else {
-                              itemsPedidoLocal =
-                                  GetStorage().read('itemsPedido');
-                              //// VALIDAR SI EL ITME SELECCIONADO YA ESTÁ,ENTONCES SE SUMA LA CANTIDAD
-                              int repetido = 0;
-                              itemsPedidoLocal.forEach(
-                                (j) {
-                                  if (itemTemp["itemCode"] == j["itemCode"] &&
-                                      itemTemp["whsCode"] == j["whsCode"]) {
-                                    int cant = 0;
-                                    cant = int.parse(j["quantity"]!) +
-                                        int.parse(itemTemp["quantity"]!);
-                                    j["quantity"] = cant.toString();
-                                    repetido = 1;
-                                  }
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FaIcon(FontAwesomeIcons.bell),
+                SizedBox(width: 100,),
+                IconButton(
+                  icon: const FaIcon(FontAwesomeIcons.basketShopping),
+                  color: Colors.black,
+                  iconSize: 32,
+                  onPressed: btnAgregarActivo
+                      ? () {
+                          if (isVisibleBod) {
+                            if (dropdownvalueBodega == '' ||
+                                dropdownvalueBodega == 'Elija una bodega') {
+                              setState(
+                                () {
+                                  mensaje = "Elija una bodega";
+                                  textoVisible = true;
+                                  btnAgregarActivo = true;
                                 },
                               );
-                              if (repetido == 0) {
-                                itemsPedidoLocal.add(itemTemp);
-                              }
-                              storage.write('itemsPedido', itemsPedidoLocal);
+                            } else {
+                              setState(
+                                () {
+                                  //// AGREGAR ITEM AL PEDIDO
+                                  itemTemp["quantity"] =
+                                      cantidadController.text;
+                                  itemTemp["itemCode"] =
+                                      itemsGuardados[index]["itemCode"];
+                                  itemTemp["itemName"] =
+                                      itemsGuardados[index]["itemName"];
+                                  itemTemp["group"] =
+                                      itemsGuardados[index]["grupo"];
+                                  if (itemsGuardados[index]["presentation"] !=
+                                      null) {
+                                    itemTemp["presentation"] =
+                                        itemsGuardados[index]["presentation"];
+                                  } else {
+                                    itemTemp["presentation"] = "";
+                                  }
+                                  itemTemp["price"] =
+                                      itemsGuardados[index]["price"].toString();
+                                  itemTemp["discountItem"] =
+                                      itemsGuardados[index]["discountItem"]
+                                          .toString();
+                                  itemTemp["discountPorc"] =
+                                      itemsGuardados[index]["discountPorc"]
+                                          .toString();
+                                  itemTemp["whsCode"] = whsCodeStockItem == null
+                                      ? "01"
+                                      : whsCodeStockItem.toString();
+                                  itemTemp["iva"] =
+                                      itemsGuardados[index]["iva"].toString();
+                                  itemsPedido.add(itemTemp);
+
+                                  int precioI = itemsGuardados[index]["price"];
+                                  double precioD = precioI.toDouble();
+                                  int discountI =
+                                      itemsGuardados[index]["discountPorc"];
+                                  double discountD = discountI.toDouble();
+                                  int discountItemI =
+                                      itemsGuardados[index]["discountItem"];
+                                  double discountItemD =
+                                      discountItemI.toDouble();
+                                  int ivaI = itemsGuardados[index]["iva"];
+                                  double ivaD = ivaI.toDouble();
+                                  Item newItem = Item(
+                                    idPedido: idPedidoDb,
+                                    quantity:
+                                        int.parse(cantidadController.text),
+                                    itemCode: itemsGuardados[index]["itemCode"],
+                                    itemName: itemsGuardados[index]["itemName"],
+                                    grupo: itemsGuardados[index]["grupo"],
+                                    whsCode: whsCodeStockItem,
+                                    presentation: itemsGuardados[index]
+                                        ["presentation"],
+                                    price: precioD,
+                                    discountItem: discountItemD,
+                                    discountPorc: discountD,
+                                    iva: ivaD,
+                                  );
+                                  // Insertar el nuevo item en la base de datos
+                                  insertItemDb(newItem);
+
+                                  ///guardar id en map
+                                  // actualizarPedidoGuardado["docNum"]=idLocal.toString();
+                                  // storage.write('actualizarPedidoGuardado', actualizarPedidoGuardado);
+                                  listarItemDb();
+                                  if (GetStorage().read('itemsPedido') ==
+                                      null) {
+                                    storage.write('itemsPedido', itemsPedido);
+                                  } else {
+                                    itemsPedidoLocal =
+                                        GetStorage().read('itemsPedido');
+                                    //// VALIDAR SI EL ITME SELECCIONADO YA ESTÁ,ENTONCES SE SUMA LA CANTIDAD
+                                    int repetido = 0;
+                                    itemsPedidoLocal.forEach(
+                                      (j) {
+                                        if (itemTemp["itemCode"] ==
+                                                j["itemCode"] &&
+                                            itemTemp["whsCode"] ==
+                                                j["whsCode"]) {
+                                          int cant = 0;
+                                          cant = int.parse(j["quantity"]!) +
+                                              int.parse(itemTemp["quantity"]!);
+                                          j["quantity"] = cant.toString();
+                                          repetido = 1;
+                                        }
+                                      },
+                                    );
+                                    if (repetido == 0) {
+                                      itemsPedidoLocal.add(itemTemp);
+                                    }
+                                    storage.write(
+                                        'itemsPedido', itemsPedidoLocal);
+                                  }
+                                  storage.write('index', index);
+                                },
+                              );
+                              Navigator.pop(context);
                             }
-                            storage.write('index', index);
-                          },
-                        );
-                        Navigator.pop(context);
-                      }
-                    }
-                  : null,
+                          } else {
+                            setState(
+                              () {
+                                //// AGREGAR ITEM AL PEDIDO
+                                itemTemp["quantity"] = cantidadController.text;
+                                itemTemp["itemCode"] =
+                                    itemsGuardados[index]["itemCode"];
+                                itemTemp["itemName"] =
+                                    itemsGuardados[index]["itemName"];
+                                itemTemp["group"] =
+                                    itemsGuardados[index]["grupo"];
+                                if (itemsGuardados[index]["presentation"] !=
+                                    null) {
+                                  itemTemp["presentation"] =
+                                      itemsGuardados[index]["presentation"];
+                                } else {
+                                  itemTemp["presentation"] = "";
+                                }
+                                itemTemp["price"] =
+                                    itemsGuardados[index]["price"].toString();
+                                itemTemp["discountItem"] = itemsGuardados[index]
+                                        ["discountItem"]
+                                    .toString();
+                                itemTemp["discountPorc"] = itemsGuardados[index]
+                                        ["discountPorc"]
+                                    .toString();
+                                itemTemp["whsCode"] = whsCodeStockItem == null
+                                    ? "01"
+                                    : whsCodeStockItem.toString();
+                                itemTemp["iva"] =
+                                    itemsGuardados[index]["iva"].toString();
+                                itemsPedido.add(itemTemp);
+
+                                int precioI = itemsGuardados[index]["price"];
+                                double precioD = precioI.toDouble();
+                                int discountI =
+                                    itemsGuardados[index]["discountPorc"];
+                                double discountD = discountI.toDouble();
+                                int discountItemI =
+                                    itemsGuardados[index]["discountItem"];
+                                double discountItemD = discountItemI.toDouble();
+                                int ivaI = itemsGuardados[index]["iva"];
+                                double ivaD = ivaI.toDouble();
+                                Item newItem = Item(
+                                  idPedido: idPedidoDb,
+                                  quantity: int.parse(cantidadController.text),
+                                  itemCode: itemsGuardados[index]["itemCode"],
+                                  itemName: itemsGuardados[index]["itemName"],
+                                  grupo: itemsGuardados[index]["grupo"],
+                                  whsCode: whsCodeStockItem,
+                                  presentation: itemsGuardados[index]
+                                      ["presentation"],
+                                  price: precioD,
+                                  discountItem: discountItemD,
+                                  discountPorc: discountD,
+                                  iva: ivaD,
+                                );
+                                // Insertar el nuevo item en la base de datos
+                                insertItemDb(newItem);
+
+                                ///guardar id en map
+                                // actualizarPedidoGuardado["docNum"]=idLocal.toString();
+                                // storage.write('actualizarPedidoGuardado', actualizarPedidoGuardado);
+                                listarItemDb();
+                                if (GetStorage().read('itemsPedido') == null) {
+                                  storage.write('itemsPedido', itemsPedido);
+                                } else {
+                                  itemsPedidoLocal =
+                                      GetStorage().read('itemsPedido');
+                                  //// VALIDAR SI EL ITME SELECCIONADO YA ESTÁ,ENTONCES SE SUMA LA CANTIDAD
+                                  int repetido = 0;
+                                  itemsPedidoLocal.forEach(
+                                    (j) {
+                                      if (itemTemp["itemCode"] ==
+                                              j["itemCode"] &&
+                                          itemTemp["whsCode"] == j["whsCode"]) {
+                                        int cant = 0;
+                                        cant = int.parse(j["quantity"]!) +
+                                            int.parse(itemTemp["quantity"]!);
+                                        j["quantity"] = cant.toString();
+                                        repetido = 1;
+                                      }
+                                    },
+                                  );
+                                  if (repetido == 0) {
+                                    itemsPedidoLocal.add(itemTemp);
+                                  }
+                                  storage.write(
+                                      'itemsPedido', itemsPedidoLocal);
+                                }
+                                storage.write('index', index);
+                              },
+                            );
+                            Navigator.pop(context);
+                          }
+                        }
+                      : null,
+                ),
+              ],
             ),
           ],
         ),
