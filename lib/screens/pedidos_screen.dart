@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:productos_app/icomoon.dart';
 import 'package:productos_app/screens/buscador_clientes.dart';
 import 'package:productos_app/screens/screens.dart';
 import 'dart:convert';
@@ -833,6 +834,28 @@ class _MyDialogState extends State<MyDialog> {
     return connectivityResult != ConnectivityResult.none;
   }
 
+  Future<http.Response> _addItemSoldOut(String itemCode, String itemName,
+      int quantity, String origen, String whsName) {
+    final String apiUrl =
+        'http://192.168.10.69:8080/manager/res/app/add-item-sold-out';
+
+    return http.post(
+      Uri.parse(apiUrl),
+      headers: <String, String>{'Content-Type': 'application/json'},
+      body: jsonEncode(
+        <String, dynamic>{
+          "itemCode": itemCode,
+          "itemName": itemName,
+          "quantity": quantity,
+          "slpCode": usuario,
+          "companyName": empresa,
+          "origen": origen,
+          "whsName": whsName
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     var bodegas = [''];
@@ -1158,12 +1181,52 @@ class _MyDialogState extends State<MyDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                FaIcon(FontAwesomeIcons.bell),
-                SizedBox(width: 100,),
+                IconButton(
+                  icon: const Icon(
+                    Icomoon.soldOut,
+                    size: 36,
+                    color: Colors.black,
+                  ),
+                  onPressed: () async {
+                    var whsName = dropdownvalueBodega == 'Elija una bodega'
+                        ? 'CEDI'
+                        : dropdownvalueBodega;
+
+                    http.Response response = await _addItemSoldOut(
+                        itemsGuardados[index]['itemCode'],
+                        itemsGuardados[index]['itemName'],
+                        int.parse(cantidadController.text),
+                        "PEDIDO",
+                        whsName);
+                    bool res = jsonDecode(response.body);
+                    if (res) {
+                      setState(
+                        () {
+                          mensaje = "Agotado reportado con éxito";
+                          textoVisible = true;
+                          btnAgregarActivo = false;
+                          cantidadController.text = "";
+                        },
+                      );
+                    } else {
+                      setState(
+                        () {
+                          mensaje = "No se pudo reportar el agotado";
+                          textoVisible = true;
+                          btnAgregarActivo = false;
+                          cantidadController.text = "";
+                        },
+                      );
+                    }
+                  },
+                ),
+                SizedBox(
+                  width: 100,
+                ),
                 IconButton(
                   icon: const FaIcon(FontAwesomeIcons.basketShopping),
                   color: Colors.black,
-                  iconSize: 32,
+                  iconSize: 33,
                   onPressed: btnAgregarActivo
                       ? () {
                           if (isVisibleBod) {
