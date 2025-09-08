@@ -667,6 +667,7 @@ class _MyDialogState extends State<MyDialog> {
   String empresa = GetStorage().read('empresa');
   String mensaje = "";
   bool btnAgregarActivo = false;
+  bool btnSodOutActivo = false;
   final numberFormat = new NumberFormat.simpleCurrency();
   var whsCodeStockItem;
   String zona = "";
@@ -1067,6 +1068,7 @@ class _MyDialogState extends State<MyDialog> {
                   setState(
                     () {
                       btnAgregarActivo = false;
+                      btnSodOutActivo = false;
                     },
                   );
                 }
@@ -1079,6 +1081,7 @@ class _MyDialogState extends State<MyDialog> {
                         mensaje = "Cantidad debe ser numérica";
                         textoVisible = true;
                         btnAgregarActivo = false;
+                        btnSodOutActivo = false;
                       },
                     );
                   } else {
@@ -1088,6 +1091,7 @@ class _MyDialogState extends State<MyDialog> {
                           mensaje = "Cantidad es mayor al stock";
                           textoVisible = true;
                           btnAgregarActivo = false;
+                          btnSodOutActivo = true;
                         },
                       );
                     } else {
@@ -1097,6 +1101,7 @@ class _MyDialogState extends State<MyDialog> {
                             mensaje = "Cantidad debe ser mayor a 0";
                             textoVisible = true;
                             btnAgregarActivo = false;
+                            btnSodOutActivo = false;
                           },
                         );
                       } else {
@@ -1106,6 +1111,7 @@ class _MyDialogState extends State<MyDialog> {
                               mensaje = "Cantidad contiene 0 a la izq";
                               textoVisible = true;
                               btnAgregarActivo = false;
+                              btnSodOutActivo = false;
                             },
                           );
                         } else {
@@ -1184,47 +1190,67 @@ class _MyDialogState extends State<MyDialog> {
                 IconButton(
                   icon: const Icon(
                     Icomoon.soldOut,
-                    size: 36,
-                    color: Colors.black,
                   ),
-                  onPressed: () async {
-                    var whsName = dropdownvalueBodega == 'Elija una bodega'
-                        ? 'CEDI'
-                        : dropdownvalueBodega;
+                  color: Colors.black,
+                  iconSize: 36,
+                  onPressed: btnSodOutActivo
+                      ? () async {
+                          var whsName =
+                              dropdownvalueBodega == 'Elija una bodega'
+                                  ? 'CEDI'
+                                  : dropdownvalueBodega;
 
-                    http.Response response = await _addItemSoldOut(
-                        itemsGuardados[index]['itemCode'],
-                        itemsGuardados[index]['itemName'],
-                        int.parse(cantidadController.text),
-                        "PEDIDO",
-                        whsName);
-                    bool res = jsonDecode(response.body);
-                    if (res) {
-                      setState(
-                        () {
-                          mensaje = "Agotado reportado con éxito";
-                          textoVisible = true;
-                          btnAgregarActivo = false;
-                          cantidadController.text = "";
-                        },
-                      );
-                    } else {
-                      setState(
-                        () {
-                          mensaje = "No se pudo reportar el agotado";
-                          textoVisible = true;
-                          btnAgregarActivo = false;
-                          cantidadController.text = "";
-                        },
-                      );
-                    }
-                  },
+                          try {
+                            http.Response response = await _addItemSoldOut(
+                                itemsGuardados[index]['itemCode'],
+                                itemsGuardados[index]['itemName'],
+                                int.parse(cantidadController.text),
+                                "PEDIDO",
+                                whsName);
+                            bool res = jsonDecode(response.body);
+
+                            if (res) {
+                              setState(
+                                () {
+                                  mensaje = "Agotado reportado con éxito";
+                                  textoVisible = true;
+                                  btnAgregarActivo = false;
+                                  btnSodOutActivo = false;
+                                  cantidadController.text = "";
+                                },
+                              );
+                            } else {
+                              setState(
+                                () {
+                                  mensaje = "No se pudo reportar el agotado";
+                                  textoVisible = true;
+                                  btnAgregarActivo = false;
+                                  btnSodOutActivo = false;
+                                  cantidadController.text = "";
+                                },
+                              );
+                            }
+                          } catch (e) {
+                            setState(
+                              () {
+                                mensaje = "No se pudo reportar el agotado";
+                                textoVisible = true;
+                                btnAgregarActivo = false;
+                                btnSodOutActivo = false;
+                                cantidadController.text = "";
+                              },
+                            );
+                          }
+                        }
+                      : null,
                 ),
                 SizedBox(
                   width: 100,
                 ),
                 IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.basketShopping),
+                  icon: const FaIcon(
+                    FontAwesomeIcons.basketShopping,
+                  ),
                   color: Colors.black,
                   iconSize: 33,
                   onPressed: btnAgregarActivo
