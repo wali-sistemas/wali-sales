@@ -667,7 +667,7 @@ class _MyDialogState extends State<MyDialog> {
   String empresa = GetStorage().read('empresa');
   String mensaje = "";
   bool btnAgregarActivo = false;
-  bool btnSodOutActivo = false;
+  bool btnSoldOutActivo = false;
   final numberFormat = new NumberFormat.simpleCurrency();
   var whsCodeStockItem;
   String zona = "";
@@ -1068,7 +1068,7 @@ class _MyDialogState extends State<MyDialog> {
                   setState(
                     () {
                       btnAgregarActivo = false;
-                      btnSodOutActivo = false;
+                      btnSoldOutActivo = false;
                     },
                   );
                 }
@@ -1081,17 +1081,17 @@ class _MyDialogState extends State<MyDialog> {
                         mensaje = "Cantidad debe ser numérica";
                         textoVisible = true;
                         btnAgregarActivo = false;
-                        btnSodOutActivo = false;
+                        btnSoldOutActivo = false;
                       },
                     );
                   } else {
-                    if (int.parse(text) > fullStock) {
+                    if (regex.hasMatch(text)) {
                       setState(
                         () {
-                          mensaje = "Cantidad es mayor al stock";
+                          mensaje = "Cantidad contiene 0 a la izq";
                           textoVisible = true;
                           btnAgregarActivo = false;
-                          btnSodOutActivo = true;
+                          btnSoldOutActivo = false;
                         },
                       );
                     } else {
@@ -1101,17 +1101,17 @@ class _MyDialogState extends State<MyDialog> {
                             mensaje = "Cantidad debe ser mayor a 0";
                             textoVisible = true;
                             btnAgregarActivo = false;
-                            btnSodOutActivo = false;
+                            btnSoldOutActivo = false;
                           },
                         );
                       } else {
-                        if (regex.hasMatch(text)) {
+                        if (int.parse(text) > fullStock) {
                           setState(
                             () {
-                              mensaje = "Cantidad contiene 0 a la izq";
+                              mensaje = "Cantidad es mayor al stock";
                               textoVisible = true;
                               btnAgregarActivo = false;
-                              btnSodOutActivo = false;
+                              btnSoldOutActivo = true;
                             },
                           );
                         } else {
@@ -1120,6 +1120,7 @@ class _MyDialogState extends State<MyDialog> {
                               mensaje = "";
                               textoVisible = false;
                               btnAgregarActivo = true;
+                              btnSoldOutActivo = false;
                             },
                           );
                         }
@@ -1193,7 +1194,7 @@ class _MyDialogState extends State<MyDialog> {
                   ),
                   color: Colors.black,
                   iconSize: 36,
-                  onPressed: btnSodOutActivo
+                  onPressed: btnSoldOutActivo
                       ? () async {
                           var whsName =
                               dropdownvalueBodega == 'Elija una bodega'
@@ -1215,7 +1216,7 @@ class _MyDialogState extends State<MyDialog> {
                                   mensaje = "Agotado reportado con éxito";
                                   textoVisible = true;
                                   btnAgregarActivo = false;
-                                  btnSodOutActivo = false;
+                                  btnSoldOutActivo = false;
                                   cantidadController.text = "";
                                 },
                               );
@@ -1225,7 +1226,7 @@ class _MyDialogState extends State<MyDialog> {
                                   mensaje = "No se pudo reportar el agotado";
                                   textoVisible = true;
                                   btnAgregarActivo = false;
-                                  btnSodOutActivo = false;
+                                  btnSoldOutActivo = true;
                                   cantidadController.text = "";
                                 },
                               );
@@ -1236,7 +1237,7 @@ class _MyDialogState extends State<MyDialog> {
                                 mensaje = "No se pudo reportar el agotado";
                                 textoVisible = true;
                                 btnAgregarActivo = false;
-                                btnSodOutActivo = false;
+                                btnSoldOutActivo = true;
                                 cantidadController.text = "";
                               },
                             );

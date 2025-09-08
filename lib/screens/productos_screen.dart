@@ -244,7 +244,7 @@ class _MyDialogState extends State<MyDialog> {
   String dropdownvalueBodega = 'Elija una bodega';
   String empresa = GetStorage().read('empresa');
   String mensaje = "";
-  bool btnAgregarActivo = false;
+  bool btnSoldOutActivo = false;
   final numberFormat = new NumberFormat.simpleCurrency();
   var whsCodeStockItem;
   String zona = "";
@@ -620,28 +620,28 @@ class _MyDialogState extends State<MyDialog> {
                 if (text.length == 0) {
                   setState(
                     () {
-                      btnAgregarActivo = false;
+                      btnSoldOutActivo = false;
                     },
                   );
                 }
                 if (text.isEmpty) {
-                  btnAgregarActivo = false;
+                  btnSoldOutActivo = false;
                 } else {
                   if (!areAllCharactersNumbers(text)) {
                     setState(
                       () {
                         mensaje = "Cantidad debe ser numérica";
                         textoVisible = true;
-                        btnAgregarActivo = false;
+                        btnSoldOutActivo = false;
                       },
                     );
                   } else {
-                    if (int.parse(text) > fullStock) {
+                    if (regex.hasMatch(text)) {
                       setState(
                         () {
-                          mensaje = "Cantidad es mayor al stock";
+                          mensaje = "Cantidad contiene 0 a la izq";
                           textoVisible = true;
-                          btnAgregarActivo = true;
+                          btnSoldOutActivo = false;
                         },
                       );
                     } else {
@@ -650,16 +650,16 @@ class _MyDialogState extends State<MyDialog> {
                           () {
                             mensaje = "Cantidad debe ser mayor a 0";
                             textoVisible = true;
-                            btnAgregarActivo = false;
+                            btnSoldOutActivo = false;
                           },
                         );
                       } else {
-                        if (regex.hasMatch(text)) {
+                        if (int.parse(text) > fullStock) {
                           setState(
                             () {
-                              mensaje = "Cantidad contiene 0 a la izq";
-                              textoVisible = true;
-                              btnAgregarActivo = false;
+                              //mensaje = "Cantidad es mayor al stock";
+                              //textoVisible = true;
+                              btnSoldOutActivo = true;
                             },
                           );
                         } else {
@@ -667,7 +667,7 @@ class _MyDialogState extends State<MyDialog> {
                             () {
                               mensaje = "";
                               textoVisible = false;
-                              btnAgregarActivo = true;
+                              btnSoldOutActivo = false;
                             },
                           );
                         }
@@ -680,7 +680,7 @@ class _MyDialogState extends State<MyDialog> {
                   () {
                     mensaje = "";
                     textoVisible = false;
-                    btnAgregarActivo = true;
+                    btnSoldOutActivo = true;
                   },
                 );
               }
@@ -688,11 +688,10 @@ class _MyDialogState extends State<MyDialog> {
             style: const TextStyle(color: Colors.black),
             controller: cantidadController,
             keyboardType: TextInputType.text,
-            //focusNode: _focusNode,
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
-              hintText: 'Cantidad agotada',
+              hintText: 'Cant agotada',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(5.0),
               ),
@@ -731,46 +730,47 @@ class _MyDialogState extends State<MyDialog> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (btnAgregarActivo)
-              IconButton(
-                icon: const Icon(
-                  Icomoon.soldOut,
-                  size: 36,
-                  color: Colors.black,
-                ),
-                onPressed: () async {
-                  var whsName = dropdownvalueBodega == 'Elija una bodega'
-                      ? 'CEDI'
-                      : dropdownvalueBodega;
-
-                  http.Response response = await _addItemSoldOut(
-                      itemsGuardados[index]['itemCode'],
-                      itemsGuardados[index]['itemName'],
-                      int.parse(cantidadController.text),
-                      "CATALOGO",
-                      whsName);
-                  bool res = jsonDecode(response.body);
-                  if (res) {
-                    setState(
-                      () {
-                        mensaje = "Agotado reportado con éxito";
-                        textoVisible = true;
-                        btnAgregarActivo = false;
-                        cantidadController.text = "";
-                      },
-                    );
-                  } else {
-                    setState(
-                      () {
-                        mensaje = "No se pudo reportar el agotado";
-                        textoVisible = true;
-                        btnAgregarActivo = false;
-                        cantidadController.text = "";
-                      },
-                    );
-                  }
-                },
+            IconButton(
+              icon: const Icon(
+                Icomoon.soldOut,
               ),
+              color: Colors.black,
+              iconSize: 36,
+              onPressed: btnSoldOutActivo
+                  ? () async {
+                      var whsName = dropdownvalueBodega == 'Elija una bodega'
+                          ? 'CEDI'
+                          : dropdownvalueBodega;
+
+                      http.Response response = await _addItemSoldOut(
+                          itemsGuardados[index]['itemCode'],
+                          itemsGuardados[index]['itemName'],
+                          int.parse(cantidadController.text),
+                          "CATALOGO",
+                          whsName);
+                      bool res = jsonDecode(response.body);
+                      if (res) {
+                        setState(
+                          () {
+                            mensaje = "Agotado reportado con éxito";
+                            textoVisible = true;
+                            btnSoldOutActivo = false;
+                            cantidadController.text = "";
+                          },
+                        );
+                      } else {
+                        setState(
+                          () {
+                            mensaje = "No se pudo reportar el agotado";
+                            textoVisible = true;
+                            btnSoldOutActivo = true;
+                            cantidadController.text = "";
+                          },
+                        );
+                      }
+                    }
+                  : null,
+            ),
           ],
         ),
       ],

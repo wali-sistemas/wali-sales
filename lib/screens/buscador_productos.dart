@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:productos_app/models/DatabaseHelper.dart';
 import 'pedidos_screen.dart';
 import 'package:http/http.dart' as http;
+import 'package:productos_app/icomoon.dart';
 
 List itemsGuardados = [];
 List<String> allNames = [""];
@@ -281,7 +282,7 @@ class _MyDialogState extends State<MyDialog> {
   String dropdownvalueBodega = 'Elija una bodega';
   String empresa = GetStorage().read('empresa');
   String mensaje = "";
-  bool btnAgregarActivo = false;
+  bool btnSoldOutActivo = false;
   final numberFormat = new NumberFormat.simpleCurrency();
   var whsCodeStockItem;
   String zona = "";
@@ -440,6 +441,28 @@ class _MyDialogState extends State<MyDialog> {
   Future<bool> checkConnectivity() async {
     var connectivityResult = await _connectivity.checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
+  }
+
+  Future<http.Response> _addItemSoldOut(String itemCode, String itemName,
+      int quantity, String origen, String whsName) {
+    final String apiUrl =
+        'http://192.168.10.69:8080/manager/res/app/add-item-sold-out';
+
+    return http.post(
+      Uri.parse(apiUrl),
+      headers: <String, String>{'Content-Type': 'application/json'},
+      body: jsonEncode(
+        <String, dynamic>{
+          "itemCode": itemCode,
+          "itemName": itemName,
+          "quantity": quantity,
+          "slpCode": usuario,
+          "companyName": empresa,
+          "origen": origen,
+          "whsName": whsName
+        },
+      ),
+    );
   }
 
   @override
@@ -623,6 +646,172 @@ class _MyDialogState extends State<MyDialog> {
                   ).toList(),
                 )
               : Container(),
+        ),
+        SizedBox(
+          height: 10,
+        ),
+        SizedBox(
+          width: 250,
+          height: 35,
+          child: TextField(
+            onChanged: (text) {
+              if (empresa != "REDPLAS") {
+                RegExp regex = RegExp(r'0+[1-9]');
+                if (text.length == 0) {
+                  setState(
+                    () {
+                      btnSoldOutActivo = false;
+                    },
+                  );
+                }
+                if (text.isEmpty) {
+                  btnSoldOutActivo = false;
+                } else {
+                  if (!areAllCharactersNumbers(text)) {
+                    setState(
+                      () {
+                        mensaje = "Cantidad debe ser numérica";
+                        textoVisible = true;
+                        btnSoldOutActivo = false;
+                      },
+                    );
+                  } else {
+                    if (regex.hasMatch(text)) {
+                      setState(
+                        () {
+                          mensaje = "Cantidad contiene 0 a la izq";
+                          textoVisible = true;
+                          btnSoldOutActivo = false;
+                        },
+                      );
+                    } else {
+                      if (int.parse(text) < 1) {
+                        setState(
+                          () {
+                            mensaje = "Cantidad debe ser mayor a 0";
+                            textoVisible = true;
+                            btnSoldOutActivo = false;
+                          },
+                        );
+                      } else {
+                        if (int.parse(text) > fullStock) {
+                          setState(
+                            () {
+                              //mensaje = "Cantidad es mayor al stock";
+                              //textoVisible = true;
+                              btnSoldOutActivo = true;
+                            },
+                          );
+                        } else {
+                          setState(
+                            () {
+                              mensaje = "";
+                              textoVisible = false;
+                              btnSoldOutActivo = false;
+                            },
+                          );
+                        }
+                      }
+                    }
+                  }
+                }
+              } else {
+                setState(
+                  () {
+                    mensaje = "";
+                    textoVisible = false;
+                    btnSoldOutActivo = true;
+                  },
+                );
+              }
+            },
+            style: const TextStyle(color: Colors.black),
+            controller: cantidadController,
+            keyboardType: TextInputType.text,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              hintText: 'Cant agotada',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+              contentPadding: const EdgeInsets.all(5),
+              hintStyle: const TextStyle(
+                color: Colors.grey,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 5,
+        ),
+        Visibility(
+          visible: textoVisible,
+          child: Center(
+            child: Material(
+              elevation: 5,
+              color: Colors.grey,
+              borderRadius: BorderRadius.horizontal(),
+              child: Container(
+                width: 300,
+                height: 30,
+                child: Center(
+                  child: Text(
+                    mensaje,
+                    style: TextStyle(fontSize: 15),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Divider(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icomoon.soldOut,
+              ),
+              color: Colors.black,
+              iconSize: 36,
+              onPressed: btnSoldOutActivo
+                  ? () async {
+                      var whsName = dropdownvalueBodega == 'Elija una bodega'
+                          ? 'CEDI'
+                          : dropdownvalueBodega;
+
+                      http.Response response = await _addItemSoldOut(
+                          itemsGuardados[index]['itemCode'],
+                          itemsGuardados[index]['itemName'],
+                          int.parse(cantidadController.text),
+                          "CATALOGO",
+                          whsName);
+                      bool res = jsonDecode(response.body);
+                      if (res) {
+                        setState(
+                          () {
+                            mensaje = "Agotado reportado con éxito";
+                            textoVisible = true;
+                            btnSoldOutActivo = false;
+                            cantidadController.text = "";
+                          },
+                        );
+                      } else {
+                        setState(
+                          () {
+                            mensaje = "No se pudo reportar el agotado";
+                            textoVisible = true;
+                            btnSoldOutActivo = true;
+                            cantidadController.text = "";
+                          },
+                        );
+                      }
+                    }
+                  : null,
+            ),
+          ],
         ),
       ],
     );
