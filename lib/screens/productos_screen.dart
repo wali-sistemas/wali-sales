@@ -406,7 +406,7 @@ class _MyDialogState extends State<MyDialog> {
   Future<http.Response> _addItemSoldOut(String itemCode, String itemName,
       int quantity, String origen, String whsName) {
     final String apiUrl =
-        'http://192.168.10.69:8080/manager/res/app/add-item-sold-out';
+        'http://wali.igbcolombia.com:8080/manager/res/app/add-item-sold-out';
 
     return http.post(
       Uri.parse(apiUrl),
@@ -455,7 +455,7 @@ class _MyDialogState extends State<MyDialog> {
     }
     //Activar seleccion de bodega para los lubricantes de REVO bodega 35-MAGNUN BOGOTA y 01-CEDI MEDELLÍN
     if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
-        itemsGuardados[index]["marca"] == 'REVO') {
+        itemsGuardados[index]["marca"] == 'REVO LUBRICANTES') {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
       isVisibleBod = true;
     }
@@ -561,7 +561,7 @@ class _MyDialogState extends State<MyDialog> {
                             whsCode = '45';
                           } else if (itemsGuardados[index]["subgrupo"] ==
                                   'LUBRICANTES' &&
-                              itemsGuardados[index]["marca"] == 'REVO') {
+                              itemsGuardados[index]["marca"] == 'REVO LUBRICANTES') {
                             whsCode = '01';
                           }
                           break;

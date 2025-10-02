@@ -57,7 +57,7 @@ class AuthService extends ChangeNotifier {
   }
 
   /// LOGIN IGB
-  Future<String?> login2(String usuario, String password) async {
+  Future<String?> login2(String usuario, String password, String version) async {
     String empresa = GetStorage().read('empresa');
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/login/' +
@@ -69,18 +69,23 @@ class AuthService extends ChangeNotifier {
     final response = await http.get(Uri.parse(apiUrl));
 
     if (response.statusCode == 500) {
-      return "Error, Datos incorrectos";
+      return "Ups, algo falló en el servidor.";
     } else {
       if (response.body.substring(8, 10) == "-1") {
-        return "Error, Usuario o clave incorrecta";
+        return "Credenciales incorrectas.";
       }
       final data = json.decode(response.body);
 
       await storage2.write('slpCode', data[0]['slpCode']);
+
+      if (version != data[0]['appVersion']) {
+        return "Versión antigua. Actualiza la app.";
+      }
+
       if (data[0]['slpCode'] == usuario && data[0]['passWord'] == password) {
         return null;
       } else {
-        return "Error, usuario o clave incorrecta";
+        return "Credenciales incorrectas.";
       }
     }
   }

@@ -237,8 +237,17 @@ class _DashboardPageState extends State<DashboardPage> {
       },
     );
     AlertDialog alert = AlertDialog(
-      title: Text("Atención"),
-      content: Text("Está seguro que desea salir de la aplicación?"),
+      title: Row(
+        children: [
+          Icon(
+            Icons.error,
+            color: Colors.orange,
+          ),
+          SizedBox(width: 8),
+          Text("Atención!"),
+        ],
+      ),
+      content: Text("¿Está seguro que desea salir de la aplicación?"),
       actions: [
         cancelButton,
         continueButton,

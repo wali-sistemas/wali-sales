@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:get_storage/get_storage.dart';
@@ -331,11 +330,7 @@ class CarteraPageState extends State<CarteraPage> {
         child: ListTile(
           title: Center(
             child: Text(
-              'CL(' +
-                  _cartera.length.toString() +
-                  ') - ' +
-                  totalCartGen +
-                  '\n',
+              'CL(' + _cartera.length.toString() + ') - ' + totalCartGen + '\n',
               style: TextStyle(
                 fontSize: 18,
               ),
@@ -739,9 +734,18 @@ class CarteraPageState extends State<CarteraPage> {
     );
 
     AlertDialog alert = AlertDialog(
-      title: Text("Atención"),
+      title: Row(
+        children: [
+          Icon(
+            Icons.error,
+            color: Colors.orange,
+          ),
+          SizedBox(width: 8),
+          Text("Atención!"),
+        ],
+      ),
       content: Text(
-        "Tiene ítmes pendientes para otro cliente, si continúa se borrarán e inciará un pedido nuevo, desea continuar?",
+        "Tiene ítmes pendientes para otro cliente, si continúa se borrarán e inciará un pedido nuevo.\n¿Desea continuar?",
       ),
       actions: [
         cancelButton,

@@ -338,12 +338,16 @@ class _LoginFormState extends State<_LoginForm> {
                         );
                         ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       } else {
+                        Future<bool> res = createRecordLogin(
+                          GetStorage().read('empresa'),
+                          loginForm.email,
+                        );
                         FocusScope.of(context).unfocus();
                         final authService =
                             Provider.of<AuthService>(context, listen: false);
                         loginForm.isLoading = true;
                         final String? errorMessage = await authService.login2(
-                            loginForm.email, loginForm.password);
+                            loginForm.email, loginForm.password, versionApp);
                         if (errorMessage == null) {
                           storage.write("usuario", loginForm.email);
                           storage.write("clave", loginForm.password);
@@ -370,10 +374,6 @@ class _LoginFormState extends State<_LoginForm> {
                               Map<String, dynamic> res =
                                   jsonDecode(response.body);
                               if (res['code'] == 0) {
-                                Future<bool> res = createRecordLogin(
-                                  GetStorage().read('empresa'),
-                                  loginForm.email,
-                                );
                                 //TODO: sincronizar stock y ítems al iniciar sesión
                                 sincronizarStock();
                                 sincronizarItems(

@@ -140,7 +140,16 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Atención"),
+          title: Row(
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.orange,
+              ),
+              SizedBox(width: 8),
+              Text("Atención!"),
+            ],
+          ),
           content: Text(message),
           actions: [
             ElevatedButton(
@@ -242,9 +251,18 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
       },
     );
     AlertDialog alert = AlertDialog(
-      title: Text("Atención"),
+      title: Row(
+        children: [
+          Icon(
+            Icons.error,
+            color: Colors.orange,
+          ),
+          SizedBox(width: 8),
+          Text("Atención!"),
+        ],
+      ),
       content: Text(
-        "Tiene ítems agregados al carrito, si continúa se borrarán e iniciará un pedido nuevo, desea continuar?",
+        "Tiene ítems agregados al carrito, si continúa se borrarán e iniciará un pedido nuevo.\n¿Desea continuar?",
       ),
       actions: [
         cancelButton,

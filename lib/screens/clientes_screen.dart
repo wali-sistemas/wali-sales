@@ -272,9 +272,18 @@ class _ClientesPageState extends State<ClientesPage> {
       },
     );
     AlertDialog alert = AlertDialog(
-      title: Text("Atención"),
+      title: Row(
+        children: [
+          Icon(
+            Icons.error,
+            color: Colors.orange,
+          ),
+          SizedBox(width: 8),
+          Text("Atención!"),
+        ],
+      ),
       content: Text(
-        "Tiene ítems pendientes para otro cliente, si continúa se borrarán e iniciará un pedido nuevo, desea continuar?",
+        "Tiene ítems pendientes para otro cliente, si continúa se borrarán e iniciará un pedido nuevo.\n¿Desea continuar?",
       ),
       actions: [
         cancelButton,

@@ -109,9 +109,7 @@ class _PedidosPageState extends State<PedidosPage>
       } else {
         throw Exception('No se pudo abrir WhatsApp');
       }
-    } catch (e) {
-      //print('Error: $e');
-    }
+    } catch (e) {}
   }
 
   @override
@@ -131,10 +129,12 @@ class _PedidosPageState extends State<PedidosPage>
                 color: Colors.white,
               ),
               onTap: () {
-                if (GetStorage().read('estadoPedido') == "guardado") {
-                  storage.remove('itemsPedido');
+                if (GetStorage().read('estadoPedido') == "nuevo") {
+                  Navigator.pushReplacementNamed(context, 'home');
+                } else {
+                  showExitEditOrderConfirmation(context,
+                      "Estás editando un pedido. Si sales, perderás los cambios.\n\n¿Deseas salir definitivamente?");
                 }
-                Navigator.pushReplacementNamed(context, 'home');
               },
             ),
             title: ListTile(
@@ -191,6 +191,52 @@ class _PedidosPageState extends State<PedidosPage>
     );
   }
 
+  void showExitEditOrderConfirmation(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.orange,
+              ),
+              SizedBox(width: 8),
+              Text('Atención!'),
+            ],
+          ),
+          content: Text(message),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                storage.remove('itemsPedido');
+                Navigator.pushReplacementNamed(context, 'home');
+              },
+              child: Text('Si'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('No'),
+            ),
+          ],
+        );
+      },
+    ); /*.then(
+      (value) {
+        setState(
+          () {
+            btnPedidoActivo = false;
+            btnGuardarActivo = false;
+          },
+        );
+      },
+    );*/
+  }
+
   Future<void> _listarItems() async {
     if (GetStorage().read('items') == null) {
       final String apiUrl =
@@ -241,24 +287,11 @@ class _PedidosPageState extends State<PedidosPage>
     /// DIRECCIONES DE ENVIO
     if (GetStorage().read('datosClientes') == null) {
     } else {
-      /////BUSCAR nit en lista de clientes para hallar direcciones de envio
-      // clientesGuardados=GetStorage().read('datosClientes');
-      // if (GetStorage().read('nit')!=null)
-      //   nit=GetStorage().read('nit');
-      // else nit="no exite nit";
-      //
-      // clientesGuardados.forEach((k) {
-      //   print ("NIT2: "); print (k['nit']);
-      //   if(nit==k['nit'])
-      //   { print ("Nitencontrado: ");
-      //     direccionesTemp=k['addresses'];}
-      // });
-
       clientesGuardados = GetStorage().read('datosClientes');
       if (GetStorage().read('cardCode') != null) {
         nit = GetStorage().read('cardCode');
       } else {
-        nit = "no exite nit";
+        nit = "El cliente no se encuentra registrado";
       }
 
       clientesGuardados.forEach((k) {
@@ -273,17 +306,6 @@ class _PedidosPageState extends State<PedidosPage>
       direccionesEnvioAsesor.add(dir['address']);
     }
 
-    ///
-    /// SI EL PEDIDO ES GUARDADO, MOSTRAR LINENUM
-    // if (GetStorage().read('pedidoGuardado') != null)
-    // {
-    //   Map<String, dynamic> pedidoFinalG = GetStorage().read('pedidoGuardado');
-    //    direccionesEnvioAsesor.clear();
-    //    direccionesEnvioAsesor.add('Elija un destino');
-    //   direccionesEnvioAsesor.add(pedidoFinalG['lineNum'] ?? 'Sin dirección');
-    //
-    // }
-
     //BUSCAR CLIENTE CON EL NIT QUE TRAE DE PESTAÑA DE CLIENTES
     for (var cliente in datosClientesArr) {
       if (cliente['cardCode'] == GetStorage().read('cardCode')) {
@@ -293,9 +315,11 @@ class _PedidosPageState extends State<PedidosPage>
     }
     _direcciones = datosClientesArr[indice]['addresses'];
     String dirs = "";
-    _direcciones.forEach((element) {
-      dirs = dirs + element['lineNum'] + '\n';
-    });
+    _direcciones.forEach(
+      (element) {
+        dirs = dirs + element['lineNum'] + '\n';
+      },
+    );
 
     pedidoTemp['cardCode'] = datosClientesArr[indice]['cardCode'].toString();
     pedidoTemp['cardName'] = datosClientesArr[indice]['cardName'].toString();
@@ -443,9 +467,9 @@ class _PedidosPageState extends State<PedidosPage>
                         children: [
                           GestureDetector(
                             onTap: () async {
-                              _launchWhatsApp(datosClientesArr[indice]
-                                      ['cellular']
-                                  .toString());
+                              _launchWhatsApp(
+                                datosClientesArr[indice]['cellular'].toString(),
+                              );
                             },
                             child: Row(
                               children: [
@@ -457,8 +481,9 @@ class _PedidosPageState extends State<PedidosPage>
                           IconButton(
                             icon: Icon(Icons.phone_outlined),
                             onPressed: () {
-                              _launchPhone(datosClientesArr[indice]['cellular']
-                                  .toString());
+                              _launchPhone(
+                                datosClientesArr[indice]['cellular'].toString(),
+                              );
                             },
                           ),
                           IconButton(
@@ -472,9 +497,7 @@ class _PedidosPageState extends State<PedidosPage>
                               );
                               try {
                                 await FlutterEmailSender.send(email);
-                              } catch (e) {
-                                //print('Error al abrir el correo: $e');
-                              }
+                              } catch (e) {}
                             },
                           ),
                         ],
@@ -499,8 +522,9 @@ class _PedidosPageState extends State<PedidosPage>
                               int indice = findItemIndex(
                                   direccionesEnvioAsesor, newValue);
                               storage.write(
-                                  "dirEnvio", direccionesEnvio[indice]);
-                              //pedidoFinal['shipToCode']=newValue;
+                                "dirEnvio",
+                                direccionesEnvio[indice],
+                              );
                               dropdownvalue2 = newValue!;
                             },
                           );
@@ -838,7 +862,7 @@ class _MyDialogState extends State<MyDialog> {
   Future<http.Response> _addItemSoldOut(String itemCode, String itemName,
       int quantity, String origen, String whsName) {
     final String apiUrl =
-        'http://192.168.10.69:8080/manager/res/app/add-item-sold-out';
+        'http://wali.igbcolombia.com:8080/manager/res/app/add-item-sold-out';
 
     return http.post(
       Uri.parse(apiUrl),
@@ -889,7 +913,7 @@ class _MyDialogState extends State<MyDialog> {
     }
     //Activar seleccion de bodega para los lubricantes de REVO bodega 35-MAGNUN BOGOTA y 01-CEDI MEDELLÍN
     if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
-        itemsGuardados[index]["marca"] == 'REVO') {
+        itemsGuardados[index]["marca"] == 'REVO LUBRICANTES') {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
       isVisibleBod = true;
     }
@@ -1008,7 +1032,8 @@ class _MyDialogState extends State<MyDialog> {
                             whsCode = '45';
                           } else if (itemsGuardados[index]["subgrupo"] ==
                                   'LUBRICANTES' &&
-                              itemsGuardados[index]["marca"] == 'REVO') {
+                              itemsGuardados[index]["marca"] ==
+                                  'REVO LUBRICANTES') {
                             whsCode = '01';
                           }
                           break;
@@ -1085,7 +1110,8 @@ class _MyDialogState extends State<MyDialog> {
                       },
                     );
                   } else {
-                    if (regex.hasMatch(text)) {
+                    final regex = RegExp(r'^(0|[1-9][0-9]*)$');
+                    if (!regex.hasMatch(text)) {
                       setState(
                         () {
                           mensaje = "Cantidad contiene 0 a la izq";
@@ -1510,7 +1536,16 @@ class _DetallePedidoState extends State<DetallePedido> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Atención"),
+          title: Row(
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.orange,
+              ),
+              SizedBox(width: 8),
+              Text("Atención!"),
+            ],
+          ),
           content: Text(message),
           actions: [
             ElevatedButton(
@@ -1548,7 +1583,16 @@ class _DetallePedidoState extends State<DetallePedido> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Atención"),
+          title: Row(
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.orange,
+              ),
+              SizedBox(width: 8),
+              Text("Atención!"),
+            ],
+          ),
           content: Text(message),
           actions: [
             ElevatedButton(
@@ -2054,7 +2098,7 @@ class _TotalPedidoState extends State<TotalPedido> {
             children: [
               Icon(
                 Icons.error,
-                color: Colors.red,
+                color: Colors.orange,
               ),
               SizedBox(width: 8),
               Text('Atención!'),
@@ -2145,7 +2189,16 @@ class _TotalPedidoState extends State<TotalPedido> {
           builder: (BuildContext context, StateSetter setState) {
             bool isProcessing = false;
             return AlertDialog(
-              title: Text("Atención"),
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.error,
+                    color: Colors.orange,
+                  ),
+                  SizedBox(width: 8),
+                  Text("Atención!"),
+                ],
+              ),
               content: Text(message),
               actions: [
                 ElevatedButton(
@@ -2308,7 +2361,16 @@ class _TotalPedidoState extends State<TotalPedido> {
           builder: (BuildContext context, StateSetter setState) {
             bool isProcessing = false;
             return AlertDialog(
-              title: Text("Atención"),
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.error,
+                    color: Colors.orange,
+                  ),
+                  SizedBox(width: 8),
+                  Text("Atención!"),
+                ],
+              ),
               content: Text(message),
               actions: [
                 ElevatedButton(

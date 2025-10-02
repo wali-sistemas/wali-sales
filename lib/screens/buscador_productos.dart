@@ -446,7 +446,7 @@ class _MyDialogState extends State<MyDialog> {
   Future<http.Response> _addItemSoldOut(String itemCode, String itemName,
       int quantity, String origen, String whsName) {
     final String apiUrl =
-        'http://192.168.10.69:8080/manager/res/app/add-item-sold-out';
+        'http://wali.igbcolombia.com:8080/manager/res/app/add-item-sold-out';
 
     return http.post(
       Uri.parse(apiUrl),
