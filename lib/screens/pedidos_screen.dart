@@ -911,10 +911,10 @@ class _MyDialogState extends State<MyDialog> {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
       isVisibleBod = true;
     }
-    //Activar seleccion de bodega para los lubricantes de REVO bodega 35-MAGNUN BOGOTA y 01-CEDI MEDELLÍN
+    //Activar seleccion de bodega para los lubricantes de REVO bodega 35-MAGNUN BOGOTA, 55-GLOBAL OIL y 01-CEDI MEDELLÍN
     if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
         itemsGuardados[index]["marca"] == 'REVO LUBRICANTES') {
-      bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
+      bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ', 'COTA'];
       isVisibleBod = true;
     }
     //Activar seleccion de bodega para las llantas TIMSUN bodega 35-MAGNUN BOGOTA, 26-MAGNUN CALI, 05-MAGNUM CARTAGENA y 45-ALMAVIVA MEDELLÍN
@@ -1039,6 +1039,9 @@ class _MyDialogState extends State<MyDialog> {
                           break;
                         case 'BOGOTÁ':
                           whsCode = '35';
+                          break;
+                        case 'COTA':
+                          whsCode = '55';
                           break;
                         default:
                           whsCode = '01';
