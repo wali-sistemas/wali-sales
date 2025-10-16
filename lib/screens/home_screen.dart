@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:productos_app/icomoon.dart';
 import 'package:productos_app/screens/ai_chat_screen.dart';
 import 'package:productos_app/screens/clientes_screen.dart';
 import 'package:productos_app/screens/dashboard_screen.dart';
@@ -202,8 +203,8 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     );
                                   },
-                                  icon: Icon(
-                                    Icons.mark_unread_chat_alt_rounded,
+                                  icon: const Icon(
+                                    Icomoon.microchipAI,
                                   ),
                                 ),
                                 SizedBox(width: 10),
@@ -218,6 +219,40 @@ class _HomePageState extends State<HomePage> {
                                   },
                                   child: Text(
                                     'Chatbot AI',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                SizedBox(width: 10),
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ListarPedidosPage(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icomoon.groups,
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AIChatScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    'Empleado',
                                     style: TextStyle(fontSize: 16),
                                   ),
                                 ),
