@@ -6,6 +6,7 @@ import 'package:productos_app/icomoon.dart';
 import 'package:productos_app/screens/ai_chat_screen.dart';
 import 'package:productos_app/screens/clientes_screen.dart';
 import 'package:productos_app/screens/dashboard_screen.dart';
+import 'package:productos_app/screens/employee.dart';
 import 'package:productos_app/screens/listar_pedidos.dart';
 import 'package:productos_app/screens/profile_screen.dart';
 import 'package:productos_app/screens/login_screen.dart';
@@ -198,8 +199,7 @@ class _HomePageState extends State<HomePage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            ListarPedidosPage(),
+                                        builder: (context) => AIChatScreen(),
                                       ),
                                     );
                                   },
@@ -218,7 +218,7 @@ class _HomePageState extends State<HomePage> {
                                     );
                                   },
                                   child: Text(
-                                    'Chatbot AI',
+                                    'Chatbot',
                                     style: TextStyle(fontSize: 16),
                                   ),
                                 ),
@@ -232,8 +232,7 @@ class _HomePageState extends State<HomePage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            ListarPedidosPage(),
+                                        builder: (context) => EmployeePage(),
                                       ),
                                     );
                                   },
@@ -247,7 +246,7 @@ class _HomePageState extends State<HomePage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => AIChatScreen(),
+                                        builder: (context) => EmployeePage(),
                                       ),
                                     );
                                   },
