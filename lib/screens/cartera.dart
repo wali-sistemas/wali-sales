@@ -233,7 +233,21 @@ class CarteraPageState extends State<CarteraPage> {
                 Map<String, dynamic> resultado = jsonDecode(response.body);
 
                 if (response.statusCode == 200 && resultado['content'] != "") {
-                  _downloadReportPDF(
+                  final Uri url = Uri.parse(
+                    "https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/" +
+                        GetStorage().read('empresa') +
+                        "/collection/" +
+                        GetStorage().read('usuario') +
+                        ".pdf",
+                  );
+
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } else {
+                    launchUrl(url);
+                  }
+
+                  /*_downloadReportPDF(
                     'http://wali.igbcolombia.com:8080/shared/' +
                         GetStorage().read('empresa') +
                         '/collection/' +
@@ -249,7 +263,7 @@ class CarteraPageState extends State<CarteraPage> {
                       content: Text('Cartera general guardada en descargas'),
                       duration: Duration(seconds: 3),
                     ),
-                  );
+                  );*/
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -887,7 +901,9 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                     for (var detail in clienteDetalle["detailPortfolio"]) {
                       detail["discApplied"] = "0";
                     }
-                    final Uri url = Uri.parse(resultado['content'].toString());
+                    final Uri url = Uri.parse(
+                        "https://drive.google.com/viewerng/viewer?embedded=true&url=" +
+                            resultado['content'].toString());
                     if (await canLaunchUrl(url)) {
                       await launchUrl(url,
                           mode: LaunchMode.externalApplication);

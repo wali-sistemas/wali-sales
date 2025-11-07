@@ -12,6 +12,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:productos_app/models/DatabaseHelper.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ListarPedidosPage extends StatefulWidget {
   const ListarPedidosPage({Key? key}) : super(key: key);
@@ -209,7 +210,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const PedidosGuardadosPage(),
+                        builder: (context) => PedidosGuardadosPage(),
                       ),
                     );
                   },
@@ -245,10 +246,10 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                           ),
                           trailing: TextButton.icon(
                             onPressed: () {},
-                            label: const Text(
+                            label: Text(
                               '',
                             ),
-                            icon: const Icon(Icons.add),
+                            icon: Icon(Icons.add),
                           ),
                         ),
                       ),
@@ -336,7 +337,21 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
 
                           if (response.statusCode == 200 &&
                               resultado['content'] != "") {
-                            _downloadDetailOrderPDF(
+                            final Uri url = Uri.parse(
+                              "https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/" +
+                                  GetStorage().read('empresa') +
+                                  "/sales/orderDetail/" +
+                                  _ventas[index]["docNum"].toString() +
+                                  ".pdf",
+                            );
+
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url,
+                                  mode: LaunchMode.externalApplication);
+                            } else {
+                              launchUrl(url);
+                            }
+                            /*_downloadDetailOrderPDF(
                               'http://wali.igbcolombia.com:8080/shared/' +
                                   GetStorage().read('empresa') +
                                   '/sales/orderDetail/' +
@@ -344,16 +359,16 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                                   '.pdf',
                               DateFormat("yyyyMMdd-hhmm").format(now),
                               _ventas[index]["docNum"].toString(),
-                            );
+                            );*/
 
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            /*ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
                                   'Detalle de la orden guardada en descargas',
                                 ),
                                 duration: Duration(seconds: 3),
                               ),
-                            );
+                            );*/
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

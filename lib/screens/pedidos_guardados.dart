@@ -374,8 +374,8 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
 
   Widget _buildSelectedMarker(DateTime date) {
     return Container(
-      margin: const EdgeInsets.all(4.0),
-      padding: const EdgeInsets.all(4.0),
+      margin: EdgeInsets.all(4.0),
+      padding: EdgeInsets.all(4.0),
       color: Colors.blue,
       child: Center(
         child: Text(
@@ -393,7 +393,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
         builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
           var data = snapshot.data;
           if (data == null) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(),
             );
           } else {
@@ -401,7 +401,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
             if (datalength == 0 ||
                 snapshot.data![0]["content"] ==
                     "No se encontraron ordenes guardadas para mostrar.") {
-              return const Center(
+              return Center(
                 child: Text('No se encontraron ordenes guardadas para mostrar'),
               );
             } else {
