@@ -45,6 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
     const Color(0xffe17055),
     const Color(0xff6c5ce7),
   ];
+
   GetStorage storage = GetStorage();
   String? usuario = GetStorage().read('usuario');
   String? empresa = GetStorage().read('empresa');
@@ -115,7 +116,6 @@ class _DashboardPageState extends State<DashboardPage> {
             now.year.toString() +
             '&month=' +
             now.month.toString();
-
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp1 = jsonDecode(response.body);
     Map<String, dynamic> data = {};
@@ -133,7 +133,7 @@ class _DashboardPageState extends State<DashboardPage> {
             "month": 1,
             "base": 0,
             "impact": 0,
-            "effectiveness": 0.0
+            "effectiveness": 0
           }
         ]
       };
@@ -150,7 +150,6 @@ class _DashboardPageState extends State<DashboardPage> {
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
     Map<String, dynamic> data = {};
-
     if (resp["code"] == 0) {
       data = {
         "code": 0,
@@ -175,7 +174,6 @@ class _DashboardPageState extends State<DashboardPage> {
             usuario!;
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-
     if (resp["code"] == 0) {
       return resp["content"];
     } else {
@@ -205,7 +203,6 @@ class _DashboardPageState extends State<DashboardPage> {
             usuario!;
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-
     if (resp["code"] == 0) {
       return resp["content"];
     } else {
@@ -624,15 +621,21 @@ class _DashboardPageState extends State<DashboardPage> {
                 future: _datosBarras(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
+                    print("***********");
+                    print(snapshot.data!["content"]);
+                    print("***********");
+
                     if (snapshot.data!["content"]
                             .toString()
                             .contains("Ocurrio un error") ||
                         snapshot.data!["content"] ==
                             "No se encontraron datos para graficar la efectividad.") {
                     } else {
+                      efectividad = 1.1;
+
                       base = snapshot.data!["content"]["base"];
                       impacto = snapshot.data!["content"]["impact"];
-                      efectividad = snapshot.data!["content"]["effectiveness"];
+                      //efectividad = snapshot.data!["content"]["effectiveness"];
                     }
                     return Row(
                       children: [
