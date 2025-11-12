@@ -121,6 +121,10 @@ class _DashboardPageState extends State<DashboardPage> {
     Map<String, dynamic> data = {};
     if (!resp1["content"].toString().contains("Ocurrio un error") ||
         !resp1["content"].toString().contains("No se encontraron")) {
+      setState(() {
+        efectividad = resp1["content"]["effectiveness"];
+      });
+
       return resp1;
     } else {
       data = {
@@ -621,21 +625,15 @@ class _DashboardPageState extends State<DashboardPage> {
                 future: _datosBarras(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    print("***********");
-                    print(snapshot.data!["content"]);
-                    print("***********");
-
                     if (snapshot.data!["content"]
                             .toString()
                             .contains("Ocurrio un error") ||
                         snapshot.data!["content"] ==
                             "No se encontraron datos para graficar la efectividad.") {
                     } else {
-                      efectividad = 1.1;
-
                       base = snapshot.data!["content"]["base"];
                       impacto = snapshot.data!["content"]["impact"];
-                      //efectividad = snapshot.data!["content"]["effectiveness"];
+                      efectividad = snapshot.data!["content"]["effectiveness"];
                     }
                     return Row(
                       children: [
@@ -682,7 +680,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       ],
                     );
                   } else if (snapshot.hasError) {
-                    return Text('Error al tratar de realizar la consulta');
+                    return Text(
+                      'En el momento no tiene asignación de efectividad',
+                      textAlign: TextAlign.center,
+                    );
                   }
                   return const CircularProgressIndicator();
                 },
