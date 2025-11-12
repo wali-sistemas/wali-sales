@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
               context: context,
               builder: (BuildContext context) {
                 return Container(
-                  height: 300,
+                  height: 400,
                   child: Stack(
                     children: [
                       Positioned(
