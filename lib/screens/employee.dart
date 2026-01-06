@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:productos_app/icomoon.dart';
@@ -7,19 +6,18 @@ import 'package:productos_app/widgets/carrito.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
-class EmployeePage extends StatefulWidget {
-  EmployeePage({Key? key}) : super(key: key);
+class EmployeePage extends StatelessWidget {
+  const EmployeePage({Key? key}) : super(key: key);
 
-  @override
-  State<EmployeePage> createState() => _EmployeePageState();
-}
+  static const Color _primaryColor = Color.fromRGBO(30, 129, 235, 1);
 
-class _EmployeePageState extends State<EmployeePage> {
-  GetStorage storage = GetStorage();
-
-  @override
-  void initState() {
-    super.initState();
+  ButtonStyle _buttonStyle() {
+    return ElevatedButton.styleFrom(
+      backgroundColor: _primaryColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(5),
+      ),
+    );
   }
 
   @override
@@ -28,20 +26,18 @@ class _EmployeePageState extends State<EmployeePage> {
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        backgroundColor: _primaryColor,
         leading: GestureDetector(
-          child: Icon(
+          child: const Icon(
             Icons.arrow_back_ios,
             color: Colors.white,
           ),
-          onTap: () {
-            Navigator.pop(context);
-          },
+          onTap: () => Navigator.pop(context),
         ),
-        actions: [
+        actions: const [
           CarritoPedido(),
         ],
-        title: Text(
+        title: const Text(
           'Empleado',
           style: TextStyle(color: Colors.white),
         ),
@@ -50,145 +46,91 @@ class _EmployeePageState extends State<EmployeePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             SizedBox(
               width: 300,
               height: 200,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromRGBO(30, 129, 235, 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      children: [
-                        Column(
-                          children: [
-                            SizedBox(height: 50),
-                            Icon(
-                              Icomoon.carta,
-                              color: Colors.white,
-                              size: 100,
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              "Carta Laboral",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                style: _buttonStyle(),
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (_) {
-                      return JobCertifyEmployeeDataDialog();
-                    },
+                    builder: (_) => const JobCertifyEmployeeDataDialog(),
                   );
                 },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(
+                      Icomoon.carta,
+                      color: Colors.white,
+                      size: 100,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Carta Laboral",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             SizedBox(
               width: 300,
               height: 200,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromRGBO(30, 129, 235, 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      children: [
-                        Column(
-                          children: [
-                            SizedBox(height: 50),
-                            Icon(
-                              Icomoon.custody,
-                              color: Colors.white,
-                              size: 100,
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              "Colillas de Pago",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                style: _buttonStyle(),
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (_) {
-                      return PaystubEmployeeDataDialog();
-                    },
+                    builder: (_) => const PaystubEmployeeDataDialog(),
                   );
                 },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(
+                      Icomoon.custody,
+                      color: Colors.white,
+                      size: 100,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Colillas de Pago",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             SizedBox(
               width: 300,
               height: 200,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromRGBO(30, 129, 235, 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      children: [
-                        Column(
-                          children: [
-                            SizedBox(height: 50),
-                            Icon(
-                              Icomoon.fondo,
-                              color: Colors.white,
-                              size: 100,
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              "Estado femprobien",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                style: _buttonStyle(),
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (_) {
-                      return AccountStatementEmployeeDataDialog();
-                    },
+                    builder: (_) => const AccountStatementEmployeeDataDialog(),
                   );
                 },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(
+                      Icomoon.fondo,
+                      color: Colors.white,
+                      size: 100,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Estado femprobien",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -318,6 +260,8 @@ Future<http.Response> _generateReportAccountStatement(String id) {
 }
 
 class JobCertifyEmployeeDataDialog extends StatefulWidget {
+  const JobCertifyEmployeeDataDialog({Key? key}) : super(key: key);
+
   @override
   _JobCertifyEmployeeDataDialogState createState() =>
       new _JobCertifyEmployeeDataDialogState();
@@ -329,11 +273,20 @@ class _JobCertifyEmployeeDataDialogState
   final TextEditingController sendtoController = TextEditingController();
 
   @override
+  void dispose() {
+    documentoController.dispose();
+    sendtoController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      title: Text(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      title: const Text(
         'Datos del empleado',
         style: TextStyle(
           fontWeight: FontWeight.bold,
@@ -346,22 +299,22 @@ class _JobCertifyEmployeeDataDialogState
           children: [
             TextField(
               controller: documentoController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Ingrese documento',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: sendtoController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Dirigido a',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.text,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -380,7 +333,7 @@ class _JobCertifyEmployeeDataDialogState
           onPressed: () async {
             if (documentoController.text.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                const SnackBar(
                   content:
                       Text('Por favor, asegúrese de llenar todos los campos.'),
                   duration: Duration(seconds: 3),
@@ -390,9 +343,12 @@ class _JobCertifyEmployeeDataDialogState
             }
 
             try {
-              http.Response response = await _generateReportJobCertify(
-                  documentoController.text, sendtoController.text);
-              Map<String, dynamic> resultado = jsonDecode(response.body);
+              final http.Response response = await _generateReportJobCertify(
+                documentoController.text,
+                sendtoController.text,
+              );
+
+              final Map<String, dynamic> resultado = jsonDecode(response.body);
 
               if (response.statusCode == 200 && resultado['content'] != "") {
                 String companyName = '';
@@ -415,11 +371,11 @@ class _JobCertifyEmployeeDataDialogState
                 if (await canLaunchUrl(url)) {
                   await launchUrl(url, mode: LaunchMode.externalApplication);
                 } else {
-                  launchUrl(url);
+                  await launchUrl(url);
                 }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text(
                       'No se pudo generar la carta laboral, error de red, verifique conectividad por favor.',
                     ),
@@ -429,16 +385,14 @@ class _JobCertifyEmployeeDataDialogState
               }
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Error al generar la carta laboral.',
-                  ),
+                const SnackBar(
+                  content: Text('Error al generar la carta laboral.'),
                   duration: Duration(seconds: 3),
                 ),
               );
             }
           },
-          child: Icon(
+          child: const Icon(
             Icomoon.pdf,
             color: Colors.black,
             size: 40,
@@ -450,6 +404,8 @@ class _JobCertifyEmployeeDataDialogState
 }
 
 class PaystubEmployeeDataDialog extends StatefulWidget {
+  const PaystubEmployeeDataDialog({Key? key}) : super(key: key);
+
   @override
   _PaystubEmployeeDataDialogState createState() =>
       new _PaystubEmployeeDataDialogState();
@@ -457,11 +413,13 @@ class PaystubEmployeeDataDialog extends StatefulWidget {
 
 class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
   final TextEditingController documentoController = TextEditingController();
+
   String? periodoSeleccionado;
   String? mesSeleccionado;
 
   List<String> periodos = [];
-  final List<String> meses = [
+
+  static const List<String> meses = [
     '1',
     '2',
     '3',
@@ -477,11 +435,19 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
   ];
 
   @override
+  void dispose() {
+    documentoController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      title: Text(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      title: const Text(
         'Datos del empleado',
         style: TextStyle(
           fontWeight: FontWeight.bold,
@@ -494,18 +460,21 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
           children: [
             TextField(
               controller: documentoController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Ingrese documento',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: mesSeleccionado,
-              decoration: InputDecoration(labelText: 'Seleccionar mes'),
+              decoration: const InputDecoration(labelText: 'Seleccionar mes'),
               items: meses
-                  .map((mes) => DropdownMenuItem(value: mes, child: Text(mes)))
+                  .map((mes) => DropdownMenuItem<String>(
+                        value: mes,
+                        child: Text(mes),
+                      ))
                   .toList(),
               onChanged: (valor) {
                 setState(() {
@@ -519,14 +488,22 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
                 });
               },
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: periodoSeleccionado,
-              decoration: InputDecoration(labelText: 'Seleccionar periodo'),
+              decoration:
+                  const InputDecoration(labelText: 'Seleccionar periodo'),
               items: periodos
-                  .map((dia) => DropdownMenuItem(value: dia, child: Text(dia)))
+                  .map((dia) => DropdownMenuItem<String>(
+                        value: dia,
+                        child: Text(dia),
+                      ))
                   .toList(),
-              onChanged: (valor) => periodoSeleccionado = valor,
+              onChanged: (valor) {
+                setState(() {
+                  periodoSeleccionado = valor;
+                });
+              },
             ),
           ],
         ),
@@ -550,7 +527,7 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
 
             if (periodo.isEmpty || mes.isEmpty || documento.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                const SnackBar(
                   content:
                       Text('Por favor, asegúrese de llenar todos los campos.'),
                   duration: Duration(seconds: 3),
@@ -560,9 +537,10 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
             }
 
             try {
-              http.Response response =
+              final http.Response response =
                   await _generateReportPaystub(documento, mes, periodo);
-              Map<String, dynamic> resultado = jsonDecode(response.body);
+
+              final Map<String, dynamic> resultado = jsonDecode(response.body);
 
               if (response.statusCode == 200 && resultado['content'] != "") {
                 String companyName = '';
@@ -585,11 +563,11 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
                 if (await canLaunchUrl(url)) {
                   await launchUrl(url, mode: LaunchMode.externalApplication);
                 } else {
-                  launchUrl(url);
+                  await launchUrl(url);
                 }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text(
                       'No se pudo generar la collila, error de red, verifique conectividad por favor.',
                     ),
@@ -599,16 +577,14 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
               }
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Error al generar la colilla de pago.',
-                  ),
+                const SnackBar(
+                  content: Text('Error al generar la colilla de pago.'),
                   duration: Duration(seconds: 3),
                 ),
               );
             }
           },
-          child: Icon(
+          child: const Icon(
             Icomoon.pdf,
             color: Colors.black,
             size: 40,
@@ -620,6 +596,8 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
 }
 
 class AccountStatementEmployeeDataDialog extends StatefulWidget {
+  const AccountStatementEmployeeDataDialog({Key? key}) : super(key: key);
+
   @override
   _AccountStatementEmployeeDataDialogState createState() =>
       new _AccountStatementEmployeeDataDialogState();
@@ -631,11 +609,20 @@ class _AccountStatementEmployeeDataDialogState
   final TextEditingController sendtoController = TextEditingController();
 
   @override
+  void dispose() {
+    documentoController.dispose();
+    sendtoController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      title: Text(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      title: const Text(
         'Datos del empleado',
         style: TextStyle(
           fontWeight: FontWeight.bold,
@@ -648,13 +635,13 @@ class _AccountStatementEmployeeDataDialogState
           children: [
             TextField(
               controller: documentoController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Ingrese documento',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -673,7 +660,7 @@ class _AccountStatementEmployeeDataDialogState
           onPressed: () async {
             if (documentoController.text.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                const SnackBar(
                   content: Text('Por favor, asegúrese de llenar el campo.'),
                   duration: Duration(seconds: 3),
                 ),
@@ -682,9 +669,12 @@ class _AccountStatementEmployeeDataDialogState
             }
 
             try {
-              http.Response response = await _generateReportAccountStatement(
-                  documentoController.text);
-              Map<String, dynamic> resultado = jsonDecode(response.body);
+              final http.Response response =
+                  await _generateReportAccountStatement(
+                documentoController.text,
+              );
+
+              final Map<String, dynamic> resultado = jsonDecode(response.body);
 
               if (response.statusCode == 200 && resultado['content'] != "") {
                 final Uri url = Uri.parse(
@@ -696,11 +686,11 @@ class _AccountStatementEmployeeDataDialogState
                 if (await canLaunchUrl(url)) {
                   await launchUrl(url, mode: LaunchMode.externalApplication);
                 } else {
-                  launchUrl(url);
+                  await launchUrl(url);
                 }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text(
                       'No se pudo generar el estado de cuenta, error de red, verifique conectividad por favor.',
                     ),
@@ -710,16 +700,14 @@ class _AccountStatementEmployeeDataDialogState
               }
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Error al generar el estado de cuenta.',
-                  ),
+                const SnackBar(
+                  content: Text('Error al generar el estado de cuenta.'),
                   duration: Duration(seconds: 3),
                 ),
               );
             }
           },
-          child: Icon(
+          child: const Icon(
             Icomoon.pdf,
             color: Colors.black,
             size: 40,

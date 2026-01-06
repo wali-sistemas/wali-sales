@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
@@ -24,29 +22,32 @@ class ListarPedidosPage extends StatefulWidget {
 class _ListarPedidosPageState extends State<ListarPedidosPage> {
   List _ventas = [];
   List<Pedido> pedidosG = [];
-  String codigo = GetStorage().read('slpCode');
-  GetStorage storage = GetStorage();
-  String usuario = GetStorage().read('usuario');
-  String empresa = GetStorage().read('empresa');
-  DateTime now = new DateTime.now();
-  final numberFormat = new NumberFormat.simpleCurrency();
+
+  final String codigo = GetStorage().read('slpCode');
+  final GetStorage storage = GetStorage();
+  final String usuario = GetStorage().read('usuario');
+  final String empresa = GetStorage().read('empresa');
+
+  final DateTime now = DateTime.now();
+  final NumberFormat numberFormat = NumberFormat.simpleCurrency();
+
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
+
   bool _showCalendar = false;
   bool _showPedidos = false;
-  String year = "";
-  String mes = "";
-  String dia = "";
-  Connectivity _connectivity = Connectivity();
 
-  void _toggleCalendar() {
-    setState(() {
-      _showCalendar = !_showCalendar;
-    });
-  }
+  String year = '';
+  String mes = '';
+  String dia = '';
 
+  final Connectivity _connectivity = Connectivity();
+
+  @override
   void initState() {
+    super.initState();
+
     year = now.year.toString();
     mes = now.month.toString();
     dia = now.day.toString();
@@ -54,79 +55,64 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
     _fetchData(year, mes, dia);
   }
 
-  void _onDaySelected(DateTime selectedDay, DateTime selectedMes) {
-    setState(
-      () {
-        _selectedDay = selectedDay;
-        dia = selectedDay.day.toString();
-        mes = selectedDay.month.toString();
-        year = selectedDay.year.toString();
-        //Consultar datos por ano, mes y día seleccionado
-        _fetchData(year, mes, dia);
-        //Ocultar calendario
-        _showCalendar = false;
-      },
-    );
+  void _toggleCalendar() {
+    setState(() => _showCalendar = !_showCalendar);
+  }
+
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    setState(() {
+      _selectedDay = selectedDay;
+      _focusedDay = focusedDay;
+
+      dia = selectedDay.day.toString();
+      mes = selectedDay.month.toString();
+      year = selectedDay.year.toString();
+
+      _showCalendar = false;
+    });
+
+    _fetchData(year, mes, dia);
   }
 
   Future<bool> checkConnectivity() async {
-    var connectivityResult = await _connectivity.checkConnectivity();
+    final connectivityResult = await _connectivity.checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
   }
 
   Future<void> listarPedidosGuardados() async {
-    List<Pedido> pedidos = [];
-    DatabaseHelper dbHelper = DatabaseHelper();
-    pedidos = await dbHelper.getPedidos();
-    pedidosG = pedidos;
+    final DatabaseHelper dbHelper = DatabaseHelper();
+    final pedidos = await dbHelper.getPedidos();
+
+    if (!mounted) return;
+    setState(() {
+      pedidosG = pedidos;
+    });
   }
 
   Future<http.Response> _generateReportOrderDetail(String docNum) async {
-    final String url =
+    const String url =
         'http://wali.igbcolombia.com:8080/manager/res/report/generate-report';
+
     return http.post(
       Uri.parse(url),
-      headers: <String, String>{'Content-Type': 'application/json'},
+      headers: const <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
           'id': docNum,
-          "copias": 0,
-          "documento": "orderDetail",
-          "companyName": empresa,
-          "origen": "S",
-          "imprimir": false
+          'copias': 0,
+          'documento': 'orderDetail',
+          'companyName': empresa,
+          'origen': 'S',
+          'imprimir': false,
         },
       ),
     );
   }
 
-  Future<void> _downloadDetailOrderPDF(
-      String pdfUrl, String dateDoc, String docNum) async {
-    final response = await http.get(Uri.parse(pdfUrl));
-
-    if (response.statusCode == 200) {
-      final Uint8List pdfBytes = response.bodyBytes;
-      final pdfFile = File('/storage/emulated/0/Download/Detalle-Orden[' +
-          docNum +
-          '-' +
-          dateDoc +
-          '].pdf');
-      await pdfFile.writeAsBytes(pdfBytes);
-    } else {
-      throw Exception('Error al descargar el detalle de la orden');
-    }
-  }
-
-  /*void _mostrarPedidos() {
-    setState(() {
-      _showPedidos = !_showPedidos;
-    });
-  }*/
-
   Future<void> _fetchData(String year, String mes, String dia) async {
-    bool isConnected = await checkConnectivity();
-    if (isConnected == true) {
-      //if (GetStorage().read('ventas') == null) {
+    final bool isConnected = await checkConnectivity();
+
+    if (isConnected) {
       final String apiUrl =
           'http://wali.igbcolombia.com:8080/manager/res/app/list-order/' +
               empresa +
@@ -138,26 +124,39 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
               mes +
               '&day=' +
               dia;
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      final codigoError = resp["code"];
-      if (codigoError == -1) {
-        _ventas = [];
-      } else {
-        final data = resp["content"];
-        if (!mounted) return;
-        setState(
-          () {
-            _ventas = data;
 
-            /// GUARDAR
-            storage.write('ventas', _ventas);
-          },
-        );
-      }
+      final response = await http.get(Uri.parse(apiUrl));
+      final Map<String, dynamic> resp = jsonDecode(response.body);
+
+      final codigoError = resp['code'];
+
+      if (!mounted) return;
+
+      setState(() {
+        if (codigoError == -1) {
+          _ventas = [];
+        } else {
+          _ventas = resp['content'];
+          storage.write('ventas', _ventas);
+        }
+      });
     } else {
-      _ventas = GetStorage().read('ventas');
+      final cached = GetStorage().read('ventas');
+      if (cached != null) {
+        if (!mounted) return;
+        setState(() => _ventas = cached);
+      } else {
+        if (!mounted) return;
+        setState(() => _ventas = []);
+      }
     }
+  }
+
+  String _formatTotal(dynamic value) {
+    String total = numberFormat.format(value);
+    final p = total.indexOf('.');
+    if (p != -1) total = total.substring(0, p);
+    return total;
   }
 
   @override
@@ -165,9 +164,9 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
         leading: GestureDetector(
-          child: Icon(
+          child: const Icon(
             Icons.arrow_back_ios,
             color: Colors.white,
           ),
@@ -178,7 +177,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
             );
           },
         ),
-        actions: [
+        actions: const [
           CarritoPedido(),
         ],
         title: ListTile(
@@ -188,7 +187,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
               delegate: CustomSearchDelegatePedidos(),
             );
           },
-          title: Text(
+          title: const Text(
             'Buscar enviados',
             style: TextStyle(color: Colors.white),
           ),
@@ -201,11 +200,11 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: Icon(Icons.calendar_today),
+                  icon: const Icon(Icons.calendar_today),
                   onPressed: _toggleCalendar,
                 ),
                 IconButton(
-                  icon: Icon(Icons.save),
+                  icon: const Icon(Icons.save),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -224,7 +223,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                   itemBuilder: (context, index) {
                     return Card(
                       child: Padding(
-                        padding: EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(8),
                         child: ListTile(
                           title: Text(
                             'Fecha: ' +
@@ -236,20 +235,16 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                                 '\n' +
                                 'Orden: ' +
                                 pedidosG[index].id.toString(),
-                            style: TextStyle(
-                              fontSize: 15,
-                            ),
+                            style: const TextStyle(fontSize: 15),
                           ),
                           subtitle: Text(
-                            "Total: " + pedidosG[index].docTotal.toString(),
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            'Total: ' + pedidosG[index].docTotal.toString(),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           trailing: TextButton.icon(
                             onPressed: () {},
-                            label: Text(
-                              '',
-                            ),
-                            icon: Icon(Icons.add),
+                            label: const Text(''),
+                            icon: const Icon(Icons.add),
                           ),
                         ),
                       ),
@@ -258,40 +253,39 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                 ),
               ),
             if (_showCalendar)
-              Container(
-                child: TableCalendar(
-                  calendarFormat: _calendarFormat,
-                  focusedDay: _focusedDay,
-                  firstDay: DateTime(2000),
-                  lastDay: DateTime(2050),
-                  selectedDayPredicate: (day) {
-                    return isSameDay(_selectedDay, day);
-                  },
-                  onDaySelected: _onDaySelected,
-                ),
+              TableCalendar(
+                calendarFormat: _calendarFormat,
+                focusedDay: _focusedDay,
+                firstDay: DateTime(2000),
+                lastDay: DateTime(2050),
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: _onDaySelected,
+                onFormatChanged: (format) {
+                  setState(() => _calendarFormat = format);
+                },
+                onPageChanged: (focusedDay) {
+                  _focusedDay = focusedDay;
+                },
               ),
-            pedidos(context),
+            _pedidos(context),
           ],
         ),
       ),
     );
   }
 
-  Widget pedidos(BuildContext context) {
+  Widget _pedidos(BuildContext context) {
     return Expanded(
       child: ListView.builder(
         itemCount: _ventas.length,
         itemBuilder: (context, index) {
-          String total = numberFormat.format(_ventas[index]['docTotal']);
-          if (total.contains('.')) {
-            int decimalIndex = total.indexOf('.');
-            total = total.substring(0, decimalIndex);
-          }
+          final total = _formatTotal(_ventas[index]['docTotal']);
+
           return Card(
             child: Container(
-              color: Color.fromRGBO(250, 251, 253, 1),
+              color: const Color.fromRGBO(250, 251, 253, 1),
               child: Padding(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: Row(
                   children: [
                     Expanded(
@@ -300,24 +294,22 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                         children: [
                           Text(
                             'Fecha: ' +
-                                _ventas[index]["docDate"].toString() +
+                                _ventas[index]['docDate'].toString() +
                                 ' - Nit: ' +
-                                _ventas[index]["cardCode"].toString() +
+                                _ventas[index]['cardCode'].toString() +
                                 '\n' +
-                                _ventas[index]["cardName"].toString() +
+                                _ventas[index]['cardName'].toString() +
                                 '\n' +
                                 'Orden: ' +
-                                _ventas[index]["docNum"].toString() +
+                                _ventas[index]['docNum'].toString() +
                                 '\n' +
                                 'Estado: ' +
-                                _ventas[index]["status"].toString(),
-                            style: TextStyle(
-                              fontSize: 15,
-                            ),
+                                _ventas[index]['status'].toString(),
+                            style: const TextStyle(fontSize: 15),
                           ),
                           Text(
-                            "Total: " + total,
-                            style: TextStyle(
+                            'Total: ' + total,
+                            style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
@@ -328,11 +320,12 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                     IconButton(
                       onPressed: () async {
                         try {
-                          http.Response response =
+                          final http.Response response =
                               await _generateReportOrderDetail(
-                                  _ventas[index]["docNum"].toString());
+                            _ventas[index]['docNum'].toString(),
+                          );
 
-                          Map<String, dynamic> resultado =
+                          final Map<String, dynamic> resultado =
                               jsonDecode(response.body);
 
                           if (response.statusCode == 200 &&
@@ -341,37 +334,21 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                               "https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/" +
                                   GetStorage().read('empresa') +
                                   "/sales/orderDetail/" +
-                                  _ventas[index]["docNum"].toString() +
+                                  _ventas[index]['docNum'].toString() +
                                   ".pdf",
                             );
 
                             if (await canLaunchUrl(url)) {
-                              await launchUrl(url,
-                                  mode: LaunchMode.externalApplication);
+                              await launchUrl(
+                                url,
+                                mode: LaunchMode.externalApplication,
+                              );
                             } else {
-                              launchUrl(url);
+                              await launchUrl(url);
                             }
-                            /*_downloadDetailOrderPDF(
-                              'http://wali.igbcolombia.com:8080/shared/' +
-                                  GetStorage().read('empresa') +
-                                  '/sales/orderDetail/' +
-                                  _ventas[index]["docNum"].toString() +
-                                  '.pdf',
-                              DateFormat("yyyyMMdd-hhmm").format(now),
-                              _ventas[index]["docNum"].toString(),
-                            );*/
-
-                            /*ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Detalle de la orden guardada en descargas',
-                                ),
-                                duration: Duration(seconds: 3),
-                              ),
-                            );*/
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
+                              const SnackBar(
                                 content: Text(
                                   'No se pudo guardar el pedido, error de red, verifique conectividad por favor',
                                 ),
@@ -381,7 +358,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                           }
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                            const SnackBar(
                               content: Text(
                                 'Error al generar el reporte para ver el detalle de la orden',
                               ),
@@ -390,37 +367,9 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                           );
                         }
                       },
-                      icon: Icon(Icons.remove_red_eye_outlined),
+                      icon: const Icon(Icons.remove_red_eye_outlined),
                     ),
                   ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget pedidosGuardados(BuildContext context) {
-    listarPedidosGuardados();
-    return Expanded(
-      child: ListView.builder(
-        itemCount: pedidosG.length,
-        itemBuilder: (context, index) {
-          return Card(
-            child: Padding(
-              padding: EdgeInsets.all(8),
-              child: ListTile(
-                title: Text(
-                  pedidosG[index].toString(),
-                  style: TextStyle(
-                    fontSize: 15,
-                  ),
-                ),
-                subtitle: Text(
-                  '',
-                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),

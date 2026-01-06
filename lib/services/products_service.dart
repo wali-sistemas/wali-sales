@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:productos_app/models/models.dart';
 
 class ProductsService extends ChangeNotifier {
@@ -65,10 +63,9 @@ class ProductsService extends ChangeNotifier {
     final url = Uri.https(_baseUrl, 'products/${product.id}.json',
         {'auth': await storage.read(key: 'token') ?? ''});
 
-    final resp = await http.put(url, body: product.toJson());
-    final decodedData = resp.body;
+    await http.put(url, body: product.toJson());
 
-    //TODO: Actualizar el listado de productos
+    // Actualizar el listado de productos
     final index =
         this.products.indexWhere((element) => element.id == product.id);
     this.products[index] = product;
@@ -117,8 +114,6 @@ class ProductsService extends ChangeNotifier {
     final resp = await http.Response.fromStream(streamResponse);
 
     if (resp.statusCode != 200 && resp.statusCode != 201) {
-      //print('algo salio mal');
-      //print( resp.body );
       return null;
     }
 

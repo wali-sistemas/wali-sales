@@ -4,8 +4,8 @@ import 'package:get_storage/get_storage.dart';
 import 'pedidos_screen.dart';
 
 List itemsGuardados = [];
-List<String> allNames = [""];
-List<String> allNames2 = [""];
+List<String> allNames = [''];
+List<String> allNames2 = [''];
 var mainColor = Color(0xff1B3954);
 var textColor = Color(0xff727272);
 var accentColor = Color(0xff16ADE1);
@@ -13,7 +13,7 @@ var whiteText = Color(0xffF5F5F5);
 List _stockB = [];
 
 class CustomSearchDelegate extends SearchDelegate {
-  var suggestion = [""];
+  var suggestion = [''];
   List<String> searchResult = [];
   TextEditingController cantidadController = TextEditingController();
   TextEditingController observacionesController = TextEditingController();
@@ -21,25 +21,6 @@ class CustomSearchDelegate extends SearchDelegate {
   List _itemsBuscador = [];
   List _itemsBuscador2 = [];
   String empresa = GetStorage().read('empresa');
-
-  /*Future<void> _listarStock(String item) async {
-    final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
-            empresa +
-            '?itemcode=' +
-            item +
-            '&whscode=0';
-
-    final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
-
-    final data = resp["content"];
-
-    //if (!mounted) return;
-    //setState(() {
-    _stockB = data;
-    //});
-  }*/
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -66,11 +47,8 @@ class CustomSearchDelegate extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     List _inventario = [];
-    var itemsPedidoLocal = <Map<String, String>>[];
-    var itemsPedido = <Map<String, String>>[];
 
     if (GetStorage().read('items') == null) {
-      //print("allnames VACIO :  *******__________________________________");
     } else {
       _itemsBuscador.clear();
       itemsGuardados = GetStorage().read('items');
@@ -107,13 +85,6 @@ class CustomSearchDelegate extends SearchDelegate {
           if (_stockB.length > 0) {
             _inventario = _stockB[0]['stockWarehouses'];
           }
-          final itemTemp = {
-            "quantity": "",
-            "itemCode": "",
-            "itemName": "",
-            "whsCode": ""
-          };
-          var _bodegas1 = [];
 
           var listaBodegas = ['Elija una Bodega'];
           for (var bodega in _inventario) {
@@ -132,7 +103,7 @@ class CustomSearchDelegate extends SearchDelegate {
                     fontSize: 15,
                   ),
                 ),
-                subtitle: Text("Sku: " + _itemsBuscador[indexB]['itemCode']),
+                subtitle: Text('Sku: ' + _itemsBuscador[indexB]['itemCode']),
                 leading: GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -159,7 +130,6 @@ class CustomSearchDelegate extends SearchDelegate {
                 ),
                 trailing: TextButton.icon(
                   onPressed: () {
-                    ///BUSCAR ITEM SELLECCIONADO
                     int i = 0;
                     int indexSeleccionado = 0;
                     itemsGuardados.forEach(
@@ -172,9 +142,8 @@ class CustomSearchDelegate extends SearchDelegate {
                       },
                     );
 
-                    storage.write("index", indexSeleccionado);
-                    //print(GetStorage().read('index'));
-                    //String dropdownvalue = 'Elija una Bodega';
+                    storage.write('index', indexSeleccionado);
+
                     showDialog(
                       context: context,
                       builder: (_) {
@@ -196,7 +165,6 @@ class CustomSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     if (GetStorage().read('items') == null) {
-      //print("allnames VACIO :  *******__________________________________");
     } else {
       _itemsBuscador2.clear();
       allNames2.clear();
@@ -213,9 +181,9 @@ class CustomSearchDelegate extends SearchDelegate {
           palabras2.forEach(
             (element2) {
               if (element2.length > 1) {
-                if (k['itemName'].toLowerCase().contains(element2.toLowerCase())
-                    // || k['itemCode'].toLowerCase().contains(element2.trim().toLowerCase())
-                    ) {
+                if (k['itemName']
+                    .toLowerCase()
+                    .contains(element2.toLowerCase())) {
                   m++;
                 }
               }
@@ -229,14 +197,10 @@ class CustomSearchDelegate extends SearchDelegate {
       );
     }
 
-// This method is called everytime the search term changes.
-// If you want to add search suggestions as the user enters their search term, this is the place to do that.
-//     final suggestionList = query.isEmpty
-//         ? suggestion
-//         : allNames2.where((element) => element.contains(query)).toList();
-    if (query == "" || query == " ") {
+    if (query == '' || query == ' ') {
       _itemsBuscador2.clear();
     }
+
     return ListView.builder(
       itemBuilder: (context, index) => ListTile(
         onTap: () {
@@ -247,7 +211,6 @@ class CustomSearchDelegate extends SearchDelegate {
         leading: Icon(query.isEmpty ? Icons.history : Icons.search),
         trailing: TextButton.icon(
           onPressed: () {
-            ///BUSCAR ITEM SELLECCIONADO
             int i = 0;
             int indexSeleccionado = 0;
             itemsGuardados.forEach(
@@ -259,9 +222,8 @@ class CustomSearchDelegate extends SearchDelegate {
               },
             );
 
-            storage.write("index", indexSeleccionado);
-            //print(GetStorage().read('index'));
-            //String dropdownvalue = 'Elija una Bodega';
+            storage.write('index', indexSeleccionado);
+
             showDialog(
               context: context,
               builder: (_) {
@@ -274,9 +236,9 @@ class CustomSearchDelegate extends SearchDelegate {
         ),
         title: RichText(
           text: TextSpan(
-            text: _itemsBuscador2[index]["itemName"] +
+            text: _itemsBuscador2[index]['itemName'] +
                 '\n' +
-                _itemsBuscador2[index]["itemCode"],
+                _itemsBuscador2[index]['itemCode'],
             style: TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,

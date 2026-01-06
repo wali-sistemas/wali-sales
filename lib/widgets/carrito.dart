@@ -3,114 +3,113 @@ import 'package:get_storage/get_storage.dart';
 import 'package:productos_app/screens/pedidos_screen.dart';
 
 class CarritoPedido extends StatefulWidget {
+  const CarritoPedido({super.key});
+
   @override
   State<CarritoPedido> createState() => _CarritoPedidoState();
 }
 
 class _CarritoPedidoState extends State<CarritoPedido> {
-  int itemCount = 0;
-  bool contar = true;
-  List<dynamic> itemsPedidoLocal = [];
-  String estadoPedido = "";
-  String? usuario = GetStorage().read('usuario');
-  Map<String, dynamic> pedidoLocal = {};
-  GetStorage storage = GetStorage();
+  final GetStorage storage = GetStorage();
 
-  void addItemToCart() {
-    if (contar) itemCount++;
+  int itemCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _recalcularContador();
   }
 
-  void removeItemFromCart() {
-    if (itemCount > 0) {
-      itemCount--;
+  void _recalcularContador() {
+    final items = storage.read('itemsPedido');
+    final String estadoPedido =
+        (storage.read('estadoPedido') ?? "desconocido").toString();
+
+    final int newCount =
+        (estadoPedido == "nuevo" && items is List) ? items.length : itemCount;
+
+    if (newCount != itemCount) {
+      setState(() => itemCount = newCount);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    contar = true;
-    if (GetStorage().read('pedido') != null) {
-      Map<String, dynamic> pedidoLocal = GetStorage().read('pedido');
-    }
-    if (GetStorage().read('itemsPedido') != null) {
-      itemsPedidoLocal = GetStorage().read('itemsPedido');
-      if (GetStorage().read('pedidoGuardado') == null) {
-        Map<String, dynamic> pedidoInicial = {};
-        storage.write("pedidoGuardado", pedidoInicial);
+    final itemsPedido = storage.read('itemsPedido');
+    final pedidoGuardado = storage.read('pedidoGuardado');
+    final String estadoPedido =
+        (storage.read('estadoPedido') ?? "desconocido").toString();
+
+    final bool contar;
+    if (itemsPedido != null) {
+      if (pedidoGuardado == null) {
+        storage.write("pedidoGuardado", <String, dynamic>{});
         contar = true;
       } else {
-        pedidoLocal = GetStorage().read('pedidoGuardado');
         contar = false;
       }
     } else {
-      itemsPedidoLocal = List.empty();
+      contar = false;
     }
 
-    if (GetStorage().read('estadoPedido') != null) {
-      estadoPedido = GetStorage().read('estadoPedido');
-    } else {
-      estadoPedido = "desconocido";
+    if (estadoPedido == "nuevo" && itemsPedido is List) {
+      final int currentLen = itemsPedido.length;
+      if (itemCount != currentLen) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          setState(() => itemCount = currentLen);
+        });
+      }
     }
+    return Stack(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.shopping_cart),
+          color: Colors.white,
+          onPressed: () {
+            storage.remove("dirEnvio");
 
-    if (estadoPedido == "nuevo") {
-      setState(
-        () {
-          {
-            itemCount = itemsPedidoLocal.length;
-          }
-        },
-      );
-    }
-    return Container(
-      child: Stack(
-        children: [
-          IconButton(
-            icon: Icon(Icons.shopping_cart),
-            color: Colors.white,
-            onPressed: () {
-              storage.remove("dirEnvio");
-              if (GetStorage().read('estadoPedido') != null) {
-                if (GetStorage().read('estadoPedido') == "guardado") {
-                  storage.remove('itemsPedido');
-                }
-              }
-              if (GetStorage().read('itemsPedido') != null) {
-                storage.write('estadoPedido', 'nuevo');
-                storage.remove('observaciones');
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => PedidosPage()),
-                );
-              }
-            },
+            final ep = storage.read('estadoPedido');
+            if (ep != null && ep.toString() == "guardado") {
+              storage.remove('itemsPedido');
+            }
+
+            final items = storage.read('itemsPedido');
+            if (items != null) {
+              storage.write('estadoPedido', 'nuevo');
+              storage.remove('observaciones');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => PedidosPage()),
+              );
+            }
+          },
+        ),
+        if (itemCount > 0)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 16,
+                minHeight: 16,
+              ),
+              child: Text(
+                itemCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           ),
-          itemCount > 0
-              ? Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    constraints: BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      itemCount.toString(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              : SizedBox(),
-        ],
-      ),
+      ],
     );
   }
 }

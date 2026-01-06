@@ -18,29 +18,36 @@ class PedidosGuardadosPage extends StatefulWidget {
 }
 
 class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
-  String codigo = GetStorage().read('slpCode');
-  GetStorage storage = GetStorage();
-  String usuario = GetStorage().read('usuario');
-  String empresa = GetStorage().read('empresa');
-  DateTime now = new DateTime.now();
-  final numberFormat = new NumberFormat.simpleCurrency();
+  final String codigo = GetStorage().read('slpCode');
+  final GetStorage storage = GetStorage();
+  final String usuario = GetStorage().read('usuario');
+  final String empresa = GetStorage().read('empresa');
+
+  final DateTime now = DateTime.now();
+  final NumberFormat numberFormat = NumberFormat.simpleCurrency();
+
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   bool _showCalendar = false;
-  bool _showPedidos = false;
+
   String year = "";
   String mes = "";
   String dia = "";
-  Connectivity _connectivity = Connectivity();
+
+  final Connectivity _connectivity = Connectivity();
+
   List<Pedido> pedidosG = [];
   List ordenesGuardadasServidor = [];
   List<dynamic> itemsPedidoLocal = [];
   List<dynamic> data = [];
   List clientes = [];
+
   final Set<DateTime> _markedDays = {};
 
-  Map<String, dynamic> pedidoInicial = {
+  late Future<List<dynamic>> _ordenesFuture;
+
+  final Map<String, dynamic> pedidoInicial = {
     "cardCode": "",
     "cardName": "",
     "nit": "",
@@ -54,36 +61,40 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     "docTotal": ""
   };
 
-  final actualizarPedidoGuardado = {"id": "", "docNum": ""};
-
-  void _toggleCalendar() {
-    setState(() {
-      _showCalendar = !_showCalendar;
-    });
-  }
+  final Map<String, dynamic> actualizarPedidoGuardado = {
+    "id": "",
+    "docNum": ""
+  };
 
   @override
   void initState() {
+    super.initState();
+
     year = now.year.toString();
     mes = now.month.toString();
     dia = now.day.toString();
 
-    super.initState();
+    _ordenesFuture = getOrdenesGuardadasServidor();
     getOrdersMarkedDays();
   }
 
+  void _toggleCalendar() {
+    setState(() => _showCalendar = !_showCalendar);
+  }
+
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    setState(
-      () {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
-        dia = selectedDay.day.toString();
-        mes = selectedDay.month.toString();
-        year = selectedDay.year.toString();
-        // Oculta el calendario después de seleccionar un día
-        _showCalendar = false;
-      },
-    );
+    setState(() {
+      _selectedDay = selectedDay;
+      _focusedDay = focusedDay;
+
+      dia = selectedDay.day.toString();
+      mes = selectedDay.month.toString();
+      year = selectedDay.year.toString();
+
+      _showCalendar = false;
+
+      _ordenesFuture = getOrdenesGuardadasServidor();
+    });
   }
 
   Future<void> getOrdersMarkedDays() async {
@@ -92,15 +103,21 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
             empresa +
             '?slpcode=' +
             usuario;
+
     final response = await http.get(Uri.parse(apiUrl));
     data = jsonDecode(response.body);
 
-    for (String obj in data) {
-      DateFormat dateFormat = DateFormat("yyyy-MM-dd");
-      DateTime f = dateFormat.parse(obj);
+    final DateFormat dateFormat = DateFormat("yyyy-MM-dd");
 
-      _markedDays.add(f);
+    _markedDays.clear();
+    for (final obj in data) {
+      final DateTime f = dateFormat.parse(obj.toString());
+      _markedDays.add(DateTime(f.year, f.month, f.day));
     }
+
+    if (!mounted) return;
+    // Para repintar markers
+    setState(() {});
   }
 
   Future<void> actualizarEstadoPedGuardado(int idP) async {
@@ -110,28 +127,21 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
             '?id=' +
             idP.toString() +
             '&docNum=0&status=C';
-    final response = await http.get(Uri.parse(apiUrl));
-    if (response.body == "true") {
-      //print("Se cambió estado a C");
-    } else {
-      //print("No se pudo cambiar el estado a C");
-    }
+
+    await http.get(Uri.parse(apiUrl));
   }
 
   Future<bool> checkConnectivity() async {
-    var connectivityResult = await _connectivity.checkConnectivity();
+    final connectivityResult = await _connectivity.checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
   }
 
   Future<void> consultarGuardados() async {
-    List<Pedido> pedidos = [];
-    DatabaseHelper dbHelper = DatabaseHelper();
-    pedidos = await dbHelper.getPedidos();
-    setState(
-      () {
-        pedidosG = pedidos;
-      },
-    );
+    final DatabaseHelper dbHelper = DatabaseHelper();
+    final pedidos = await dbHelper.getPedidos();
+
+    if (!mounted) return;
+    setState(() => pedidosG = pedidos);
   }
 
   void showConfirmOrderSave(BuildContext context, int idOrder, String message) {
@@ -141,11 +151,8 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Row(
-            children: [
-              Icon(
-                Icons.error,
-                color: Colors.orange,
-              ),
+            children: const [
+              Icon(Icons.error, color: Colors.orange),
               SizedBox(width: 8),
               Text("Atención!"),
             ],
@@ -153,30 +160,24 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
           content: Text(message),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("NO"),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("NO"),
             ),
             ElevatedButton(
-              onPressed: () {
-                setState(
-                  () {
-                    if (!mounted) return;
-                    actualizarEstadoPedGuardado(idOrder);
-                    storage.remove('pedidoGuardado');
-                  },
-                );
+              onPressed: () async {
                 Navigator.pop(context);
+
+                await actualizarEstadoPedGuardado(idOrder);
+                storage.remove('pedidoGuardado');
+
+                if (!mounted) return;
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => HomePage(),
-                  ),
+                  MaterialPageRoute(builder: (context) => HomePage()),
                   (Route<dynamic> route) => false,
                 );
               },
-              child: Text("SI"),
+              child: const Text("SI"),
             ),
           ],
         );
@@ -191,50 +192,24 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
             '?slpcode=' +
             usuario +
             '&year=' +
-            year.toString() +
+            year +
             '&month=' +
-            mes.toString() +
+            mes +
             '&day=' +
-            dia.toString();
+            dia;
+
     final response = await http.get(Uri.parse(apiUrl));
     data = jsonDecode(response.body);
-
-    // setState(() {
-    //   if (!mounted) return;
-    //   ordenesGuardadasServidor = data;
-    // });
-
-    //ordenesGuardadasServidor.add(data[0]);
-
-    // if (!resp["content"].toString().contains("Ocurrio un error")) {
-    //  data = resp["content"];
-    //  ordenesGuardadasServidor.add(data);
-    //
-    // }
-    // else {
-    //   data={"code":-1,"content":"Ocurrio un error"};
-    //
-    // }
     return data;
   }
 
-  void _mostrarPedidos() {
-    setState(
-      () {
-        _showPedidos = !_showPedidos;
-      },
-    );
-  }
-
   void showAlertDialogItemsInShoppingCart(BuildContext context) {
-    Widget cancelButton = ElevatedButton(
-      child: Text("NO"),
-      onPressed: () {
-        Navigator.pop(context);
-      },
+    final Widget cancelButton = ElevatedButton(
+      onPressed: () => Navigator.pop(context),
+      child: const Text("NO"),
     );
-    Widget continueButton = ElevatedButton(
-      child: Text("SI"),
+
+    final Widget continueButton = ElevatedButton(
       onPressed: () {
         storage.remove("observaciones");
         storage.remove("pedido");
@@ -242,39 +217,33 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
         storage.remove("dirEnvio");
         storage.remove("pedidoGuardado");
         storage.write("estadoPedido", "nuevo");
+
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(),
-          ),
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
       },
+      child: const Text("SI"),
     );
-    AlertDialog alert = AlertDialog(
+
+    final AlertDialog alert = AlertDialog(
       title: Row(
-        children: [
-          Icon(
-            Icons.error,
-            color: Colors.orange,
-          ),
+        children: const [
+          Icon(Icons.error, color: Colors.orange),
           SizedBox(width: 8),
           Text("Atención!"),
         ],
       ),
-      content: Text(
+      content: const Text(
         "Tiene ítems agregados al carrito, si continúa se borrarán e iniciará un pedido nuevo.\n¿Desea continuar?",
       ),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
+      actions: [cancelButton, continueButton],
     );
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
-        return alert;
-      },
+      builder: (BuildContext context) => alert,
     );
   }
 
@@ -283,12 +252,9 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
         leading: GestureDetector(
-          child: Icon(
-            Icons.arrow_back_ios,
-            color: Colors.white,
-          ),
+          child: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onTap: () {
             storage.remove('observaciones');
             storage.remove("pedido");
@@ -296,22 +262,14 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
             storage.remove("pedidoGuardado");
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => HomePage(),
-              ),
+              MaterialPageRoute(builder: (context) => HomePage()),
             );
           },
         ),
-        actions: [
+        actions: const [
           CarritoPedido(),
         ],
-        title: ListTile(
-          onTap: () {
-            /*showSearch(
-              context: context,
-              delegate: CustomSearchDelegatePedidos(),
-            );*/
-          },
+        title: const ListTile(
           title: Text(
             'Pedidos guardados',
             style: TextStyle(color: Colors.white),
@@ -322,262 +280,252 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
         child: Column(
           children: [
             IconButton(
-              icon: Icon(Icons.calendar_today),
+              icon: const Icon(Icons.calendar_today),
               onPressed: _toggleCalendar,
             ),
             if (_showCalendar)
-              Container(
-                child: TableCalendar(
-                  calendarFormat: _calendarFormat,
-                  focusedDay: _focusedDay,
-                  firstDay: DateTime(2000),
-                  lastDay: DateTime(2050),
-                  selectedDayPredicate: (day) {
-                    return isSameDay(_selectedDay, day);
+              TableCalendar(
+                calendarFormat: _calendarFormat,
+                focusedDay: _focusedDay,
+                firstDay: DateTime(2000),
+                lastDay: DateTime(2050),
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: _onDaySelected,
+                calendarBuilders: CalendarBuilders(
+                  markerBuilder: (context, date, events) {
+                    final d = DateTime(date.year, date.month, date.day);
+                    if (_markedDays.contains(d)) {
+                      return const Positioned(
+                        right: 5,
+                        top: 5,
+                        child: _MarkerDot(),
+                      );
+                    }
+                    return null;
                   },
-                  onDaySelected: _onDaySelected,
-                  calendarBuilders: CalendarBuilders(
-                    markerBuilder: (context, date, events) {
-                      if (_markedDays.contains(
-                          DateTime(date.year, date.month, date.day))) {
-                        return Positioned(
-                          right: 5,
-                          top: 5,
-                          child: _buildMarker(),
-                        );
-                      }
-                      return null;
-                    },
-                    selectedBuilder: (context, date, _) {
-                      return _buildSelectedMarker(date);
-                    },
-                  ),
+                  selectedBuilder: (context, date, _) =>
+                      _SelectedDay(date: date),
                 ),
               ),
-            pedidosGuardados(context),
+            _pedidosGuardados(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMarker() {
-    return Container(
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(
-        color: Colors.red,
-        shape: BoxShape.circle,
+  Widget _pedidosGuardados(BuildContext context) {
+    return Expanded(
+      child: FutureBuilder<List<dynamic>>(
+        future: _ordenesFuture,
+        builder: (context, snapshot) {
+          final data = snapshot.data;
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (data == null) {
+            return const Center(
+              child: Text('Error al tratar de realizar la consulta'),
+            );
+          }
+
+          if (data.isEmpty ||
+              (data.isNotEmpty &&
+                  data[0] is Map &&
+                  data[0]["content"] ==
+                      "No se encontraron ordenes guardadas para mostrar.")) {
+            return const Center(
+              child: Text('No se encontraron ordenes guardadas para mostrar'),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: data.length,
+            itemBuilder: (context, index) {
+              String totalTxt = numberFormat.format(data[index]["docTotal"]);
+              if (totalTxt.length >= 3) {
+                totalTxt = totalTxt.substring(0, totalTxt.length - 3);
+              }
+
+              return Card(
+                color: const Color.fromRGBO(250, 251, 253, 1),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          height: 40,
+                          child: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              showConfirmOrderSave(
+                                context,
+                                data[index]["id"],
+                                "¿Está seguro de eliminar la orden guardada?",
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    ListTile(
+                      title: Text(
+                        'Fecha: ' +
+                            data[index]["docDate"].toString() +
+                            '\n' +
+                            data[index]["cardCode"].toString() +
+                            '\n' +
+                            data[index]["cardName"].toString() +
+                            '\n' +
+                            'Orden: ' +
+                            data[index]["id"].toString(),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Observación: ' + data[index]["comments"].toString(),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    ListTile(
+                      title: Text(
+                        "Total: " + totalTxt,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          height: 40,
+                          child: IconButton(
+                            icon: const Icon(Icons.add),
+                            onPressed: () {
+                              if (GetStorage().read('itemsPedido') == null) {
+                                if (GetStorage().read('pedido') == null) {
+                                  storage.write('pedido', {});
+                                  return;
+                                }
+
+                                final Map<String, dynamic> pedidoFinal =
+                                    Map<String, dynamic>.from(pedidoInicial);
+
+                                pedidoFinal['cardCode'] =
+                                    data[index]["cardCode"];
+                                pedidoFinal['companyName'] =
+                                    data[index]["companyName"];
+                                pedidoFinal['comments'] =
+                                    data[index]["comments"];
+                                pedidoFinal['numAtCard'] =
+                                    data[index]["numAtCard"];
+                                pedidoFinal['shipToCode'] =
+                                    data[index]["shipToCode"];
+                                pedidoFinal['payToCode'] =
+                                    data[index]["payToCode"];
+                                pedidoFinal['discountPercent'] =
+                                    data[index]["discountPercent"];
+                                pedidoFinal['docTotal'] = totalTxt;
+                                pedidoFinal['lineNum'] =
+                                    data[index]["lineNum"] ?? '';
+                                pedidoFinal['id'] = data[index]["id"];
+
+                                final List tempItemsList = List.from(
+                                  data[index]["detailSalesOrderSave"],
+                                );
+
+                                for (final k in tempItemsList) {
+                                  k['quantity'] = k['quantity'].toString();
+                                  k['price'] = k['price'].toString();
+                                  k['iva'] = k['iva'].toString();
+                                }
+
+                                pedidoFinal['detailSalesOrder'] = tempItemsList;
+
+                                storage.write('pedidoGuardado', pedidoFinal);
+                                storage.write('itemsPedido', tempItemsList);
+                                storage.write('pedido', pedidoFinal);
+
+                                final int idG = data[index]["id"];
+                                actualizarPedidoGuardado["id"] = idG.toString();
+
+                                storage.write(
+                                    'cardCode', data[index]["cardCode"]);
+                                storage.write('actualizarPedidoGuardado',
+                                    actualizarPedidoGuardado);
+                                storage.write('estadoPedido', 'guardado');
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PedidosPage(),
+                                  ),
+                                );
+                              } else {
+                                showAlertDialogItemsInShoppingCart(context);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
+}
 
-  Widget _buildSelectedMarker(DateTime date) {
-    return Container(
-      margin: EdgeInsets.all(4.0),
-      padding: EdgeInsets.all(4.0),
-      color: Colors.blue,
-      child: Center(
-        child: Text(
-          '${date.day}',
-          style: TextStyle().copyWith(color: Colors.white),
+class _MarkerDot extends StatelessWidget {
+  const _MarkerDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 10,
+      height: 10,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          shape: BoxShape.circle,
         ),
       ),
     );
   }
+}
 
-  Widget pedidosGuardados(BuildContext context) {
-    return Expanded(
-      child: FutureBuilder<List<dynamic>>(
-        future: getOrdenesGuardadasServidor(),
-        builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
-          var data = snapshot.data;
-          if (data == null) {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          } else {
-            var datalength = data.length;
-            if (datalength == 0 ||
-                snapshot.data![0]["content"] ==
-                    "No se encontraron ordenes guardadas para mostrar.") {
-              return Center(
-                child: Text('No se encontraron ordenes guardadas para mostrar'),
-              );
-            } else {
-              return ListView.builder(
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  String totalTxt =
-                      numberFormat.format(snapshot.data![index]["docTotal"]);
-                  totalTxt = totalTxt.substring(0, totalTxt.length - 3);
-                  if (snapshot.hasData) {
-                    return Card(
-                      color: Color.fromRGBO(250, 251, 253, 1),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Container(
-                                height: 40,
-                                child: IconButton(
-                                  icon: Icon(Icons.delete),
-                                  onPressed: () {
-                                    showConfirmOrderSave(
-                                      context,
-                                      snapshot.data![index]["id"],
-                                      "¿Está seguro de eliminar la orden guardada?",
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          ListTile(
-                            title: Text(
-                              'Fecha: ' +
-                                  snapshot.data![index]["docDate"].toString() +
-                                  '\n' +
-                                  snapshot.data![index]["cardCode"].toString() +
-                                  '\n' +
-                                  snapshot.data![index]["cardName"].toString() +
-                                  '\n' +
-                                  'Orden: ' +
-                                  snapshot.data![index]["id"].toString(),
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              'Observación: ' +
-                                  snapshot.data![index]["comments"].toString(),
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                            ),
-                          ),
-                          ListTile(
-                            title: Text(
-                              "Total: " + totalTxt,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Container(
-                                height: 40,
-                                child: IconButton(
-                                  icon: Icon(Icons.add),
-                                  onPressed: () {
-                                    if (GetStorage().read('itemsPedido') ==
-                                        null) {
-                                      if (GetStorage().read('pedido') == null) {
-                                        storage.write('pedido', {});
-                                      } else {
-                                        Map<String, dynamic> pedidoFinal =
-                                            Map<String, dynamic>.from(
-                                                pedidoInicial);
-                                        pedidoFinal['cardCode'] =
-                                            snapshot.data![index]["cardCode"];
-                                        pedidoFinal['companyName'] = snapshot
-                                            .data![index]["companyName"];
-                                        pedidoFinal['comments'] =
-                                            snapshot.data![index]["comments"];
-                                        pedidoFinal['numAtCard'] =
-                                            snapshot.data![index]["numAtCard"];
-                                        pedidoFinal['shipToCode'] =
-                                            snapshot.data![index]["shipToCode"];
-                                        pedidoFinal['payToCode'] =
-                                            snapshot.data![index]["payToCode"];
-                                        pedidoFinal['discountPercent'] =
-                                            snapshot.data![index]
-                                                ["discountPercent"];
-                                        pedidoFinal['docTotal'] = totalTxt;
-                                        pedidoFinal['lineNum'] =
-                                            snapshot.data![index]["lineNum"] ??
-                                                '';
-                                        pedidoFinal['id'] =
-                                            snapshot.data![index]["id"];
+class _SelectedDay extends StatelessWidget {
+  final DateTime date;
 
-                                        List tempItemsList =
-                                            snapshot.data![index]
-                                                ["detailSalesOrderSave"];
+  const _SelectedDay({required this.date});
 
-                                        /// Pasar a texto campo "quantity" "iva" y "price" que viende del servicio
-                                        tempItemsList.forEach((k) {
-                                          k['quantity'] =
-                                              k['quantity'].toString();
-                                          k['price'] = k['price'].toString();
-                                          k['iva'] = k['iva'].toString();
-                                        });
-
-                                        pedidoFinal['detailSalesOrder'] =
-                                            tempItemsList;
-
-                                        setState(
-                                          () {
-                                            storage.write(
-                                                'pedidoGuardado', pedidoFinal);
-                                            storage.write(
-                                                'itemsPedido',
-                                                snapshot.data![index]
-                                                    ["detailSalesOrderSave"]);
-                                            storage.write(
-                                                'pedido', pedidoFinal);
-                                            int idG =
-                                                snapshot.data![index]["id"];
-                                            actualizarPedidoGuardado["id"] =
-                                                idG.toString();
-                                            storage.write(
-                                                'cardCode',
-                                                snapshot.data![index]
-                                                    ["cardCode"]);
-                                            storage.write(
-                                                'actualizarPedidoGuardado',
-                                                actualizarPedidoGuardado);
-                                            storage.write(
-                                                'estadoPedido', 'guardado');
-                                          },
-                                        );
-
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => PedidosPage(),
-                                          ),
-                                        );
-                                      }
-                                    } else {
-                                      showAlertDialogItemsInShoppingCart(
-                                        context,
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  } else {
-                    return Text('Error al tratar de realizar la consulta');
-                  }
-                },
-              );
-            }
-          }
-        },
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(4.0),
+      padding: const EdgeInsets.all(4.0),
+      color: Colors.blue,
+      child: Center(
+        child: Text(
+          '${date.day}',
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
     );
   }

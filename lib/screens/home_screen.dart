@@ -1,7 +1,6 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:productos_app/controllers/home_controller.dart';
 import 'package:productos_app/icomoon.dart';
 import 'package:productos_app/screens/ai_chat_screen.dart';
 import 'package:productos_app/screens/clientes_screen.dart';
@@ -13,7 +12,6 @@ import 'package:productos_app/screens/login_screen.dart';
 import 'package:productos_app/screens/sincronizar.dart';
 import 'package:productos_app/screens/cartera.dart';
 import 'package:productos_app/screens/productos_screen.dart';
-import '../controllers/home_controller.dart';
 import 'package:get_storage/get_storage.dart';
 import 'dart:async';
 
@@ -23,10 +21,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  HomeController con = Get.put(HomeController());
-  GetStorage storage = GetStorage();
-  String? usuario = GetStorage().read('usuario');
-  String empresa = GetStorage().read('empresa');
+  final HomeController con = Get.put(HomeController());
+  final GetStorage storage = GetStorage();
+  final String? usuario = GetStorage().read('usuario');
+  final String empresa = GetStorage().read('empresa');
+
   int _selectedScreenIndex = 0;
   Timer? _timer;
 
@@ -43,6 +42,12 @@ class _HomePageState extends State<HomePage> {
     _startTimer();
   }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   void _selectScreen(int index) {
     setState(() {
       _selectedScreenIndex = index;
@@ -52,18 +57,21 @@ class _HomePageState extends State<HomePage> {
   void _startTimer() {
     const duration = Duration(hours: 24);
     _timer = Timer(duration, () {
+      if (!mounted) return;
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => LoginScreen()));
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
     });
   }
 
   Future mostrarMenu() {
     return showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(1000.0, 1000.0, 0.0, 0.0),
-      items: <PopupMenuItem<String>>[
-        new PopupMenuItem<String>(child: const Text('test1'), value: 'test1'),
-        new PopupMenuItem<String>(child: const Text('test2'), value: 'test2'),
+      position: const RelativeRect.fromLTRB(1000.0, 1000.0, 0.0, 0.0),
+      items: const <PopupMenuItem<String>>[
+        PopupMenuItem<String>(child: Text('test1'), value: 'test1'),
+        PopupMenuItem<String>(child: Text('test2'), value: 'test2'),
       ],
       elevation: 8.0,
     );
@@ -72,6 +80,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
+      onWillPop: () async {
+        showAlertDialog(context);
+        return false;
+      },
       child: Scaffold(
         backgroundColor: Colors.white,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -80,11 +92,11 @@ class _HomePageState extends State<HomePage> {
             showModalBottomSheet(
               context: context,
               builder: (BuildContext context) {
-                return Container(
+                return SizedBox(
                   height: 400,
                   child: Stack(
                     children: [
-                      Positioned(
+                      const Positioned(
                         top: 0,
                         left: 0,
                         right: 0,
@@ -95,167 +107,37 @@ class _HomePageState extends State<HomePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                SizedBox(width: 10),
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const CarteraPage(),
-                                      ),
-                                    );
-                                  },
-                                  icon: Icon(Icons.wallet_outlined),
-                                ),
-                                SizedBox(width: 10),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => CarteraPage(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Cartera de clientes',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                              ],
+                            _itemBottomSheet(
+                              context,
+                              icon: Icons.wallet_outlined,
+                              text: 'Cartera de clientes',
+                              page: const CarteraPage(),
                             ),
-                            Row(
-                              children: [
-                                SizedBox(width: 10),
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ProductosPage(),
-                                      ),
-                                    );
-                                  },
-                                  icon: Icon(Icons.image_search_rounded),
-                                ),
-                                SizedBox(width: 10),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ProductosPage(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Catálogo de productos',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                              ],
+                            _itemBottomSheet(
+                              context,
+                              icon: Icons.image_search_rounded,
+                              text: 'Catálogo de productos',
+                              page: ProductosPage(),
                             ),
-                            Row(
-                              children: [
-                                SizedBox(width: 10),
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ListarPedidosPage(),
-                                      ),
-                                    );
-                                  },
-                                  icon: Icon(Icons.store_outlined),
-                                ),
-                                SizedBox(width: 10),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ListarPedidosPage(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Pedidos enviados y guardados',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                              ],
+                            _itemBottomSheet(
+                              context,
+                              icon: Icons.store_outlined,
+                              text: 'Pedidos enviados y guardados',
+                              page: ListarPedidosPage(),
                             ),
-                            Row(
-                              children: [
-                                SizedBox(width: 10),
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => AIChatScreen(),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(
-                                    Icomoon.microchipAI,
-                                  ),
-                                ),
-                                SizedBox(width: 10),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => AIChatScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Chatbot',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                              ],
+                            _itemBottomSheet(
+                              context,
+                              icon: null,
+                              customIcon: const Icon(Icomoon.microchipAI),
+                              text: 'Chatbot',
+                              page: AIChatScreen(),
                             ),
-                            Row(
-                              children: [
-                                SizedBox(width: 10),
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => EmployeePage(),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(
-                                    Icomoon.groups,
-                                  ),
-                                ),
-                                SizedBox(width: 10),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => EmployeePage(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Empleado',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                              ],
+                            _itemBottomSheet(
+                              context,
+                              icon: null,
+                              customIcon: const Icon(Icomoon.groups),
+                              text: 'Empleado',
+                              page: const EmployeePage(),
                             ),
                           ],
                         ),
@@ -266,97 +148,122 @@ class _HomePageState extends State<HomePage> {
               },
             );
           },
-          child: Icon(Icons.add, color: Colors.white),
-          backgroundColor: Color.fromRGBO(0, 55, 114, 1),
-          shape: CircleBorder(),
+          child: const Icon(Icons.add, color: Colors.white),
+          backgroundColor: const Color.fromRGBO(0, 55, 114, 1),
+          shape: const CircleBorder(),
         ),
         bottomNavigationBar: BottomAppBar(
-          color: Color.fromRGBO(30, 129, 235, 1),
+          color: const Color.fromRGBO(30, 129, 235, 1),
           height: 67,
-          shape: CircularNotchedRectangle(),
+          shape: const CircularNotchedRectangle(),
           notchMargin: 4.0,
           clipBehavior: Clip.antiAlias,
-          child: Container(
-            child: BottomNavigationBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              type: BottomNavigationBarType.fixed,
-              currentIndex: _selectedScreenIndex,
-              onTap: _selectScreen,
-              selectedItemColor: Colors.white,
-              unselectedItemColor: Color.fromRGBO(1, 39, 80, 1),
-              selectedFontSize: 8,
-              unselectedFontSize: 12.5,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.data_saver_off_outlined,
-                  ),
-                  label: 'Dash',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_pin_circle_rounded),
-                  label: 'Clientes',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.sync),
-                  label: 'Sincronizar',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_rounded),
-                  label: 'Perfil',
-                ),
-              ],
-            ),
+          child: BottomNavigationBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _selectedScreenIndex,
+            onTap: _selectScreen,
+            selectedItemColor: Colors.white,
+            unselectedItemColor: const Color.fromRGBO(1, 39, 80, 1),
+            selectedFontSize: 8,
+            unselectedFontSize: 12.5,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.data_saver_off_outlined),
+                label: 'Dash',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_pin_circle_rounded),
+                label: 'Clientes',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.sync),
+                label: 'Sincronizar',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_rounded),
+                label: 'Perfil',
+              ),
+            ],
           ),
         ),
         body: _screens[_selectedScreenIndex]["screen"],
       ),
-      onWillPop: () async {
-        showAlertDialog(context);
-        return false;
-      },
     );
   }
 
-  showAlertDialog(BuildContext context) {
-    Widget cancelButton = ElevatedButton(
-      child: Text("NO"),
-      onPressed: () {
-        Navigator.pop(context);
-      },
+  Widget _itemBottomSheet(
+    BuildContext context, {
+    IconData? icon,
+    Icon? customIcon,
+    required String text,
+    required Widget page,
+  }) {
+    return Row(
+      children: [
+        const SizedBox(width: 10),
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => page),
+            );
+          },
+          icon: customIcon ?? Icon(icon),
+        ),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => page),
+            );
+          },
+          child: const Text(
+            '',
+            style: TextStyle(fontSize: 16),
+          ),
+        ),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 16),
+        ),
+      ],
     );
-    Widget continueButton = ElevatedButton(
-      child: Text("SI"),
+  }
+
+  void showAlertDialog(BuildContext context) {
+    final Widget cancelButton = ElevatedButton(
+      onPressed: () => Navigator.pop(context),
+      child: const Text("NO"),
+    );
+
+    final Widget continueButton = ElevatedButton(
       onPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => LoginScreen()),
         );
       },
+      child: const Text("SI"),
     );
-    AlertDialog alert = AlertDialog(
+
+    final AlertDialog alert = AlertDialog(
       title: Row(
-        children: [
-          Icon(
-            Icons.error,
-            color: Colors.orange,
-          ),
+        children: const [
+          Icon(Icons.error, color: Colors.orange),
           SizedBox(width: 8),
           Text("Atención!"),
         ],
       ),
-      content: Text("¿Está seguro que desea salir de la aplicación?"),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
+      content: const Text("¿Está seguro que desea salir de la aplicación?"),
+      actions: [cancelButton, continueButton],
     );
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
+      builder: (BuildContext context) => alert,
     );
   }
 }

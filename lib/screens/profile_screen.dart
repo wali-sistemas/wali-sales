@@ -10,199 +10,126 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ProfilePage extends StatelessWidget {
-  GetStorage storage = GetStorage();
+  ProfilePage({super.key});
 
-  final String pdfUrl =
+  final GetStorage storage = GetStorage();
+
+  static const String pdfUrl =
       'http://wali.igbcolombia.com:8080/shared/app/instructivo.pdf';
 
-  Future<void> _downloadPDF() async {
+  Future<void> _downloadPDF(BuildContext context) async {
     final response = await http.get(Uri.parse(pdfUrl));
 
     if (response.statusCode == 200) {
-      DateTime now = DateTime.now();
+      final DateTime now = DateTime.now();
 
       final Uint8List pdfBytes = response.bodyBytes;
-      final pdfFile = File('/storage/emulated/0/Download/instructivo ' +
-          DateFormat('yyyyMMdd hhmm').format(now) +
-          '.pdf');
+      final File pdfFile = File(
+        '/storage/emulated/0/Download/instructivo_${DateFormat('yyyyMMdd_HHmm').format(now)}.pdf',
+      );
+
       await pdfFile.writeAsBytes(pdfBytes);
-      //print("Archivo descargado");
-      //print('/storage/emulated/0/Download/instructivo.pdf');
-      // Lógica adicional para mostrar una notificación o manejar el archivo descargado
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Archivo guardado en carpeta Descargas'),
+          duration: Duration(seconds: 3),
+        ),
+      );
     } else {
       throw Exception('Error al descargar el archivo');
     }
   }
 
-  void _launchWhatsApp() async {
-    try {
-      final Uri whatsappUri = Uri.parse(
-          'https://wa.me/+573227656966?text=${Uri.encodeComponent("Hola, requiero soporte de Wali Sales acerca de:")}');
-
-      if (await canLaunchUrl(whatsappUri)) {
-        await launchUrl(whatsappUri);
-      } else {
-        throw Exception('No se pudo abrir WhatsApp');
-      }
-    } catch (e) {
-      /*print('Error: $e');*/
-    }
-  }
-
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: Duration(seconds: 3), // Duración de la notificación
-      ),
+  Future<void> _launchWhatsApp() async {
+    final Uri whatsappUri = Uri.parse(
+      'https://wa.me/+573227656966?text=${Uri.encodeComponent("Hola, requiero soporte de Wali Sales acerca de:")}',
     );
+
+    if (await canLaunchUrl(whatsappUri)) {
+      await launchUrl(whatsappUri);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    String? usuario = GetStorage().read('usuario');
-    String? nombreAsesor = GetStorage().read('nombreAsesor');
-    String? emailAsesor = GetStorage().read('emailAsesor');
+    final String? usuario = GetStorage().read('usuario');
+    final String? nombreAsesor = GetStorage().read('nombreAsesor');
+    final String? emailAsesor = GetStorage().read('emailAsesor');
     return Scaffold(
       backgroundColor: Colors.white,
       body: AuthBackgroundProfile(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 200),
+              const SizedBox(height: 200),
               CardContainer(
-                child: Container(
-                  child: Form(
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 10,
-                          ),
-                          child: TextFormField(
-                            style: TextStyle(fontSize: 15),
-                            maxLines: null,
-                            readOnly: true,
-                            autocorrect: false,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              labelText: nombreAsesor,
-                              prefixIcon: Icon(Icons.person),
-                              prefixIconColor: Color.fromRGBO(30, 129, 235, 1),
+                child: Form(
+                  child: Column(
+                    children: [
+                      _readOnlyField(
+                        label: nombreAsesor,
+                        icon: Icons.person,
+                      ),
+                      const SizedBox(height: 15),
+                      _readOnlyField(
+                        label: usuario,
+                        icon: Icons.contact_mail_outlined,
+                        fontSize: 20,
+                      ),
+                      const SizedBox(height: 15),
+                      _readOnlyField(
+                        label: emailAsesor,
+                        icon: Icons.email_outlined,
+                        fontSize: 20,
+                      ),
+                      const SizedBox(height: 15),
+                      Image.asset(
+                        'assets/wali.jpg',
+                        width: 100,
+                        height: 100,
+                      ),
+                      const SizedBox(height: 5),
+                      const Text('Versión 12.3'),
+                      const Text('WALI COLOMBIA SAS'),
+                      const Text('Todos los derechos reservados'),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () => _downloadPDF(context),
+                        child: const Text(
+                          'Documentación',
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      GestureDetector(
+                        onTap: _launchWhatsApp,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            FaIcon(FontAwesomeIcons.whatsapp),
+                            SizedBox(width: 10),
+                            Text(
+                              'Línea de atención al cliente',
+                              style: TextStyle(color: Colors.blue),
                             ),
-                          ),
+                          ],
                         ),
-                        SizedBox(height: 15),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 10,
-                          ),
-                          child: TextFormField(
-                            style: TextStyle(fontSize: 20),
-                            readOnly: true,
-                            autocorrect: false,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              // hintText: '*****',
-                              labelText: usuario,
-                              prefixIcon: Icon(Icons.contact_mail_outlined),
-                              prefixIconColor: Color.fromRGBO(30, 129, 235, 1),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 10,
-                                ),
-                                child: TextFormField(
-                                  style: TextStyle(fontSize: 20),
-                                  readOnly: true,
-                                  autocorrect: false,
-                                  keyboardType: TextInputType.emailAddress,
-                                  initialValue: "",
-                                  decoration: InputDecoration(
-                                    //hintText: 'co',
-                                    labelText: emailAsesor,
-                                    prefixIcon: Icon(Icons.email_outlined),
-                                    prefixIconColor:
-                                        Color.fromRGBO(30, 129, 235, 1),
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        Image.asset(
-                          "./assets/wali.jpg",
-                          width: 100,
-                          height: 100,
-                        ),
-                        SizedBox(height: 5),
-                        Text("Versión 12.3"),
-                        Text("WALI COLOMBIA SAS"),
-                        Text("Todos los derechos reservados"),
-                        SizedBox(height: 10),
-                        GestureDetector(
-                          onTap: () {
-                            _downloadPDF();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Archivo guardado en carpeta Descargas',
-                                ),
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            "Documentación",
-                            style: TextStyle(color: Colors.blue),
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        GestureDetector(
-                          onTap: () async {
-                            _launchWhatsApp();
-                          },
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              FaIcon(FontAwesomeIcons.whatsapp),
-                              SizedBox(width: 10),
-                              Text(
-                                'Línea de atención al cliente',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               FloatingActionButton(
-                heroTag: "btn2",
-                onPressed: () {
-                  showAlertDialog(context);
-                },
-                child: Icon(Icons.power_settings_new),
+                heroTag: 'btn2',
                 backgroundColor: Colors.red,
+                onPressed: () {
+                  _showAlertDialog(context);
+                },
+                child: const Icon(Icons.power_settings_new),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -210,92 +137,65 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  showAlertDialog(BuildContext context) {
-    // set up the buttons
-    Widget cancelButton = ElevatedButton(
-      child: Text("NO"),
-      onPressed: () {
-        Navigator.pop(context);
-      },
-    );
-    Widget continueButton = ElevatedButton(
-      child: Text("SI"),
-      onPressed: () {
-        //storage.remove('usuario');
-        storage.remove('emailAsesor');
-        storage.remove('nombreAsesor');
-        storage.remove('datosClientes');
-        storage.remove('empresa');
-        storage.remove('observaciones');
-        storage.remove('chat_history');
-        //storage.remove('items');
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => LoginScreen()),
-        );
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            Icons.error,
-            color: Colors.orange,
-          ),
-          SizedBox(width: 8),
-          Text("Atención!"),
-        ],
+  static Widget _readOnlyField({
+    String? label,
+    required IconData icon,
+    double fontSize = 15,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      child: TextFormField(
+        readOnly: true,
+        maxLines: null,
+        style: TextStyle(fontSize: fontSize),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          prefixIconColor: const Color.fromRGBO(30, 129, 235, 1),
+        ),
       ),
-      content: Text("¿Está seguro que desea salir de la aplicación?"),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
     );
+  }
 
-    // show the dialog
+  void _showAlertDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
-  Widget userInfo(String title, String subtitle, IconData iconData) {
-    return Container(
-      margin: EdgeInsets.only(left: 30, right: 30),
-      child: ListTile(
-        title: Text(
-          title,
-          style: const TextStyle(color: Colors.white),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(color: Colors.blue),
-        ),
-        leading: Icon(iconData, color: Colors.blue),
-      ),
-    );
-  }
-
-  Widget circleImageUser() {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.only(top: 30),
-        width: 200,
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: ClipOval(
-            child: FadeInImage.assetNetwork(
-                fit: BoxFit.cover,
-                placeholder: 'assets/user_profile.png',
-                image: 'http://179.50.5.95/cluster/img/person-icon.png'),
+      builder: (_) {
+        return AlertDialog(
+          title: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Atención!'),
+            ],
           ),
-        ),
-      ),
+          content: const Text(
+            '¿Está seguro que desea salir de la aplicación?',
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('NO'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                storage.remove('emailAsesor');
+                storage.remove('nombreAsesor');
+                storage.remove('datosClientes');
+                storage.remove('empresa');
+                storage.remove('observaciones');
+                storage.remove('chat_history');
+
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              child: const Text('SI'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

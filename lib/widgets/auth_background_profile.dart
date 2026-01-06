@@ -4,19 +4,16 @@ import 'package:get_storage/get_storage.dart';
 class AuthBackgroundProfile extends StatelessWidget {
   final Widget child;
 
-  const AuthBackgroundProfile({Key? key, required this.child})
-      : super(key: key);
+  const AuthBackgroundProfile({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
+    return SizedBox.expand(
       child: Stack(
         children: [
-          _PurpleBox(),
-          circleImageUser(),
-          this.child,
+          const _PurpleBox(),
+          const SafeArea(child: _CircleImageUserContent()),
+          child,
         ],
       ),
     );
@@ -24,56 +21,73 @@ class AuthBackgroundProfile extends StatelessWidget {
 }
 
 class _PurpleBox extends StatelessWidget {
+  const _PurpleBox();
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final Size size = MediaQuery.of(context).size;
 
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: size.height * 0.91,
-      decoration: _purpleBackground(),
-      child: Stack(
-        children: [
-          Positioned(child: _Bubble(), top: 90, left: 30),
-          Positioned(child: _Bubble(), top: -40, left: -30),
-          Positioned(child: _Bubble(), top: -50, right: -20),
-          Positioned(child: _Bubble(), bottom: -50, left: 10),
-          Positioned(child: _Bubble(), bottom: 120, right: 20),
-        ],
+      child: DecoratedBox(
+        decoration: _purpleBackground,
+        child: const Stack(
+          children: [
+            Positioned(top: 90, left: 30, child: _Bubble()),
+            Positioned(top: -40, left: -30, child: _Bubble()),
+            Positioned(top: -50, right: -20, child: _Bubble()),
+            Positioned(bottom: -50, left: 10, child: _Bubble()),
+            Positioned(bottom: 120, right: 20, child: _Bubble()),
+          ],
+        ),
       ),
     );
   }
 
-  BoxDecoration _purpleBackground() => BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.fromRGBO(56, 232, 211, 1),
-            Color.fromRGBO(30, 129, 235, 1),
-            Color.fromRGBO(41, 35, 92, 1)
-          ],
-        ),
-      );
+  static const BoxDecoration _purpleBackground = BoxDecoration(
+    gradient: LinearGradient(
+      colors: [
+        Color.fromRGBO(56, 232, 211, 1),
+        Color.fromRGBO(30, 129, 235, 1),
+        Color.fromRGBO(41, 35, 92, 1),
+      ],
+    ),
+  );
 }
 
 class _Bubble extends StatelessWidget {
+  const _Bubble();
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return const SizedBox(
       width: 100,
       height: 100,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(100),
-        color: Color.fromRGBO(255, 255, 255, 0.05),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(100)),
+          color: Color.fromRGBO(255, 255, 255, 0.05),
+        ),
       ),
     );
   }
 }
 
-Widget circleImageUser() {
-  String? urlFoto = GetStorage().read('urlFoto');
-  return SafeArea(
-    child: Container(
-      margin: EdgeInsets.only(top: 10, left: 120),
+class _CircleImageUserContent extends StatelessWidget {
+  const _CircleImageUserContent();
+
+  static const String _fallbackImage =
+      'http://179.50.5.95/cluster/img/person-icon.png';
+
+  static final GetStorage _storage = GetStorage();
+
+  @override
+  Widget build(BuildContext context) {
+    final String? urlFoto = _storage.read('urlFoto');
+
+    return Container(
+      margin: const EdgeInsets.only(top: 10, left: 120),
       width: 150,
       child: AspectRatio(
         aspectRatio: 1,
@@ -81,10 +95,10 @@ Widget circleImageUser() {
           child: FadeInImage.assetNetwork(
             fit: BoxFit.cover,
             placeholder: 'assets/user_profile.png',
-            image: urlFoto ?? 'http://179.50.5.95/cluster/img/person-icon.png',
+            image: urlFoto ?? _fallbackImage,
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
 class NotificationsService {
-  static GlobalKey<ScaffoldMessengerState> messengerKey =
-      new GlobalKey<ScaffoldMessengerState>();
+  static final GlobalKey<ScaffoldMessengerState> messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
-  static showSnackbar(String message) {
-    final snackBar = new SnackBar(
+  static void showSnackbar(String message) {
+    final snackBar = SnackBar(
       content: Text(
         message,
-        style: TextStyle(color: Colors.white, fontSize: 20),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+        ),
       ),
     );
-    messengerKey.currentState!.showSnackBar(snackBar);
+
+    messengerKey.currentState?.showSnackBar(snackBar);
   }
 }

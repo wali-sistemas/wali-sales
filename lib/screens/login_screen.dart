@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 
 class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -31,16 +32,6 @@ class LoginScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                //SizedBox(height: 50),
-                /*TextButton(
-                onPressed: () => Navigator.pushReplacementNamed(context, 'register'), 
-                style: ButtonStyle(
-                  overlayColor: MaterialStateProperty.all( Colors.indigo.withOpacity(0.1)),
-                  shape: MaterialStateProperty.all( StadiumBorder() )
-                ),
-                child: Text('Crear una nueva cuenta', style: TextStyle( fontSize: 18, color: Colors.black87 ),)
-              ),*/
-                //SizedBox(height: 50),
               ],
             ),
           ),
@@ -67,7 +58,6 @@ class _LoginFormState extends State<_LoginForm> {
   String versionApp = "12.3";
   String isSincStock = "";
   String isSincItems = "";
-  List _items = [];
   var loginForm;
   TextEditingController usuarioController = TextEditingController();
   TextEditingController claveController = TextEditingController();
@@ -212,36 +202,8 @@ class _LoginFormState extends State<_LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    /*setState(() {
-
-    usuario=GetStorage().read('usuario');
-    clave=GetStorage().read('clave');
-    usuarioController.text= usuario ?? '';
-    claveController.text=clave ?? '';
-    });*/
-
-    //print ("Borrando items ==============================================================");
-    // storage.remove('itemsPedido');
-    // storage.remove('items');
-    // storage.remove('pedido');
-    // storage.remove('dirEnvio');
-    // storage.remove('presupuesto');
-
     var items = ['Elija una empresa', 'IGB', 'MOTOZONE', 'REDPLAS'];
-    //final loginForm = Provider.of<LoginFormProvider>(context);
     loginForm = Provider.of<LoginFormProvider>(context);
-    //loginForm.isLoading = activeLogin;
-    /*if (usuario != null) {
-      loginForm.email = usuario!;
-    } else {
-      if (usuario == "") loginForm.email = "";
-    }
-
-    if (clave != null) {
-      loginForm.password = clave!;
-    } else {
-      if (clave == "") loginForm.password = "";
-    }*/
     return Container(
       child: Form(
         key: loginForm.formKey,
@@ -270,7 +232,7 @@ class _LoginFormState extends State<_LoginForm> {
                 controller: claveController,
                 autocorrect: false,
                 obscureText: true,
-                keyboardType: TextInputType.emailAddress,
+                keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   hintText: '**********',
                   labelText: 'Contraseña',
@@ -338,7 +300,7 @@ class _LoginFormState extends State<_LoginForm> {
                         );
                         ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       } else {
-                        Future<bool> res = createRecordLogin(
+                        await createRecordLogin(
                           GetStorage().read('empresa'),
                           loginForm.email,
                         );
@@ -374,7 +336,7 @@ class _LoginFormState extends State<_LoginForm> {
                               Map<String, dynamic> res =
                                   jsonDecode(response.body);
                               if (res['code'] == 0) {
-                                //TODO: sincronizar stock y ítems al iniciar sesión
+                                // Sincronizar stock y ítems al iniciar sesión
                                 sincronizarStock();
                                 sincronizarItems(
                                   GetStorage().read('empresa'),

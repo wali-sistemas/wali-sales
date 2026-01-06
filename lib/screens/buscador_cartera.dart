@@ -19,15 +19,11 @@ class CustomSearchDelegateCartera extends SearchDelegate {
   GetStorage storage = GetStorage();
   String empresa = GetStorage().read('empresa');
 
-  Future<void> _guardarDatos() async {
-    storage.write('datosCartera', _carteraBusqueda);
-  }
-
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: Icon(Icons.clear),
+        icon: const Icon(Icons.clear),
         onPressed: () {
           query = '';
         },
@@ -38,7 +34,7 @@ class CustomSearchDelegateCartera extends SearchDelegate {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back),
       onPressed: () {
         close(context, null);
       },
@@ -48,7 +44,6 @@ class CustomSearchDelegateCartera extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     if (GetStorage().read('datosCartera') == null) {
-      //print("allnames VACIO :  *******__________________________________");
     } else {
       _carteraBusqueda.clear();
       carteraGuardados = GetStorage().read('datosCartera');
@@ -71,13 +66,13 @@ class CustomSearchDelegateCartera extends SearchDelegate {
       itemBuilder: (context, index) {
         return Card(
           child: Padding(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             child: ListTile(
               title: Text(
                 _carteraBusqueda[index]['cardCode'] +
                     '\n' +
                     _carteraBusqueda[index]['cardName'],
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
                 ),
               ),
@@ -94,7 +89,7 @@ class CustomSearchDelegateCartera extends SearchDelegate {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CarteraPage(),
+                      builder: (context) => const CarteraPage(),
                     ),
                   );
                 },
@@ -114,7 +109,6 @@ class CustomSearchDelegateCartera extends SearchDelegate {
     _carteraBusqueda2.clear();
 
     if (GetStorage().read('datosCartera') == null) {
-      //print("allnames VACIO :  *******__________________________________");
     } else {
       carteraGuardados = GetStorage().read('datosCartera');
       carteraGuardados.forEach((k) {
@@ -126,16 +120,12 @@ class CustomSearchDelegateCartera extends SearchDelegate {
       });
     }
 
-// This method is called everytime the search term changes.
-// If you want to add search suggestions as the user enters their search term, this is the place to do that.
-    final suggestionList = query.isEmpty
-        ? suggestion
-        : allNames2.where((element) => element.contains(query)).toList();
     if (query == "") {
       _carteraBusqueda2 = [];
     }
 
     return ListView.builder(
+      itemCount: _carteraBusqueda2.length,
       itemBuilder: (context, index) => ListTile(
         onTap: () {
           if (query.isEmpty) {
@@ -156,7 +146,7 @@ class CustomSearchDelegateCartera extends SearchDelegate {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => CarteraPage(),
+                builder: (context) => const CarteraPage(),
               ),
             );
           },
@@ -164,18 +154,18 @@ class CustomSearchDelegateCartera extends SearchDelegate {
           icon: const Icon(Icons.add),
         ),
         title: RichText(
-            text: TextSpan(
-          text: _carteraBusqueda2[index]["cardCode"] +
-              "\n" +
-              _carteraBusqueda2[index]["cardName"],
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+          text: TextSpan(
+            text: _carteraBusqueda2[index]["cardCode"] +
+                "\n" +
+                _carteraBusqueda2[index]["cardName"],
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
           ),
-        )),
+        ),
       ),
-      itemCount: _carteraBusqueda2.length,
     );
   }
 }

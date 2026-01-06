@@ -17,11 +17,12 @@ class ClientesPage extends StatefulWidget {
 
 class _ClientesPageState extends State<ClientesPage> {
   List _clientes = [];
-  String codigo = GetStorage().read('slpCode');
-  GetStorage storage = GetStorage();
-  String empresa = GetStorage().read('empresa');
-  String usuario = GetStorage().read('usuario');
-  Connectivity _connectivity = Connectivity();
+  final String codigo = GetStorage().read('slpCode');
+  final GetStorage storage = GetStorage();
+  final String empresa = GetStorage().read('empresa');
+  final String usuario = GetStorage().read('usuario');
+  final Connectivity _connectivity = Connectivity();
+
   List _stockFull = [];
   Map<String, dynamic> pedidoLocal = {};
   List<dynamic> itemsPedidoLocal = [];
@@ -31,10 +32,11 @@ class _ClientesPageState extends State<ClientesPage> {
     super.initState();
     sincClientes();
     sincronizarStock();
+    _fetchData();
   }
 
   Future<bool> checkConnectivity() async {
-    var connectivityResult = await _connectivity.checkConnectivity();
+    final connectivityResult = await _connectivity.checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
   }
 
@@ -44,29 +46,23 @@ class _ClientesPageState extends State<ClientesPage> {
             codigo +
             '/' +
             empresa;
-    bool isConnected = await checkConnectivity();
-    if (isConnected == false) {
-      //print("Error de red");
-    } else {
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      final codigoError = resp["code"];
-      if (codigoError == -1 ||
-          response.statusCode != 200 ||
-          isConnected == false) {
-      } else {
-        final data = resp["content"];
-        if (!mounted) return;
-        setState(
-          () {
-            _clientes = data;
 
-            /// GUARDAR EN LOCAL STORAGE
-            storage.write('datosClientes', _clientes);
-          },
-        );
-      }
-    }
+    final bool isConnected = await checkConnectivity();
+    if (!isConnected) return;
+
+    final response = await http.get(Uri.parse(apiUrl));
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+
+    final codigoError = resp['code'];
+    if (codigoError == -1 || response.statusCode != 200) return;
+
+    final data = resp['content'];
+    if (!mounted) return;
+
+    setState(() {
+      _clientes = data;
+      storage.write('datosClientes', _clientes);
+    });
   }
 
   Future<void> sincronizarStock() async {
@@ -74,75 +70,64 @@ class _ClientesPageState extends State<ClientesPage> {
         'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
             empresa +
             '?itemcode=0&whscode=0&slpcode=0';
-    //usuario;
-    bool isConnected = await checkConnectivity();
-    if (isConnected == false) {
-      //print("Error de red");
-    } else {
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      final codigoError = resp["code"];
-      if (codigoError == -1) {
-        //print("codigoError: $codigoError");
-      } else {
-        final data = resp["content"];
-        if (!mounted) return;
-        setState(
-          () {
-            _stockFull = data;
 
-            /// GUARDAR
-            storage.write('stockFull', _stockFull);
-          },
-        );
-      }
-    }
+    final bool isConnected = await checkConnectivity();
+    if (!isConnected) return;
+
+    final response = await http.get(Uri.parse(apiUrl));
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+
+    final codigoError = resp['code'];
+    if (codigoError == -1) return;
+
+    final data = resp['content'];
+    if (!mounted) return;
+
+    setState(() {
+      _stockFull = data;
+      storage.write('stockFull', _stockFull);
+    });
   }
 
   Future<void> _fetchData() async {
-    if (GetStorage().read('datosClientes') == null) {
-      final String apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
-              codigo +
-              '/' +
-              empresa;
+    final cached = GetStorage().read('datosClientes');
+    if (cached != null) {
+      _clientes = cached;
 
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      String texto = "No se encontraron clientes para el asesor " +
+      if (mounted) setState(() {});
+      return;
+    }
+
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
+            codigo +
+            '/' +
+            empresa;
+
+    final response = await http.get(Uri.parse(apiUrl));
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+
+    final codigoError = resp['code'];
+    if (codigoError == -1) {
+      final String texto = 'No se encontraron clientes para el asesor ' +
           codigo +
-          " en la empresa " +
+          ' en la empresa ' +
           empresa;
 
-      final codigoError = resp["code"];
-      if (codigoError == -1) {
-        var snackBar = SnackBar(
-          content: Text(texto),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(texto)),
         );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
-      final data = resp["content"];
-      //print(data.toString());
-      if (!mounted) return;
-      setState(
-        () {
-          _clientes = data;
-
-          /// GUARDAR EN LOCAL STORAGE
-          _guardarDatos();
-        },
-      );
-    } else {
-      _clientes = GetStorage().read('datosClientes');
     }
-  }
 
-  Future<void> _guardarDatos() async {
-    // SharedPreferences pref = await SharedPreferences.getInstance();
-    // //Map json = jsonDecode(jsonString);
-    // String user = jsonEncode(_clientes);
-    // pref.setString('datosClientes', user);
-    storage.write('datosClientes', _clientes);
+    final data = resp['content'];
+    if (!mounted) return;
+
+    setState(() {
+      _clientes = data;
+      storage.write('datosClientes', _clientes);
+    });
   }
 
   @override
@@ -150,9 +135,9 @@ class _ClientesPageState extends State<ClientesPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
         leading: GestureDetector(
-          child: Icon(
+          child: const Icon(
             Icons.arrow_back_ios,
             color: Colors.white,
           ),
@@ -163,7 +148,7 @@ class _ClientesPageState extends State<ClientesPage> {
             );
           },
         ),
-        actions: [
+        actions: const [
           CarritoPedido(),
         ],
         title: ListTile(
@@ -173,35 +158,32 @@ class _ClientesPageState extends State<ClientesPage> {
               delegate: CustomSearchDelegateClientes(),
             );
           },
-          title: Text(
+          title: const Text(
             'Buscar cliente',
             style: TextStyle(color: Colors.white),
           ),
         ),
       ),
-      body: clientes(context),
+      body: _clientesWidget(context),
     );
   }
 
-  Widget clientes(BuildContext context) {
-    _fetchData();
+  Widget _clientesWidget(BuildContext context) {
     return SafeArea(
       child: ListView.builder(
         itemCount: _clientes.length,
         itemBuilder: (context, index) {
           return Card(
             child: Container(
-              color: Color.fromRGBO(250, 251, 253, 1),
+              color: const Color.fromRGBO(250, 251, 253, 1),
               child: Padding(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 child: ListTile(
                   title: Text(
                     _clientes[index]['cardCode'] +
                         ' - ' +
                         _clientes[index]['cardName'],
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
+                    style: const TextStyle(fontSize: 15),
                   ),
                   trailing: TextButton.icon(
                     onPressed: () {
@@ -211,17 +193,18 @@ class _ClientesPageState extends State<ClientesPage> {
                         itemsPedidoLocal = GetStorage().read('itemsPedido');
                         pedidoLocal = GetStorage().read('pedido');
                       }
-                      if (pedidoLocal["cardCode"] !=
+
+                      if (pedidoLocal['cardCode'] !=
                               _clientes[index]['cardCode'] &&
-                          itemsPedidoLocal.length > 0) {
+                          itemsPedidoLocal.isNotEmpty) {
                         showAlertDialogItemsInShoppingCart(
                           context,
                           _clientes[index]['cardCode'],
                         );
                       } else {
                         storage.write('estadoPedido', 'nuevo');
-                        storage.write('nit', _clientes[index]["nit"]);
-                        storage.write('cardCode', _clientes[index]["cardCode"]);
+                        storage.write('nit', _clientes[index]['nit']);
+                        storage.write('cardCode', _clientes[index]['cardCode']);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -246,21 +229,21 @@ class _ClientesPageState extends State<ClientesPage> {
   }
 
   void showAlertDialogItemsInShoppingCart(BuildContext context, String nit) {
-    Widget cancelButton = ElevatedButton(
-      child: Text("NO"),
+    final Widget cancelButton = ElevatedButton(
       onPressed: () {
         Navigator.pop(context);
       },
+      child: const Text('NO'),
     );
-    Widget continueButton = ElevatedButton(
-      child: Text("SI"),
+
+    final Widget continueButton = ElevatedButton(
       onPressed: () {
-        storage.remove("observaciones");
-        storage.remove("pedido");
-        storage.remove("itemsPedido");
-        storage.remove("dirEnvio");
-        storage.remove("pedidoGuardado");
-        storage.write("estadoPedido", "nuevo");
+        storage.remove('observaciones');
+        storage.remove('pedido');
+        storage.remove('itemsPedido');
+        storage.remove('dirEnvio');
+        storage.remove('pedidoGuardado');
+        storage.write('estadoPedido', 'nuevo');
         storage.write('cardCode', nit);
 
         Navigator.push(
@@ -270,32 +253,30 @@ class _ClientesPageState extends State<ClientesPage> {
           ),
         );
       },
+      child: const Text('SI'),
     );
-    AlertDialog alert = AlertDialog(
+
+    final AlertDialog alert = AlertDialog(
       title: Row(
-        children: [
-          Icon(
-            Icons.error,
-            color: Colors.orange,
-          ),
+        children: const [
+          Icon(Icons.error, color: Colors.orange),
           SizedBox(width: 8),
-          Text("Atención!"),
+          Text('Atención!'),
         ],
       ),
-      content: Text(
-        "Tiene ítems pendientes para otro cliente, si continúa se borrarán e iniciará un pedido nuevo.\n¿Desea continuar?",
+      content: const Text(
+        'Tiene ítems pendientes para otro cliente, si continúa se borrarán e iniciará un pedido nuevo.\n¿Desea continuar?',
       ),
       actions: [
         cancelButton,
         continueButton,
       ],
     );
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
-        return alert;
-      },
+      builder: (BuildContext context) => alert,
     );
   }
 }

@@ -42,6 +42,14 @@ class _PedidosPageState extends State<PedidosPage>
   String nit = "";
   String urlImagenItem = "";
 
+  late final Future<void> _itemsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _itemsFuture = _listarItems();
+  }
+
   final pedidoJson = {
     "cardCode": "C890911260",
     "cardName": "TRANSALGAR SA",
@@ -122,9 +130,10 @@ class _PedidosPageState extends State<PedidosPage>
         child: Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
-            backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+            backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
             leading: GestureDetector(
-              child: Icon(
+              behavior: HitTestBehavior.opaque,
+              child: const Icon(
                 Icons.arrow_back_ios,
                 color: Colors.white,
               ),
@@ -132,8 +141,10 @@ class _PedidosPageState extends State<PedidosPage>
                 if (GetStorage().read('estadoPedido') == "nuevo") {
                   Navigator.pushReplacementNamed(context, 'home');
                 } else {
-                  showExitEditOrderConfirmation(context,
-                      "Estás editando un pedido. Si sales, perderás los cambios.\n\n¿Deseas salir definitivamente?");
+                  showExitEditOrderConfirmation(
+                    context,
+                    "Estás editando un pedido. Si sales, perderás los cambios.\n\n¿Deseas salir definitivamente?",
+                  );
                 }
               },
             ),
@@ -144,7 +155,7 @@ class _PedidosPageState extends State<PedidosPage>
                   delegate: CustomSearchDelegate(),
                 );
               },
-              title: Text(
+              title: const Text(
                 'Buscar ítems',
                 style: TextStyle(color: Colors.white),
               ),
@@ -183,7 +194,7 @@ class _PedidosPageState extends State<PedidosPage>
               formulario(context),
               items(context),
               detalle(context),
-              total(context)
+              total(context),
             ],
           ),
         ),
@@ -195,10 +206,10 @@ class _PedidosPageState extends State<PedidosPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (_) {
         return AlertDialog(
           title: Row(
-            children: [
+            children: const [
               Icon(
                 Icons.error,
                 color: Colors.orange,
@@ -212,53 +223,47 @@ class _PedidosPageState extends State<PedidosPage>
             ElevatedButton(
               onPressed: () {
                 storage.remove('itemsPedido');
+
+                Navigator.of(context, rootNavigator: true).pop();
                 Navigator.pushReplacementNamed(context, 'home');
               },
-              child: Text('Si'),
+              child: const Text('Si'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('No'),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+              child: const Text('No'),
             ),
           ],
         );
       },
-    ); /*.then(
-      (value) {
-        setState(
-          () {
-            btnPedidoActivo = false;
-            btnGuardarActivo = false;
-          },
-        );
-      },
-    );*/
+    );
   }
 
   Future<void> _listarItems() async {
-    if (GetStorage().read('items') == null) {
-      final String apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
-              empresa +
-              '?slpcode=' +
-              usuario;
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      final data = resp["content"];
-      if (!mounted) return;
-      setState(() {
-        _items = data;
+    final cachedItems = GetStorage().read('items');
 
-        /// GUARDAR EN SHAREDPREFERENCES MIENTRAS SE HACE CON SQL
-        //String itemsG = jsonEncode(_items);
-        storage.write('items', _items);
-        //_guardarItems();
-      });
-    } else {
-      _items = GetStorage().read('items');
+    if (cachedItems != null) {
+      _items = cachedItems;
+      return;
     }
+
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
+            empresa +
+            '?slpcode=' +
+            usuario;
+
+    final response = await http.get(Uri.parse(apiUrl));
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+    final data = resp["content"];
+
+    if (!mounted) return;
+
+    setState(() {
+      _items = data;
+    });
+
+    storage.write('items', data);
   }
 
   int findItemIndex(List<dynamic> list, dynamic item) {
@@ -284,7 +289,7 @@ class _PedidosPageState extends State<PedidosPage>
     List direccionesTemp = [];
     final numberFormat = new NumberFormat.simpleCurrency();
 
-    /// DIRECCIONES DE ENVIO
+    // DIRECCIONES DE ENVIO
     if (GetStorage().read('datosClientes') == null) {
     } else {
       clientesGuardados = GetStorage().read('datosClientes');
@@ -553,66 +558,76 @@ class _PedidosPageState extends State<PedidosPage>
 
   @override
   Widget items(BuildContext context) {
-    return FutureBuilder(
-      future: _listarItems(),
+    return FutureBuilder<void>(
+      future: _itemsFuture,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SafeArea(
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const SafeArea(
+            child: Center(child: Text('Error cargando ítems')),
+          );
+        }
+
+        if (_items.isEmpty) {
+          return const SafeArea(
+            child: Center(child: Text('No hay ítems para mostrar')),
+          );
+        }
+
         return SafeArea(
           child: ListView.builder(
             itemCount: _items.length,
             itemBuilder: (context, index) {
+              final item = _items[index];
               return Card(
                 child: Padding(
-                  padding: EdgeInsets.all(1),
+                  padding: const EdgeInsets.all(1),
                   child: Container(
-                    color: Color.fromRGBO(250, 251, 253, 1),
+                    color: const Color.fromRGBO(250, 251, 253, 1),
                     child: ListTile(
                       title: Text(
-                        _items[index]['itemName'],
-                        style: TextStyle(
-                          fontSize: 15,
-                        ),
+                        item['itemName'],
+                        style: const TextStyle(fontSize: 15),
                       ),
                       subtitle: Text(
-                        "Sku: " + _items[index]['itemCode'],
-                        style: TextStyle(
-                          fontSize: 13,
-                        ),
+                        'Sku: ${item['itemCode']}',
+                        style: const TextStyle(fontSize: 13),
                       ),
                       leading: GestureDetector(
                         onTap: () {
-                          urlImagenItem = _items[index]['pictureUrl'];
+                          urlImagenItem = item['pictureUrl'];
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) {
-                                return DetailScreen(
-                                  _items[index]['pictureUrl'],
-                                );
-                              },
+                              builder: (_) => DetailScreen(item['pictureUrl']),
                             ),
                           );
                         },
                         child: CachedNetworkImage(
-                          imageUrl: _items[index]['pictureUrl'],
+                          imageUrl: item['pictureUrl'],
                           maxHeightDiskCache: 300,
                           maxWidthDiskCache: 300,
                           memCacheHeight: 300,
                           memCacheWidth: 300,
-                          placeholder: (context, url) =>
-                              CircularProgressIndicator(),
-                          errorWidget: (context, url, error) =>
-                              Icon(Icons.image_not_supported_outlined),
+                          placeholder: (_, __) =>
+                              const CircularProgressIndicator(),
+                          errorWidget: (_, __, ___) =>
+                              const Icon(Icons.image_not_supported_outlined),
                         ),
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.add),
                         onPressed: () {
+                          storage.write("index", index);
+
                           showDialog(
                             context: context,
-                            builder: (_) {
-                              storage.write("index", index);
-                              return MyDialog();
-                            },
+                            builder: (_) => MyDialog(),
                           );
                         },
                       ),
@@ -645,16 +660,16 @@ class MyDialog extends StatefulWidget {
 
 class DetailScreen extends StatelessWidget {
   final String image;
-  const DetailScreen(this.image, {Key? key}) : super(key: key);
+
+  const DetailScreen(this.image, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: GestureDetector(
-        onTap: () {
-          Navigator.pop(context);
-        },
+        behavior: HitTestBehavior.opaque,
+        onTap: () => Navigator.pop(context),
         child: Center(
           child: Hero(
             tag: 'imageHero',
@@ -664,8 +679,8 @@ class DetailScreen extends StatelessWidget {
               maxWidthDiskCache: 300,
               memCacheHeight: 300,
               memCacheWidth: 300,
-              placeholder: (context, url) => const CircularProgressIndicator(),
-              errorWidget: (context, url, error) =>
+              placeholder: (_, __) => const CircularProgressIndicator(),
+              errorWidget: (_, __, ___) =>
                   const Icon(Icons.image_not_supported_outlined),
               fit: BoxFit.contain,
             ),
@@ -682,28 +697,37 @@ class _MyDialogState extends State<MyDialog> {
   List _stock = [];
   List listaItems = [];
   List _inventario = [];
-  GetStorage storage = GetStorage();
+
+  final GetStorage storage = GetStorage();
   bool textoVisible = false;
-  TextEditingController cantidadController = TextEditingController();
+
+  final TextEditingController cantidadController = TextEditingController();
+
   List<dynamic> itemsPedidoLocal = [];
   List<dynamic> itemsPedido = [];
+
   String dropdownvalueBodega = 'Elija una bodega';
-  String empresa = GetStorage().read('empresa');
+  final String empresa = GetStorage().read('empresa');
   String mensaje = "";
+
   bool btnAgregarActivo = false;
   bool btnSoldOutActivo = false;
-  final numberFormat = new NumberFormat.simpleCurrency();
+
+  final NumberFormat numberFormat = NumberFormat.simpleCurrency();
   var whsCodeStockItem;
+
   String zona = "";
-  String usuario = GetStorage().read('usuario');
+  final String usuario = GetStorage().read('usuario');
+
   List _stockFull = [];
   int idPedidoDb = 0;
   int idLocal = 0;
   int fullStock = 0;
-  FocusNode _focusNode = FocusNode();
 
-  Connectivity _connectivity = Connectivity();
-  final itemTemp = {
+  final FocusNode _focusNode = FocusNode();
+  final Connectivity _connectivity = Connectivity();
+
+  final Map<String, dynamic> itemTemp = {
     "quantity": "",
     "itemCode": "",
     "itemName": "",
@@ -715,12 +739,65 @@ class _MyDialogState extends State<MyDialog> {
     "discountPorc": "",
     "iva": ""
   };
-  final actualizarPedidoGuardado = {"id": "", "docNum": ""};
+
+  final Map<String, dynamic> actualizarPedidoGuardado = {
+    "id": "",
+    "docNum": ""
+  };
+
+  List _itemsGuardados = [];
 
   @override
   void initState() {
     super.initState();
     _focusNode.requestFocus();
+
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    // zona
+    zona = GetStorage().read('zona') ?? "01";
+    // index
+    index = GetStorage().read('index') ?? 0;
+    // items
+    await _listarItems();
+    // itemsGuardados cache
+    _itemsGuardados = (GetStorage().read('items') ?? []) as List;
+    // stock
+    _cargarStockDeItemActual();
+
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    cantidadController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _cargarStockDeItemActual() {
+    if (_itemsGuardados.isEmpty) return;
+
+    final stockFullStorage = GetStorage().read('stockFull');
+    if (stockFullStorage == null) return;
+
+    _stockFull = stockFullStorage;
+
+    final List stockTemp = [];
+    for (final j in _stockFull) {
+      if (_itemsGuardados[index]["itemCode"] == j["itemCode"]) {
+        stockTemp.add(j);
+      }
+    }
+
+    _stock = stockTemp;
+
+    if (_stock.isNotEmpty) {
+      _inventario = _stock[0]['stockWarehouses'];
+      fullStock = _stock[0]['stockFull'];
+    }
   }
 
   Future<void> _listarItems() async {
@@ -730,20 +807,17 @@ class _MyDialogState extends State<MyDialog> {
               empresa +
               '?slpcode=' +
               usuario;
-      final response = await http.get(Uri.parse(apiUrl));
-      Map<String, dynamic> resp = jsonDecode(response.body);
-      final data = resp["content"];
-      if (!mounted) return;
-      setState(
-        () {
-          _items = data;
 
-          /// GUARDAR EN SHAREDPREFERENCES MIENTRAS SE HACE CON SQL
-          //String itemsG = jsonEncode(_items);
-          storage.write('items', _items);
-          //_guardarItems();
-        },
-      );
+      final response = await http.get(Uri.parse(apiUrl));
+      final Map<String, dynamic> resp = jsonDecode(response.body);
+      final data = resp["content"];
+
+      if (!mounted) return;
+      setState(() {
+        _items = data;
+      });
+
+      storage.write('items', _items);
     } else {
       _items = GetStorage().read('items');
     }
@@ -758,15 +832,15 @@ class _MyDialogState extends State<MyDialog> {
             '&whscode=' +
             whsCode +
             '&slpcode=0';
+
     final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
-    final codigoError = resp["code"];
-    if (codigoError == 0) {
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+
+    if (resp["code"] == 0) {
       final data = resp["content"];
       return data[0]['stockFull'];
-    } else {
-      return 0;
     }
+    return 0;
   }
 
   bool isDigit(String character) {
@@ -774,60 +848,32 @@ class _MyDialogState extends State<MyDialog> {
   }
 
   bool areAllCharactersNumbers(String text) {
-    if (text.isEmpty) {
-      return false;
-    }
+    if (text.isEmpty) return false;
 
     for (int i = 0; i < text.length; i++) {
-      if (!isDigit(text[i])) {
-        return false;
-      }
+      if (!isDigit(text[i])) return false;
     }
     return true;
   }
 
   Future<void> insertItemDb(Item newItem) async {
-    // Supongamos que tienes un objeto de tipo Item que quieres insertar en la base de datos
-    // Insertar el nuevo item en la base de datos
-    DatabaseHelper dbHelper = DatabaseHelper();
-    int insertedItemId = await dbHelper.insertItem(newItem);
+    final DatabaseHelper dbHelper = DatabaseHelper();
+    final int insertedItemId = await dbHelper.insertItem(newItem);
     idLocal = insertedItemId;
-    if (insertedItemId > 0) {
-      //print("El item ha sido insertado con éxito con el ID: $insertedItemId");
-    }
   }
 
   Future<void> listarItemDb() async {
-    DatabaseHelper dbHelper = DatabaseHelper();
-    List<Item> items = await dbHelper.getItems();
-
-    if (items.isNotEmpty) {
-      for (Item item in items) {
-        // print("ID: ${item.id}");
-        // print("ID Pedido: ${item.idPedido}");
-        // print("Quantity: ${item.quantity}");
-        // print("--------------------------");
-      }
-    }
+    final DatabaseHelper dbHelper = DatabaseHelper();
+    await dbHelper.getItems();
   }
 
   Future<void> listarPedidos() async {
-    DatabaseHelper dbHelper = DatabaseHelper();
-    List<Pedido> pedidos = await dbHelper.getPedidos();
-
-    if (pedidos.isNotEmpty) {
-      for (Pedido pedido in pedidos) {
-        //print("ID: ${pedido.id}");
-        //print("Cardcode: ${pedido.cardCode}");
-        //print("Nombre: ${pedido.cardName}");
-        // ... Mostrar los demás atributos del item ...
-        //print("--------------------------");
-      }
-    }
+    final DatabaseHelper dbHelper = DatabaseHelper();
+    await dbHelper.getPedidos();
   }
 
   Future<void> insertPedidoDb() async {
-    Pedido newPedido = Pedido(
+    final Pedido newPedido = Pedido(
       cardCode: "C12345",
       cardName: "Cliente Ejemplo",
       comments: "Pedido de prueba",
@@ -842,31 +888,24 @@ class _MyDialogState extends State<MyDialog> {
       detailSalesOrder: "Detalle del pedido",
     );
 
-    // Insertar el nuevo pedido en la base de datos y obtener el ID asignado
-    DatabaseHelper dbHelper = DatabaseHelper();
-    int insertedPedidoId = await dbHelper.insertPedido(newPedido);
-
-    if (insertedPedidoId > 0) {
-      //print("El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
-    } else {
-      //print("Error al insertar el pedido en la base de datos");
-    }
+    final DatabaseHelper dbHelper = DatabaseHelper();
+    final int insertedPedidoId = await dbHelper.insertPedido(newPedido);
     idPedidoDb = insertedPedidoId;
   }
 
   Future<bool> checkConnectivity() async {
-    var connectivityResult = await _connectivity.checkConnectivity();
+    final connectivityResult = await _connectivity.checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
   }
 
   Future<http.Response> _addItemSoldOut(String itemCode, String itemName,
       int quantity, String origen, String whsName) {
-    final String apiUrl =
+    const String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/add-item-sold-out';
 
     return http.post(
       Uri.parse(apiUrl),
-      headers: <String, String>{'Content-Type': 'application/json'},
+      headers: const <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
           "itemCode": itemCode,
@@ -875,134 +914,121 @@ class _MyDialogState extends State<MyDialog> {
           "slpCode": usuario,
           "companyName": empresa,
           "origen": origen,
-          "whsName": whsName
+          "whsName": whsName,
         },
       ),
     );
   }
 
+  void _setMensajeEstado({
+    required String msg,
+    required bool visible,
+    required bool agregar,
+    required bool soldOut,
+    String? limpiarCantidad,
+  }) {
+    setState(() {
+      mensaje = msg;
+      textoVisible = visible;
+      btnAgregarActivo = agregar;
+      btnSoldOutActivo = soldOut;
+      if (limpiarCantidad != null) {
+        cantidadController.text = limpiarCantidad;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_itemsGuardados.isEmpty) {
+      return const AlertDialog(
+        backgroundColor: Colors.white,
+        content: SizedBox(
+          height: 80,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
     var bodegas = [''];
     bool isVisibleBod = false;
     bool alertItemAdd = false;
     int cantItemAdd = 0;
 
-    if (GetStorage().read('items') == null) {
-      _listarItems();
-    } else {
-      itemsGuardados = GetStorage().read('items');
-    }
-
-    if (GetStorage().read('zona') == null) {
-      zona = "01";
-    } else {
-      zona = GetStorage().read('zona');
-    }
-
-    if (GetStorage().read('index') == null) {
-      index = 0;
-    } else {
-      index = GetStorage().read('index');
-    }
-    //Activar seleccion de bodega para las llantas
-    if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-        itemsGuardados[index]["marca"] == 'XCELINK') {
+    // Activar seleccion de bodega para las llantas
+    if (_itemsGuardados[index]["grupo"] == 'LLANTAS' &&
+        _itemsGuardados[index]["marca"] == 'XCELINK') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
       isVisibleBod = true;
     }
-    //Activar seleccion de bodega para los lubricantes de REVO bodega 35-MAGNUN BOGOTA, 55-GLOBAL OIL y 01-CEDI MEDELLÍN
-    if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
-        itemsGuardados[index]["marca"] == 'REVO LUBRICANTES') {
+
+    // Activar seleccion de bodega para los lubricantes REVO
+    if (_itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
+        _itemsGuardados[index]["marca"] == 'REVO LUBRICANTES') {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ', 'COTA'];
       isVisibleBod = true;
     }
-    //Activar seleccion de bodega para las llantas TIMSUN bodega 35-MAGNUN BOGOTA, 26-MAGNUN CALI, 05-MAGNUM CARTAGENA y 45-ALMAVIVA MEDELLÍN
-    if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-        itemsGuardados[index]["marca"] == 'TIMSUN') {
+
+    // Activar seleccion de bodega para las llantas TIMSUN
+    if (_itemsGuardados[index]["grupo"] == 'LLANTAS' &&
+        _itemsGuardados[index]["marca"] == 'TIMSUN') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ', 'MEDELLÍN'];
       isVisibleBod = true;
     }
 
-    if (itemsGuardados.length > 0) {
-      List _stockTemp = [];
-      if (GetStorage().read('stockFull') != null) {
-        _stockFull = GetStorage().read('stockFull');
-        _stockFull.forEach(
-          (j) {
-            if (itemsGuardados[index]["itemCode"] == j["itemCode"]) {
-              _stockTemp.add(j);
-            }
-          },
-        );
-        setState(
-          () {
-            _stock = _stockTemp;
-          },
-        );
+    // Validar si ya existe el item en itemsPedido (solo para mostrar icono)
+    final itemsPedidoSaved = GetStorage().read('itemsPedido');
+    if (itemsPedidoSaved != null) {
+      final List<dynamic> itemsAddDetail = itemsPedidoSaved;
+      for (final j in itemsAddDetail) {
+        if (_itemsGuardados[index]["itemCode"] == j["itemCode"]) {
+          cantItemAdd = int.parse(j["quantity"]);
+          alertItemAdd = true;
+          break;
+        }
       }
     }
 
-    if (GetStorage().read('itemsPedido') != null) {
-      List<dynamic> itemsAddDetail = GetStorage().read('itemsPedido');
-      itemsAddDetail.forEach(
-        (j) {
-          if (itemsGuardados[index]["itemCode"] == j["itemCode"]) {
-            cantItemAdd = int.parse(j["quantity"]);
-            alertItemAdd = true;
-          }
-        },
-      );
-    }
-
-    if (_stock.length > 0) {
-      if (!isVisibleBod) {
-        _inventario = _stock[0]['stockWarehouses'];
-        fullStock = _stock[0]['stockFull'];
-      }
+    // Calcular stock si no requiere bodega seleccionable
+    if (_stock.isNotEmpty && !isVisibleBod) {
+      _inventario = _stock[0]['stockWarehouses'];
+      fullStock = _stock[0]['stockFull'];
     }
 
     num stockSuma = 0;
-    for (var bodega in _inventario) {
+    for (final bodega in _inventario) {
       if (bodega['quantity'] > 0 && bodega['whsCode'] == zona) {
         whsCodeStockItem = bodega['whsCode'];
         fullStock = bodega['quantity'];
       } else {
-        whsCodeStockItem = itemsGuardados[index]["whsCode"];
+        whsCodeStockItem = _itemsGuardados[index]["whsCode"];
         stockSuma = stockSuma + bodega['quantity'];
       }
     }
 
-    String precioTxt = numberFormat.format(itemsGuardados[index]['price']);
+    String precioTxt = numberFormat.format(_itemsGuardados[index]['price']);
     if (precioTxt.contains('.')) {
-      int decimalIndex = precioTxt.indexOf('.');
-      precioTxt = precioTxt.substring(0, decimalIndex);
+      precioTxt = precioTxt.substring(0, precioTxt.indexOf('.'));
     }
 
     return AlertDialog(
       backgroundColor: Colors.white,
       title: Text(
-        itemsGuardados[index]['itemName'],
-        style: TextStyle(fontSize: 14),
+        _itemsGuardados[index]['itemName'],
+        style: const TextStyle(fontSize: 14),
       ),
       actions: <Widget>[
-        Divider(),
-        SizedBox(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (alertItemAdd) Text(cantItemAdd.toString() + ' '),
-              if (alertItemAdd) Icon(Icons.verified_outlined),
-              Text('          Sku: ' + itemsGuardados[index]['itemCode']),
-            ],
-          ),
+        const Divider(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if (alertItemAdd) Text('$cantItemAdd '),
+            if (alertItemAdd) const Icon(Icons.verified_outlined),
+            Text('          Sku: ' + _itemsGuardados[index]['itemCode']),
+          ],
         ),
-        SizedBox(
-          child: Text('Stock: ' + fullStock.toString()),
-        ),
-        SizedBox(
-          child: Text('Precio: ' + precioTxt),
-        ),
+        Text('Stock: $fullStock'),
+        Text('Precio: $precioTxt'),
         SizedBox(
           width: 250,
           child: isVisibleBod
@@ -1012,169 +1038,151 @@ class _MyDialogState extends State<MyDialog> {
                       ? dropdownvalueBodega
                       : null,
                   onChanged: (String? newValue) async {
-                    dropdownvalueBodega = newValue.toString();
-                    if (dropdownvalueBodega.length > 0) {
-                      var whsCode = '';
-                      switch (dropdownvalueBodega) {
-                        case 'CARTAGENA':
-                          if (empresa == 'VARROC') {
-                            whsCode = '13';
-                          } else {
-                            whsCode = '05';
-                          }
-                          break;
-                        case 'CALI':
-                          whsCode = '26';
-                          break;
-                        case 'MEDELLÍN':
-                          if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-                              itemsGuardados[index]["marca"] == 'TIMSUN') {
-                            whsCode = '45';
-                          } else if (itemsGuardados[index]["subgrupo"] ==
-                                  'LUBRICANTES' &&
-                              itemsGuardados[index]["marca"] ==
-                                  'REVO LUBRICANTES') {
-                            whsCode = '01';
-                          }
-                          break;
-                        case 'BOGOTÁ':
-                          whsCode = '35';
-                          break;
-                        case 'COTA':
-                          whsCode = '55';
-                          break;
-                        default:
+                    if (newValue == null) return;
+
+                    dropdownvalueBodega = newValue;
+
+                    var whsCode = '';
+                    switch (dropdownvalueBodega) {
+                      case 'CARTAGENA':
+                        whsCode = (empresa == 'VARROC') ? '13' : '05';
+                        break;
+                      case 'CALI':
+                        whsCode = '26';
+                        break;
+                      case 'MEDELLÍN':
+                        if (_itemsGuardados[index]["grupo"] == 'LLANTAS' &&
+                            _itemsGuardados[index]["marca"] == 'TIMSUN') {
+                          whsCode = '45';
+                        } else if (_itemsGuardados[index]["subgrupo"] ==
+                                'LUBRICANTES' &&
+                            _itemsGuardados[index]["marca"] ==
+                                'REVO LUBRICANTES') {
                           whsCode = '01';
-                          break;
-                      }
-                      int stock = await _getStockByItemAndWhsCode(
-                          itemsGuardados[index]['itemCode'], whsCode);
-                      setState(
-                        () {
-                          mensaje = '';
-                          textoVisible = false;
-                          fullStock = stock;
-                          whsCodeStockItem = whsCode;
-                        },
-                      );
+                        } else {
+                          whsCode = '01';
+                        }
+                        break;
+                      case 'BOGOTÁ':
+                        whsCode = '35';
+                        break;
+                      case 'COTA':
+                        whsCode = '55';
+                        break;
+                      default:
+                        whsCode = '01';
+                        break;
                     }
-                    setState(
-                      () {
-                        dropdownvalueBodega = newValue!;
-                      },
+
+                    final int stock = await _getStockByItemAndWhsCode(
+                      _itemsGuardados[index]['itemCode'],
+                      whsCode,
                     );
+
+                    if (!mounted) return;
+                    setState(() {
+                      mensaje = '';
+                      textoVisible = false;
+                      fullStock = stock;
+                      whsCodeStockItem = whsCode;
+                    });
                   },
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                  ),
-                  items: bodegas.map(
-                    (String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(value),
-                        ),
-                      );
-                    },
-                  ).toList(),
+                  style: const TextStyle(color: Colors.black, fontSize: 14),
+                  items: bodegas.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(value),
+                      ),
+                    );
+                  }).toList(),
                 )
-              : Container(),
+              : const SizedBox.shrink(),
         ),
-        SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10),
         SizedBox(
           width: 250,
           height: 35,
           child: TextField(
+            controller: cantidadController,
+            focusNode: _focusNode,
+            keyboardType: TextInputType.number,
             onChanged: (text) {
-              if (empresa != "REDPLAS") {
-                RegExp regex = RegExp(r'0+[1-9]');
-                if (text.length == 0) {
-                  setState(
-                    () {
-                      btnAgregarActivo = false;
-                      btnSoldOutActivo = false;
-                    },
-                  );
-                }
-                if (text.isEmpty) {
-                  btnAgregarActivo = false;
-                } else {
-                  if (!areAllCharactersNumbers(text)) {
-                    setState(
-                      () {
-                        mensaje = "Cantidad debe ser numérica";
-                        textoVisible = true;
-                        btnAgregarActivo = false;
-                        btnSoldOutActivo = false;
-                      },
-                    );
-                  } else {
-                    final regex = RegExp(r'^(0|[1-9][0-9]*)$');
-                    if (!regex.hasMatch(text)) {
-                      setState(
-                        () {
-                          mensaje = "Cantidad contiene 0 a la izq";
-                          textoVisible = true;
-                          btnAgregarActivo = false;
-                          btnSoldOutActivo = false;
-                        },
-                      );
-                    } else {
-                      if (int.parse(text) < 1) {
-                        setState(
-                          () {
-                            mensaje = "Cantidad debe ser mayor a 0";
-                            textoVisible = true;
-                            btnAgregarActivo = false;
-                            btnSoldOutActivo = false;
-                          },
-                        );
-                      } else {
-                        if (int.parse(text) > fullStock) {
-                          setState(
-                            () {
-                              mensaje = "Cantidad es mayor al stock";
-                              textoVisible = true;
-                              btnAgregarActivo = false;
-                              btnSoldOutActivo = true;
-                            },
-                          );
-                        } else {
-                          setState(
-                            () {
-                              mensaje = "";
-                              textoVisible = false;
-                              btnAgregarActivo = true;
-                              btnSoldOutActivo = false;
-                            },
-                          );
-                        }
-                      }
-                    }
-                  }
-                }
-              } else {
-                setState(
-                  () {
-                    mensaje = "";
-                    textoVisible = false;
-                    btnAgregarActivo = true;
-                  },
+              if (empresa == "REDPLAS") {
+                _setMensajeEstado(
+                  msg: "",
+                  visible: false,
+                  agregar: true,
+                  soldOut: false,
                 );
+                return;
               }
+
+              if (text.isEmpty) {
+                _setMensajeEstado(
+                  msg: "",
+                  visible: false,
+                  agregar: false,
+                  soldOut: false,
+                );
+                return;
+              }
+
+              if (!areAllCharactersNumbers(text)) {
+                _setMensajeEstado(
+                  msg: "Cantidad debe ser numérica",
+                  visible: true,
+                  agregar: false,
+                  soldOut: false,
+                );
+                return;
+              }
+
+              final regex = RegExp(r'^(0|[1-9][0-9]*)$');
+              if (!regex.hasMatch(text)) {
+                _setMensajeEstado(
+                  msg: "Cantidad contiene 0 a la izq",
+                  visible: true,
+                  agregar: false,
+                  soldOut: false,
+                );
+                return;
+              }
+
+              final int cant = int.tryParse(text) ?? 0;
+
+              if (cant < 1) {
+                _setMensajeEstado(
+                  msg: "Cantidad debe ser mayor a 0",
+                  visible: true,
+                  agregar: false,
+                  soldOut: false,
+                );
+                return;
+              }
+
+              if (cant > fullStock) {
+                _setMensajeEstado(
+                  msg: "Cantidad es mayor al stock",
+                  visible: true,
+                  agregar: false,
+                  soldOut: true,
+                );
+                return;
+              }
+
+              _setMensajeEstado(
+                msg: "",
+                visible: false,
+                agregar: true,
+                soldOut: false,
+              );
             },
             style: const TextStyle(color: Colors.black),
-            controller: cantidadController,
-            keyboardType: TextInputType.text,
-            focusNode: _focusNode,
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
-              //hintText: 'Por favor ingrese cantidad',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(5.0),
               ),
@@ -1186,314 +1194,177 @@ class _MyDialogState extends State<MyDialog> {
             ),
           ),
         ),
-        SizedBox(
-          height: 5,
-        ),
+        const SizedBox(height: 5),
         Visibility(
           visible: textoVisible,
           child: Center(
             child: Material(
               elevation: 5,
               color: Colors.grey,
-              borderRadius: BorderRadius.horizontal(),
-              child: Container(
+              borderRadius: const BorderRadius.horizontal(),
+              child: SizedBox(
                 width: 300,
                 height: 30,
                 child: Center(
                   child: Text(
                     mensaje,
-                    style: TextStyle(fontSize: 15),
+                    style: const TextStyle(fontSize: 15),
                   ),
                 ),
               ),
             ),
           ),
         ),
-        Divider(),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(
-                    Icomoon.soldOut,
-                  ),
-                  color: Colors.black,
-                  iconSize: 36,
-                  onPressed: btnSoldOutActivo
-                      ? () async {
-                          var whsName =
-                              dropdownvalueBodega == 'Elija una bodega'
-                                  ? 'CEDI'
-                                  : dropdownvalueBodega;
+        const Divider(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icomoon.soldOut),
+              color: Colors.black,
+              iconSize: 36,
+              onPressed: btnSoldOutActivo
+                  ? () async {
+                      final whsName = dropdownvalueBodega == 'Elija una bodega'
+                          ? 'CEDI'
+                          : dropdownvalueBodega;
 
-                          try {
-                            http.Response response = await _addItemSoldOut(
-                                itemsGuardados[index]['itemCode'],
-                                itemsGuardados[index]['itemName'],
-                                int.parse(cantidadController.text),
-                                "PEDIDO",
-                                whsName);
-                            bool res = jsonDecode(response.body);
+                      try {
+                        final http.Response response = await _addItemSoldOut(
+                          _itemsGuardados[index]['itemCode'],
+                          _itemsGuardados[index]['itemName'],
+                          int.parse(cantidadController.text),
+                          "PEDIDO",
+                          whsName,
+                        );
+                        final bool res = jsonDecode(response.body);
 
-                            if (res) {
-                              setState(
-                                () {
-                                  mensaje = "Agotado reportado con éxito";
-                                  textoVisible = true;
-                                  btnAgregarActivo = false;
-                                  btnSoldOutActivo = false;
-                                  cantidadController.text = "";
-                                },
-                              );
-                            } else {
-                              setState(
-                                () {
-                                  mensaje = "No se pudo reportar el agotado";
-                                  textoVisible = true;
-                                  btnAgregarActivo = false;
-                                  btnSoldOutActivo = true;
-                                  cantidadController.text = "";
-                                },
-                              );
-                            }
-                          } catch (e) {
-                            setState(
-                              () {
-                                mensaje = "No se pudo reportar el agotado";
-                                textoVisible = true;
-                                btnAgregarActivo = false;
-                                btnSoldOutActivo = true;
-                                cantidadController.text = "";
-                              },
-                            );
+                        if (res) {
+                          _setMensajeEstado(
+                            msg: "Agotado reportado con éxito",
+                            visible: true,
+                            agregar: false,
+                            soldOut: false,
+                            limpiarCantidad: "",
+                          );
+                        } else {
+                          _setMensajeEstado(
+                            msg: "No se pudo reportar el agotado",
+                            visible: true,
+                            agregar: false,
+                            soldOut: true,
+                            limpiarCantidad: "",
+                          );
+                        }
+                      } catch (_) {
+                        _setMensajeEstado(
+                          msg: "No se pudo reportar el agotado",
+                          visible: true,
+                          agregar: false,
+                          soldOut: true,
+                          limpiarCantidad: "",
+                        );
+                      }
+                    }
+                  : null,
+            ),
+            const SizedBox(width: 100),
+            IconButton(
+              icon: const FaIcon(FontAwesomeIcons.basketShopping),
+              color: Colors.black,
+              iconSize: 33,
+              onPressed: btnAgregarActivo
+                  ? () {
+                      if (isVisibleBod &&
+                          (dropdownvalueBodega.isEmpty ||
+                              dropdownvalueBodega == 'Elija una bodega')) {
+                        _setMensajeEstado(
+                          msg: "Elija una bodega",
+                          visible: true,
+                          agregar: true,
+                          soldOut: false,
+                        );
+                        return;
+                      }
+
+                      itemTemp["quantity"] = cantidadController.text;
+                      itemTemp["itemCode"] = _itemsGuardados[index]["itemCode"];
+                      itemTemp["itemName"] = _itemsGuardados[index]["itemName"];
+                      itemTemp["group"] = _itemsGuardados[index]["grupo"];
+                      itemTemp["presentation"] =
+                          _itemsGuardados[index]["presentation"] ?? "";
+                      itemTemp["price"] =
+                          _itemsGuardados[index]["price"].toString();
+                      itemTemp["discountItem"] =
+                          _itemsGuardados[index]["discountItem"].toString();
+                      itemTemp["discountPorc"] =
+                          _itemsGuardados[index]["discountPorc"].toString();
+                      itemTemp["whsCode"] = whsCodeStockItem == null
+                          ? "01"
+                          : whsCodeStockItem.toString();
+                      itemTemp["iva"] =
+                          _itemsGuardados[index]["iva"].toString();
+
+                      itemsPedido.add(Map<String, dynamic>.from(itemTemp));
+
+                      final int precioI = _itemsGuardados[index]["price"];
+                      final double precioD = precioI.toDouble();
+                      final int discountI =
+                          _itemsGuardados[index]["discountPorc"];
+                      final double discountD = discountI.toDouble();
+                      final int discountItemI =
+                          _itemsGuardados[index]["discountItem"];
+                      final double discountItemD = discountItemI.toDouble();
+                      final int ivaI = _itemsGuardados[index]["iva"];
+                      final double ivaD = ivaI.toDouble();
+
+                      final Item newItem = Item(
+                        idPedido: idPedidoDb,
+                        quantity: int.parse(cantidadController.text),
+                        itemCode: _itemsGuardados[index]["itemCode"],
+                        itemName: _itemsGuardados[index]["itemName"],
+                        grupo: _itemsGuardados[index]["grupo"],
+                        whsCode: whsCodeStockItem,
+                        presentation: _itemsGuardados[index]["presentation"],
+                        price: precioD,
+                        discountItem: discountItemD,
+                        discountPorc: discountD,
+                        iva: ivaD,
+                      );
+
+                      insertItemDb(newItem);
+                      listarItemDb();
+
+                      final saved = GetStorage().read('itemsPedido');
+                      if (saved == null) {
+                        storage.write('itemsPedido', itemsPedido);
+                      } else {
+                        itemsPedidoLocal = saved;
+
+                        int repetido = 0;
+                        for (final j in itemsPedidoLocal) {
+                          if (itemTemp["itemCode"] == j["itemCode"] &&
+                              itemTemp["whsCode"] == j["whsCode"]) {
+                            final int cant = int.parse(j["quantity"]!) +
+                                int.parse(itemTemp["quantity"]!);
+                            j["quantity"] = cant.toString();
+                            repetido = 1;
+                            break;
                           }
                         }
-                      : null,
-                ),
-                SizedBox(
-                  width: 100,
-                ),
-                IconButton(
-                  icon: const FaIcon(
-                    FontAwesomeIcons.basketShopping,
-                  ),
-                  color: Colors.black,
-                  iconSize: 33,
-                  onPressed: btnAgregarActivo
-                      ? () {
-                          if (isVisibleBod) {
-                            if (dropdownvalueBodega == '' ||
-                                dropdownvalueBodega == 'Elija una bodega') {
-                              setState(
-                                () {
-                                  mensaje = "Elija una bodega";
-                                  textoVisible = true;
-                                  btnAgregarActivo = true;
-                                },
-                              );
-                            } else {
-                              setState(
-                                () {
-                                  //// AGREGAR ITEM AL PEDIDO
-                                  itemTemp["quantity"] =
-                                      cantidadController.text;
-                                  itemTemp["itemCode"] =
-                                      itemsGuardados[index]["itemCode"];
-                                  itemTemp["itemName"] =
-                                      itemsGuardados[index]["itemName"];
-                                  itemTemp["group"] =
-                                      itemsGuardados[index]["grupo"];
-                                  if (itemsGuardados[index]["presentation"] !=
-                                      null) {
-                                    itemTemp["presentation"] =
-                                        itemsGuardados[index]["presentation"];
-                                  } else {
-                                    itemTemp["presentation"] = "";
-                                  }
-                                  itemTemp["price"] =
-                                      itemsGuardados[index]["price"].toString();
-                                  itemTemp["discountItem"] =
-                                      itemsGuardados[index]["discountItem"]
-                                          .toString();
-                                  itemTemp["discountPorc"] =
-                                      itemsGuardados[index]["discountPorc"]
-                                          .toString();
-                                  itemTemp["whsCode"] = whsCodeStockItem == null
-                                      ? "01"
-                                      : whsCodeStockItem.toString();
-                                  itemTemp["iva"] =
-                                      itemsGuardados[index]["iva"].toString();
-                                  itemsPedido.add(itemTemp);
 
-                                  int precioI = itemsGuardados[index]["price"];
-                                  double precioD = precioI.toDouble();
-                                  int discountI =
-                                      itemsGuardados[index]["discountPorc"];
-                                  double discountD = discountI.toDouble();
-                                  int discountItemI =
-                                      itemsGuardados[index]["discountItem"];
-                                  double discountItemD =
-                                      discountItemI.toDouble();
-                                  int ivaI = itemsGuardados[index]["iva"];
-                                  double ivaD = ivaI.toDouble();
-                                  Item newItem = Item(
-                                    idPedido: idPedidoDb,
-                                    quantity:
-                                        int.parse(cantidadController.text),
-                                    itemCode: itemsGuardados[index]["itemCode"],
-                                    itemName: itemsGuardados[index]["itemName"],
-                                    grupo: itemsGuardados[index]["grupo"],
-                                    whsCode: whsCodeStockItem,
-                                    presentation: itemsGuardados[index]
-                                        ["presentation"],
-                                    price: precioD,
-                                    discountItem: discountItemD,
-                                    discountPorc: discountD,
-                                    iva: ivaD,
-                                  );
-                                  // Insertar el nuevo item en la base de datos
-                                  insertItemDb(newItem);
-
-                                  ///guardar id en map
-                                  // actualizarPedidoGuardado["docNum"]=idLocal.toString();
-                                  // storage.write('actualizarPedidoGuardado', actualizarPedidoGuardado);
-                                  listarItemDb();
-                                  if (GetStorage().read('itemsPedido') ==
-                                      null) {
-                                    storage.write('itemsPedido', itemsPedido);
-                                  } else {
-                                    itemsPedidoLocal =
-                                        GetStorage().read('itemsPedido');
-                                    //// VALIDAR SI EL ITME SELECCIONADO YA ESTÁ,ENTONCES SE SUMA LA CANTIDAD
-                                    int repetido = 0;
-                                    itemsPedidoLocal.forEach(
-                                      (j) {
-                                        if (itemTemp["itemCode"] ==
-                                                j["itemCode"] &&
-                                            itemTemp["whsCode"] ==
-                                                j["whsCode"]) {
-                                          int cant = 0;
-                                          cant = int.parse(j["quantity"]!) +
-                                              int.parse(itemTemp["quantity"]!);
-                                          j["quantity"] = cant.toString();
-                                          repetido = 1;
-                                        }
-                                      },
-                                    );
-                                    if (repetido == 0) {
-                                      itemsPedidoLocal.add(itemTemp);
-                                    }
-                                    storage.write(
-                                        'itemsPedido', itemsPedidoLocal);
-                                  }
-                                  storage.write('index', index);
-                                },
-                              );
-                              Navigator.pop(context);
-                            }
-                          } else {
-                            setState(
-                              () {
-                                //// AGREGAR ITEM AL PEDIDO
-                                itemTemp["quantity"] = cantidadController.text;
-                                itemTemp["itemCode"] =
-                                    itemsGuardados[index]["itemCode"];
-                                itemTemp["itemName"] =
-                                    itemsGuardados[index]["itemName"];
-                                itemTemp["group"] =
-                                    itemsGuardados[index]["grupo"];
-                                if (itemsGuardados[index]["presentation"] !=
-                                    null) {
-                                  itemTemp["presentation"] =
-                                      itemsGuardados[index]["presentation"];
-                                } else {
-                                  itemTemp["presentation"] = "";
-                                }
-                                itemTemp["price"] =
-                                    itemsGuardados[index]["price"].toString();
-                                itemTemp["discountItem"] = itemsGuardados[index]
-                                        ["discountItem"]
-                                    .toString();
-                                itemTemp["discountPorc"] = itemsGuardados[index]
-                                        ["discountPorc"]
-                                    .toString();
-                                itemTemp["whsCode"] = whsCodeStockItem == null
-                                    ? "01"
-                                    : whsCodeStockItem.toString();
-                                itemTemp["iva"] =
-                                    itemsGuardados[index]["iva"].toString();
-                                itemsPedido.add(itemTemp);
-
-                                int precioI = itemsGuardados[index]["price"];
-                                double precioD = precioI.toDouble();
-                                int discountI =
-                                    itemsGuardados[index]["discountPorc"];
-                                double discountD = discountI.toDouble();
-                                int discountItemI =
-                                    itemsGuardados[index]["discountItem"];
-                                double discountItemD = discountItemI.toDouble();
-                                int ivaI = itemsGuardados[index]["iva"];
-                                double ivaD = ivaI.toDouble();
-                                Item newItem = Item(
-                                  idPedido: idPedidoDb,
-                                  quantity: int.parse(cantidadController.text),
-                                  itemCode: itemsGuardados[index]["itemCode"],
-                                  itemName: itemsGuardados[index]["itemName"],
-                                  grupo: itemsGuardados[index]["grupo"],
-                                  whsCode: whsCodeStockItem,
-                                  presentation: itemsGuardados[index]
-                                      ["presentation"],
-                                  price: precioD,
-                                  discountItem: discountItemD,
-                                  discountPorc: discountD,
-                                  iva: ivaD,
-                                );
-                                // Insertar el nuevo item en la base de datos
-                                insertItemDb(newItem);
-
-                                ///guardar id en map
-                                // actualizarPedidoGuardado["docNum"]=idLocal.toString();
-                                // storage.write('actualizarPedidoGuardado', actualizarPedidoGuardado);
-                                listarItemDb();
-                                if (GetStorage().read('itemsPedido') == null) {
-                                  storage.write('itemsPedido', itemsPedido);
-                                } else {
-                                  itemsPedidoLocal =
-                                      GetStorage().read('itemsPedido');
-                                  //// VALIDAR SI EL ITME SELECCIONADO YA ESTÁ,ENTONCES SE SUMA LA CANTIDAD
-                                  int repetido = 0;
-                                  itemsPedidoLocal.forEach(
-                                    (j) {
-                                      if (itemTemp["itemCode"] ==
-                                              j["itemCode"] &&
-                                          itemTemp["whsCode"] == j["whsCode"]) {
-                                        int cant = 0;
-                                        cant = int.parse(j["quantity"]!) +
-                                            int.parse(itemTemp["quantity"]!);
-                                        j["quantity"] = cant.toString();
-                                        repetido = 1;
-                                      }
-                                    },
-                                  );
-                                  if (repetido == 0) {
-                                    itemsPedidoLocal.add(itemTemp);
-                                  }
-                                  storage.write(
-                                      'itemsPedido', itemsPedidoLocal);
-                                }
-                                storage.write('index', index);
-                              },
-                            );
-                            Navigator.pop(context);
-                          }
+                        if (repetido == 0) {
+                          itemsPedidoLocal
+                              .add(Map<String, dynamic>.from(itemTemp));
                         }
-                      : null,
-                ),
-              ],
+
+                        storage.write('itemsPedido', itemsPedidoLocal);
+                      }
+
+                      storage.write('index', index);
+                      Navigator.pop(context);
+                    }
+                  : null,
             ),
           ],
         ),
@@ -1513,24 +1384,28 @@ class _DetallePedidoState extends State<DetallePedido> {
   num subtotalDetalle = 0;
   num iva = 0;
   num totalDetalle = 0;
-  int borrar = 0;
-  final numberFormat = new NumberFormat.simpleCurrency();
-  int cantidadAdicionalItem = 0;
-  GetStorage storage = GetStorage();
-  List _stock2 = [];
-  List _stockFull2 = [];
-  var fullStock = 0;
-  var stockItem;
 
-  void borrarItemDetalle(String item) {
-    itemsPedidoLocal = GetStorage().read('itemsPedido');
-    itemsPedidoLocal.forEach(
-      (j) {
-        if (j['itemCode'] == item) {
-          itemsPedidoLocal.remove(j);
-        }
-      },
-    );
+  final NumberFormat numberFormat = NumberFormat.simpleCurrency();
+  final GetStorage storage = GetStorage();
+
+  List _stockFull2 = [];
+  int fullStock = 0;
+  dynamic stockItem;
+
+  void borrarItemDetalle(String itemCode) {
+    final items = GetStorage().read('itemsPedido');
+    if (items == null) return;
+
+    final List<dynamic> temp = List<dynamic>.from(items);
+
+    temp.removeWhere((e) => e['itemCode'] == itemCode);
+
+    storage.write('itemsPedido', temp);
+
+    setState(() {
+      itemsPedidoLocal = temp;
+      listaItems = List.from(temp);
+    });
   }
 
   void showAlertDetailItems(BuildContext context, String message) {
@@ -1540,11 +1415,8 @@ class _DetallePedidoState extends State<DetallePedido> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Row(
-            children: [
-              Icon(
-                Icons.error,
-                color: Colors.orange,
-              ),
+            children: const [
+              Icon(Icons.error, color: Colors.orange),
               SizedBox(width: 8),
               Text("Atención!"),
             ],
@@ -1552,19 +1424,17 @@ class _DetallePedidoState extends State<DetallePedido> {
           content: Text(message),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("NO"),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("NO"),
             ),
             ElevatedButton(
               onPressed: () {
-                setState(
-                  () {
-                    itemsPedidoLocal.clear();
-                    storage.remove('itemsPedido');
-                  },
-                );
+                setState(() {
+                  itemsPedidoLocal.clear();
+                  listaItems.clear();
+                });
+                storage.remove('itemsPedido');
+
                 Navigator.pop(context);
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -1572,7 +1442,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                   (Route<dynamic> route) => false,
                 );
               },
-              child: Text("SI"),
+              child: const Text("SI"),
             ),
           ],
         );
@@ -1587,11 +1457,8 @@ class _DetallePedidoState extends State<DetallePedido> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Row(
-            children: [
-              Icon(
-                Icons.error,
-                color: Colors.orange,
-              ),
+            children: const [
+              Icon(Icons.error, color: Colors.orange),
               SizedBox(width: 8),
               Text("Atención!"),
             ],
@@ -1599,27 +1466,122 @@ class _DetallePedidoState extends State<DetallePedido> {
           content: Text(message),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("NO"),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("NO"),
             ),
             ElevatedButton(
               onPressed: () {
-                setState(
-                  () {
-                    itemsPedidoLocal.forEach(
-                      (j) {
-                        if (j['itemCode'] == itemCode) {
-                          itemsPedidoLocal.remove(j);
-                        }
-                      },
-                    );
-                  },
-                );
+                borrarItemDetalle(itemCode);
                 Navigator.pop(context);
               },
-              child: Text("SI"),
+              child: const Text("SI"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _zonaActual() {
+    final zona = GetStorage().read('zona');
+    return (zona == null) ? "01" : zona.toString();
+  }
+
+  int _stockDisponibleParaItem(
+      String itemCode, String zona, String whsFallback) {
+    final stockFull = GetStorage().read('stockFull');
+    if (stockFull == null) return 0;
+
+    _stockFull2 = stockFull;
+
+    // Busca el item
+    final List matches =
+        _stockFull2.where((j) => j["itemCode"] == itemCode).toList();
+
+    if (matches.isEmpty) return 0;
+
+    final List inventario = matches[0]['stockWarehouses'];
+    int stockZona = 0;
+
+    for (final bodega in inventario) {
+      if (bodega['whsCode'] == zona && (bodega['quantity'] as num) > 0) {
+        stockItem = bodega['whsCode'];
+        stockZona = (bodega['quantity'] as num).toInt();
+        break;
+      }
+    }
+
+    if (stockZona == 0) {
+      stockItem = whsFallback;
+    }
+
+    return stockZona;
+  }
+
+  void _incrementarCantidad(int index) {
+    final String itemCode = listaItems[index]["itemCode"].toString();
+    final String whsCode = listaItems[index]["whsCode"].toString();
+    final String zona = _zonaActual();
+
+    final int stockZona = _stockDisponibleParaItem(itemCode, zona, whsCode);
+
+    final double actual =
+        double.parse(listaItems[index]['quantity'].toString());
+
+    if (stockZona > 0 && stockZona > actual) {
+      final int nueva = actual.toInt() + 1;
+
+      setState(() {
+        listaItems[index]['quantity'] = nueva.toString();
+      });
+
+      storage.write('itemsPedido', listaItems);
+      storage.write("cantidadItem", 0);
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("No hay stock disponible"),
+          actions: [
+            TextButton(
+              child: const Text("Aceptar"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
+
+    storage.write("cantidadItem", 0);
+  }
+
+  void _decrementarCantidad(int index) {
+    final double actual =
+        double.parse(listaItems[index]['quantity'].toString());
+
+    if (actual > 1) {
+      final int nueva = actual.toInt() - 1;
+
+      setState(() {
+        listaItems[index]['quantity'] = nueva.toString();
+      });
+
+      storage.write('itemsPedido', listaItems);
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("La cantidad de ítems es menor a 1"),
+          actions: [
+            TextButton(
+              child: const Text("Aceptar"),
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ],
         );
@@ -1629,20 +1591,18 @@ class _DetallePedidoState extends State<DetallePedido> {
 
   @override
   Widget build(BuildContext context) {
-    if (GetStorage().read('itemsPedido') == null) {
-      //print("No hay items ");
+    final saved = GetStorage().read('itemsPedido');
+    if (saved != null) {
+      itemsPedidoLocal = List<dynamic>.from(saved);
+      listaItems = List.from(itemsPedidoLocal);
     } else {
-      itemsPedidoLocal = GetStorage().read('itemsPedido');
+      itemsPedidoLocal = [];
       listaItems = [];
-      itemsPedidoLocal.forEach(
-        (j) {
-          listaItems.add(j);
-        },
-      );
     }
+
     return SafeArea(
       child: listaItems.isEmpty
-          ? Text(
+          ? const Text(
               "No se encontraron ítems agregados para mostar",
               textAlign: TextAlign.center,
             )
@@ -1652,7 +1612,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.delete),
+                      icon: const Icon(Icons.delete),
                       onPressed: () {
                         showAlertDetailItems(
                           context,
@@ -1660,7 +1620,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                         );
                       },
                     ),
-                    Text(
+                    const Text(
                       'Borrar todo',
                       style: TextStyle(
                         fontSize: 16.0,
@@ -1673,231 +1633,89 @@ class _DetallePedidoState extends State<DetallePedido> {
                   child: ListView.builder(
                     itemCount: listaItems.length,
                     itemBuilder: (context, index) {
-                      subtotalDetalle =
-                          double.parse(listaItems[index]['price']) *
-                              double.parse(listaItems[index]['quantity']);
-                      iva = (double.parse(listaItems[index]['iva']) *
-                              subtotalDetalle) /
-                          100;
+                      final double price =
+                          double.parse(listaItems[index]['price'].toString());
+                      final double qty = double.parse(
+                          listaItems[index]['quantity'].toString());
+                      final double ivaPct =
+                          double.parse(listaItems[index]['iva'].toString());
+
+                      subtotalDetalle = price * qty;
+                      iva = (ivaPct * subtotalDetalle) / 100;
+                      totalDetalle = subtotalDetalle + iva;
+
                       String ivaTxt = numberFormat.format(iva);
                       ivaTxt = ivaTxt.substring(0, ivaTxt.length - 3);
+
                       String subtotalDetalleTxt =
                           numberFormat.format(subtotalDetalle);
                       subtotalDetalleTxt = subtotalDetalleTxt.substring(
                           0, subtotalDetalleTxt.length - 3);
-                      totalDetalle = subtotalDetalle + iva;
+
                       String totalDetalleTxt =
                           numberFormat.format(totalDetalle);
                       totalDetalleTxt = totalDetalleTxt.substring(
                           0, totalDetalleTxt.length - 3);
-                      int precio = int.parse(listaItems[index]['price']);
-                      String precioTxt = numberFormat.format(precio);
+
+                      final int precioInt = price.toInt();
+                      String precioTxt = numberFormat.format(precioInt);
                       precioTxt = precioTxt.substring(0, precioTxt.length - 3);
+
                       return Card(
                         child: Container(
                           color: Colors.white,
                           child: Padding(
-                            padding: EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.all(16.0),
                             child: Row(
                               children: [
                                 Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     IconButton(
-                                      icon: Icon(Icons.delete),
+                                      icon: const Icon(Icons.delete),
                                       onPressed: () {
                                         showAlertDetailSingleItem(
                                           context,
-                                          listaItems[index]['itemCode'],
+                                          listaItems[index]['itemCode']
+                                              .toString(),
                                           "¿Está seguro de borrar el ítem " +
-                                              listaItems[index]['itemCode'] +
+                                              listaItems[index]['itemCode']
+                                                  .toString() +
                                               "?",
                                         );
                                       },
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.add),
-                                      onPressed: () {
-                                        //////VERIFICAR STOCK
-                                        List _stockTemp = [];
-                                        List _inventario = [];
-                                        var zona = "";
-                                        if (GetStorage().read('zona') == null) {
-                                          zona = "01";
-                                        } else {
-                                          zona = GetStorage().read('zona');
-                                        }
-                                        if (GetStorage().read('stockFull') !=
-                                            null) {
-                                          _stockFull2 =
-                                              GetStorage().read('stockFull');
-                                          _stockFull2.forEach(
-                                            (j) {
-                                              if (listaItems[index]
-                                                      ["itemCode"] ==
-                                                  j["itemCode"]) {
-                                                _stockTemp.add(j);
-                                              }
-                                            },
-                                          );
-                                          setState(
-                                            () {
-                                              _stock2 = _stockTemp;
-                                            },
-                                          );
-                                        }
-                                        if (_stock2.length > 0) {
-                                          _inventario =
-                                              _stock2[0]['stockWarehouses'];
-                                          fullStock = _stock2[0]['stockFull'];
-                                        }
-
-                                        num stockSuma = 0;
-                                        for (var bodega in _inventario) {
-                                          if (bodega['quantity'] > 0 &&
-                                              bodega['whsCode'] == zona) {
-                                            stockItem = bodega['whsCode'];
-                                            fullStock = bodega['quantity'];
-                                          } else
-                                            stockItem =
-                                                listaItems[index]["whsCode"];
-                                          stockSuma =
-                                              stockSuma + bodega['quantity'];
-                                        }
-
-                                        ////FIN VERIFICAR STOCK
-                                        //int nuevaCantidad = int.tryParse(cantAdicional.text) ?? 0;
-                                        double cant1 = 0.0;
-                                        if (fullStock > 0 &&
-                                            fullStock >
-                                                double.parse(listaItems[index]
-                                                    ['quantity'])) {
-                                          cant1 = double.parse(listaItems[index]
-                                                  ['quantity']) +
-                                              1;
-                                          listaItems[index]['quantity'] =
-                                              cant1.toInt().toString();
-                                        } else {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return AlertDialog(
-                                                title: Text(
-                                                    "No hay stock disponible"),
-                                                actions: [
-                                                  TextButton(
-                                                    child: Text("Aceptar"),
-                                                    onPressed: () {
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    },
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          );
-                                        }
-                                        storage.write("cantidadItem", 0);
-                                      },
+                                      icon: const Icon(Icons.add),
+                                      onPressed: () =>
+                                          _incrementarCantidad(index),
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.remove),
-                                      onPressed: () {
-                                        List _stockTemp = [];
-                                        List _inventario = [];
-                                        var zona = "";
-                                        if (GetStorage().read('zona') == null) {
-                                          zona = "01";
-                                        } else {
-                                          zona = GetStorage().read('zona');
-                                        }
-                                        if (GetStorage().read('stockFull') !=
-                                            null) {
-                                          _stockFull2 =
-                                              GetStorage().read('stockFull');
-                                          _stockFull2.forEach(
-                                            (j) {
-                                              if (listaItems[index]
-                                                      ["itemCode"] ==
-                                                  j["itemCode"]) {
-                                                _stockTemp.add(j);
-                                              }
-                                            },
-                                          );
-                                          setState(
-                                            () {
-                                              _stock2 = _stockTemp;
-                                            },
-                                          );
-                                        }
-                                        if (_stock2.length > 0) {
-                                          _inventario =
-                                              _stock2[0]['stockWarehouses'];
-                                          fullStock = _stock2[0]['stockFull'];
-                                        }
-
-                                        num stockSuma = 0;
-                                        for (var bodega in _inventario) {
-                                          if (bodega['quantity'] > 0 &&
-                                              bodega['whsCode'] == zona) {
-                                            stockItem = bodega['whsCode'];
-                                            fullStock = bodega['quantity'];
-                                          } else {
-                                            stockItem =
-                                                listaItems[index]["whsCode"];
-                                            stockSuma =
-                                                stockSuma + bodega['quantity'];
-                                          }
-                                        }
-                                        ////FIN VERIFICAR STOCK
-                                        double cant1 = 0.0;
-                                        cant1 = double.parse(
-                                            listaItems[index]['quantity']);
-                                        if (cant1 > 1) {
-                                          cant1 = cant1 - 1;
-                                          listaItems[index]['quantity'] =
-                                              cant1.toInt().toString();
-                                        } else {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return AlertDialog(
-                                                title: Text(
-                                                  "La cantidad de ítems es menor a 1",
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                    child: Text("Aceptar"),
-                                                    onPressed: () {
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    },
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          );
-                                        }
-                                      },
+                                      icon: const Icon(Icons.remove),
+                                      onPressed: () =>
+                                          _decrementarCantidad(index),
                                     ),
                                   ],
                                 ),
-                                SizedBox(width: 16.0),
+                                const SizedBox(width: 16.0),
                                 Expanded(
                                   child: Text(
-                                    listaItems[index]['itemName'] +
+                                    listaItems[index]['itemName'].toString() +
                                         '\n' +
                                         'Sku: ' +
-                                        listaItems[index]['itemCode'] +
+                                        listaItems[index]['itemCode']
+                                            .toString() +
                                         '\n' +
                                         'Precio: ' +
                                         precioTxt +
                                         '\n' +
                                         'Cant: ' +
-                                        listaItems[index]['quantity'] +
+                                        listaItems[index]['quantity']
+                                            .toString() +
                                         '\n' +
                                         'Bodega: ' +
-                                        listaItems[index]['whsCode'] +
+                                        listaItems[index]['whsCode']
+                                            .toString() +
                                         '\n' +
                                         'Subtotal: ' +
                                         subtotalDetalleTxt +
@@ -1907,8 +1725,9 @@ class _DetallePedidoState extends State<DetallePedido> {
                                         '\n' +
                                         'Total: ' +
                                         totalDetalleTxt,
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -1931,53 +1750,50 @@ class TotalPedido extends StatefulWidget {
 }
 
 class _TotalPedidoState extends State<TotalPedido> {
-  TextEditingController observacionesController = TextEditingController();
-  GetStorage storage = GetStorage();
-  String empresa = GetStorage().read('empresa');
-  Connectivity _connectivity = Connectivity();
+  final TextEditingController observacionesController = TextEditingController();
+  final GetStorage storage = GetStorage();
+  final String empresa = GetStorage().read('empresa');
+  final Connectivity _connectivity = Connectivity();
+
   bool cargando = false;
   bool btnPedidoActivo = false;
   bool btnGuardarActivo = false;
 
-  //
-  // @override
-  // void dispose() {
-  //   Map<String, dynamic> pedidoFinal = GetStorage().read('pedido');
-  //   var obs = GetStorage().read('observaciones');
-  //   pedidoFinal['comments'] = obs;
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    observacionesController.dispose();
+    super.dispose();
+  }
 
   Future<http.Response> _enviarPedido(
       BuildContext context, Map<String, dynamic> pedidoFinal) {
-    final String url =
+    const String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/create-order';
-    var dirEnvio = GetStorage().read('dirEnvio');
+    final dirEnvio = GetStorage().read('dirEnvio');
 
-    DateTime now = DateTime.now();
-    String formatter = DateFormat('hhmm').format(now);
-    formatter = formatter.replaceAll(":", "");
-    String fecha = DateFormat("yyyyMMdd").format(now);
+    final DateTime now = DateTime.now();
+    String formatter = DateFormat('hhmm').format(now).replaceAll(":", "");
+    final String fecha = DateFormat("yyyyMMdd").format(now);
+
     String numAtCard;
+    final pedidoGuardado = GetStorage().read('pedidoGuardado');
 
-    if (GetStorage().read('pedidoGuardado') == null ||
-        GetStorage().read('pedidoGuardado').isEmpty) {
-      numAtCard = fecha.toString() +
-          pedidoFinal['cardCode'].toString() +
-          formatter.toString();
+    if (pedidoGuardado == null ||
+        (pedidoGuardado is Map && pedidoGuardado.isEmpty)) {
+      numAtCard = fecha + pedidoFinal['cardCode'].toString() + formatter;
     } else {
-      numAtCard = fecha.toString() +
+      numAtCard = fecha +
           pedidoFinal['cardCode'].toString() +
-          GetStorage().read('pedidoGuardado')['id'].toString();
+          pedidoGuardado['id'].toString();
     }
 
-    DatabaseHelper dbHelper = DatabaseHelper();
+    final DatabaseHelper dbHelper = DatabaseHelper();
     dbHelper.deleteAllItemsP();
     dbHelper.deleteAllItems();
 
     return http.post(
       Uri.parse(url),
-      headers: <String, String>{'Content-Type': 'application/json'},
+      headers: const <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
           'cardCode': pedidoFinal['cardCode'],
@@ -1997,21 +1813,22 @@ class _TotalPedidoState extends State<TotalPedido> {
   }
 
   Future<http.Response> _guardarPedido(
-      BuildContext context, Map<String, dynamic> pedidoFinal) {
-    final String url =
+    BuildContext context,
+    Map<String, dynamic> pedidoFinal,
+  ) {
+    const String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/save-order';
-    var dirEnvio = GetStorage().read('dirEnvio');
+    final dirEnvio = GetStorage().read('dirEnvio');
 
-    DateTime now = DateTime.now();
-    String formatter = DateFormat('hhmm').format(now);
-    formatter = formatter.replaceAll(":", "");
-    String fecha = DateFormat("yyyyMMdd").format(now);
-    String numAtCard = fecha.toString() +
-        pedidoFinal['cardCode'].toString() +
-        formatter.toString();
+    final DateTime now = DateTime.now();
+    String formatter = DateFormat('hhmm').format(now).replaceAll(":", "");
+    final String fecha = DateFormat("yyyyMMdd").format(now);
+    final String numAtCard =
+        fecha + pedidoFinal['cardCode'].toString() + formatter;
+
     return http.post(
       Uri.parse(url),
-      headers: <String, String>{'Content-Type': 'application/json'},
+      headers: const <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
           "cardCode": pedidoFinal['cardCode'],
@@ -2034,30 +1851,27 @@ class _TotalPedidoState extends State<TotalPedido> {
   }
 
   int restarStock(String item, String bodegaB, int cantidad) {
-    if (GetStorage().read('stockFull') != null) {
-      List _stockFull = GetStorage().read('stockFull');
-      for (var stock in _stockFull) {
-        if (stock['itemCode'] == item) {
-          for (var bodega in stock['stockWarehouses']) {
-            if (bodega['whsCode'] == bodegaB) {
-              bodega['quantity'] = bodega['quantity'] - cantidad;
-            }
+    final stockFull = GetStorage().read('stockFull');
+    if (stockFull == null) return 0;
+
+    final List _stockFull = List.from(stockFull);
+
+    for (final stock in _stockFull) {
+      if (stock['itemCode'] == item) {
+        for (final bodega in stock['stockWarehouses']) {
+          if (bodega['whsCode'] == bodegaB) {
+            bodega['quantity'] = bodega['quantity'] - cantidad;
           }
         }
       }
-      setState(
-        () {
-          storage.write("stockFull", _stockFull);
-        },
-      );
-      return 1;
-    } else {
-      return 0;
     }
+
+    storage.write("stockFull", _stockFull);
+    return 1;
   }
 
   Future<bool> checkConnectivity() async {
-    var connectivityResult = await _connectivity.checkConnectivity();
+    final connectivityResult = await _connectivity.checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
   }
 
@@ -2068,11 +1882,8 @@ class _TotalPedidoState extends State<TotalPedido> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Row(
-            children: [
-              Icon(
-                Icons.error,
-                color: Colors.red,
-              ),
+            children: const [
+              Icon(Icons.error, color: Colors.red),
               SizedBox(width: 8),
               Text('Error!'),
             ],
@@ -2080,10 +1891,8 @@ class _TotalPedidoState extends State<TotalPedido> {
           content: Text(message),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -2098,11 +1907,8 @@ class _TotalPedidoState extends State<TotalPedido> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Row(
-            children: [
-              Icon(
-                Icons.error,
-                color: Colors.orange,
-              ),
+            children: const [
+              Icon(Icons.error, color: Colors.orange),
               SizedBox(width: 8),
               Text('Atención!'),
             ],
@@ -2110,24 +1916,19 @@ class _TotalPedidoState extends State<TotalPedido> {
           content: Text(message),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('OK'),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
             ),
           ],
         );
       },
-    ).then(
-      (value) {
-        setState(
-          () {
-            btnPedidoActivo = false;
-            btnGuardarActivo = false;
-          },
-        );
-      },
-    );
+    ).then((_) {
+      if (!mounted) return;
+      setState(() {
+        btnPedidoActivo = false;
+        btnGuardarActivo = false;
+      });
+    });
   }
 
   void showAlertPedidoEnviado(BuildContext context, String message) {
@@ -2137,11 +1938,8 @@ class _TotalPedidoState extends State<TotalPedido> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Row(
-            children: [
-              Icon(
-                Icons.check_circle,
-                color: Colors.green,
-              ),
+            children: const [
+              Icon(Icons.check_circle, color: Colors.green),
               SizedBox(width: 8),
               Text('Muy bien'),
             ],
@@ -2157,20 +1955,19 @@ class _TotalPedidoState extends State<TotalPedido> {
                 storage.remove("pedidoGuardado");
                 storage.write('estadoPedido', 'nuevo');
 
-                DatabaseHelper dbHelper = DatabaseHelper();
+                final DatabaseHelper dbHelper = DatabaseHelper();
                 dbHelper.deleteAllItemsP();
                 dbHelper.deleteAllItems();
+
                 requestStoragePermission();
                 deleteAppData();
 
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => HomePage(),
-                  ),
+                  MaterialPageRoute(builder: (context) => HomePage()),
                 );
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -2189,15 +1986,13 @@ class _TotalPedidoState extends State<TotalPedido> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
+          builder: (BuildContext context, StateSetter setStateDialog) {
             bool isProcessing = false;
+
             return AlertDialog(
               title: Row(
-                children: [
-                  Icon(
-                    Icons.error,
-                    color: Colors.orange,
-                  ),
+                children: const [
+                  Icon(Icons.error, color: Colors.orange),
                   SizedBox(width: 8),
                   Text("Atención!"),
                 ],
@@ -2207,35 +2002,29 @@ class _TotalPedidoState extends State<TotalPedido> {
                 ElevatedButton(
                   onPressed: btnConfirmarEnvio
                       ? () {
-                          setState(
-                            () {
-                              btnConfirmarEnvio = false;
-                            },
-                          );
+                          setStateDialog(() => btnConfirmarEnvio = false);
                           Navigator.pop(context);
                         }
                       : null,
-                  child: Text("NO"),
+                  child: const Text("NO"),
                 ),
                 ElevatedButton(
                   onPressed: btnConfirmarEnvio && !isProcessing
                       ? () async {
-                          setState(
-                            () {
-                              isProcessing = true;
-                              btnConfirmarEnvio = false;
-                              message = 'Guardando pedido. Por favor espere...';
-                            },
-                          );
+                          setStateDialog(() {
+                            isProcessing = true;
+                            btnConfirmarEnvio = false;
+                            message = 'Guardando pedido. Por favor espere...';
+                          });
 
-                          String codigo = pedidoFinal["slpCode"];
-                          int slpInt = int.parse(codigo);
-                          String descS = pedidoFinal["discountPercent"];
-                          double descD = double.parse(descS);
-                          String totS = pedidoFinal["docTotal"];
-                          double totD = double.parse(totS);
+                          final String codigo = pedidoFinal["slpCode"];
+                          final int slpInt = int.parse(codigo);
+                          final String descS = pedidoFinal["discountPercent"];
+                          final double descD = double.parse(descS);
+                          final String totS = pedidoFinal["docTotal"];
+                          final double totD = double.parse(totS);
 
-                          Pedido pedidoF = Pedido(
+                          final Pedido pedidoF = Pedido(
                             cardCode: pedidoFinal["cardCode"],
                             cardName: pedidoFinal["cardName"],
                             comments: pedidoFinal["comments"],
@@ -2250,54 +2039,45 @@ class _TotalPedidoState extends State<TotalPedido> {
                             detailSalesOrder: "Detalle del pedido",
                           );
 
-                          // Guardar el pedido en la base de datos local
                           insertPedidoDb(pedidoF);
                           listarPedidos();
 
-                          setState(
-                            () {
-                              cargando = true;
-                            },
-                          );
+                          if (mounted) {
+                            setState(() => cargando = true);
+                          }
 
                           try {
-                            http.Response response =
+                            final http.Response response =
                                 await _guardarPedido(context, pedidoFinal);
-                            Map<String, dynamic> resultado =
+                            final Map<String, dynamic> resultado =
                                 jsonDecode(response.body);
 
                             if (response.statusCode == 200 &&
                                 resultado['content'] != "") {
-                              // Registrar localización
-                              http.Response response =
+                              final http.Response responseGeo =
                                   await createRecordGeoLocation(
-                                      locationData.latitude.toString(),
-                                      locationData.longitude.toString(),
-                                      GetStorage().read('usuario'),
-                                      empresa,
-                                      'G');
-                              Map<String, dynamic> res =
-                                  jsonDecode(response.body);
+                                locationData.latitude.toString(),
+                                locationData.longitude.toString(),
+                                GetStorage().read('usuario'),
+                                empresa,
+                                'G',
+                              );
+
+                              final Map<String, dynamic> res =
+                                  jsonDecode(responseGeo.body);
+
                               if (res['code'] == 0) {
                                 Navigator.pop(context);
-                                setState(
-                                  () {
-                                    showAlertPedidoEnviado(
-                                      context,
-                                      "Pedido Guardado: " +
-                                          resultado['content'].toString(),
-                                    );
-                                  },
+
+                                showAlertPedidoEnviado(
+                                  context,
+                                  "Pedido Guardado: ${resultado['content']}",
                                 );
-                                setState(
-                                  () {
-                                    actualizarEstadoPed(
-                                      GetStorage().read('pedidoGuardado')['id'],
-                                      0,
-                                      'C',
-                                    );
-                                  },
-                                );
+
+                                final pg = GetStorage().read('pedidoGuardado');
+                                if (pg != null) {
+                                  actualizarEstadoPed(pg['id'], 0, 'C');
+                                }
                               } else {
                                 Get.snackbar(
                                   'Error',
@@ -2312,42 +2092,29 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 "No se pudo guardar el pedido, error de red, verifique conectividad por favor",
                               );
                             }
-                          } catch (e) {
-                            setState(
-                              () {
-                                Get.snackbar(
-                                  'Error',
-                                  'El servicio no responde, contacte al administrador',
-                                  colorText: Colors.red,
-                                  backgroundColor: Colors.white,
-                                );
-                              },
+                          } catch (_) {
+                            Get.snackbar(
+                              'Error',
+                              'El servicio no responde, contacte al administrador',
+                              colorText: Colors.red,
+                              backgroundColor: Colors.white,
                             );
                           } finally {
-                            setState(
-                              () {
-                                isProcessing = false;
-                              },
-                            );
+                            setStateDialog(() => isProcessing = false);
                           }
                         }
                       : null,
-                  child: Text("SI"),
+                  child: const Text("SI"),
                 ),
               ],
             );
           },
         );
       },
-    ).then(
-      (value) {
-        setState(
-          () {
-            btnGuardarActivo = false;
-          },
-        );
-      },
-    );
+    ).then((_) {
+      if (!mounted) return;
+      setState(() => btnGuardarActivo = false);
+    });
   }
 
   void showAlertConfirmOrder(
@@ -2361,15 +2128,13 @@ class _TotalPedidoState extends State<TotalPedido> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
+          builder: (BuildContext context, StateSetter setStateDialog) {
             bool isProcessing = false;
+
             return AlertDialog(
               title: Row(
-                children: [
-                  Icon(
-                    Icons.error,
-                    color: Colors.orange,
-                  ),
+                children: const [
+                  Icon(Icons.error, color: Colors.orange),
                   SizedBox(width: 8),
                   Text("Atención!"),
                 ],
@@ -2379,188 +2144,146 @@ class _TotalPedidoState extends State<TotalPedido> {
                 ElevatedButton(
                   onPressed: btnConfirmarEnvio && !isProcessing
                       ? () {
-                          setState(
-                            () {
-                              isProcessing = true;
-                              btnConfirmarEnvio = false;
-                            },
-                          );
+                          setStateDialog(() {
+                            isProcessing = true;
+                            btnConfirmarEnvio = false;
+                          });
                           Navigator.pop(context);
                         }
                       : null,
-                  child: Text("NO"),
+                  child: const Text("NO"),
                 ),
                 ElevatedButton(
                   onPressed: btnConfirmarEnvio
                       ? () async {
-                          setState(
-                            () {
-                              btnConfirmarEnvio = false;
-                              message =
-                                  'Procesando pedido. Por favor espere...';
-                            },
-                          );
-                          bool isConnected = await checkConnectivity();
-                          if (isConnected == true) {
-                            pedidoFinal['comments'] =
-                                observacionesController.text;
-                            storage.write('pedido', pedidoFinal);
-                            setState(
-                              () {
-                                cargando = true;
-                              },
-                            );
+                          setStateDialog(() {
+                            btnConfirmarEnvio = false;
+                            message = 'Procesando pedido. Por favor espere...';
+                          });
 
-                            try {
-                              http.Response response =
-                                  await _enviarPedido(context, pedidoFinal);
-                              Map<String, dynamic> resultado =
-                                  jsonDecode(response.body);
-                              if (response.statusCode == 200 &&
-                                  resultado['content'] != "") {
-                                //registrar localización en la tabla "@HIST_COORDENADAS"
-                                http.Response response =
-                                    await createRecordGeoLocation(
-                                        locationData.latitude.toString(),
-                                        locationData.longitude.toString(),
-                                        GetStorage().read('usuario'),
-                                        empresa,
-                                        'G');
-                                Map<String, dynamic> res =
-                                    jsonDecode(response.body);
-                                if (res['code'] == 0) {
-                                  Navigator.pop(context);
-                                  setState(
-                                    () {
-                                      showAlertPedidoEnviado(
-                                        context,
-                                        "Pedido: " +
-                                            resultado['content'].toString(),
-                                      );
-                                    },
-                                  );
-                                  Map<String, dynamic>
-                                      actualizarPedidoGuardado = {};
-                                  if (GetStorage()
-                                          .read('actualizarPedidoGuardado') !=
-                                      null) {
-                                    actualizarPedidoGuardado = GetStorage()
-                                        .read('actualizarPedidoGuardado');
-                                    setState(
-                                      () {
-                                        actualizarEstadoPed(
-                                          int.parse(
-                                              actualizarPedidoGuardado["id"]),
-                                          resultado['content'],
-                                          'F',
-                                        );
-                                      },
-                                    );
-                                  }
-                                  storage.remove("pedido");
-                                  storage.remove("itemsPedido");
-                                  storage.remove("dirEnvio");
-                                  storage.remove("pedidoGuardado");
-                                  storage.write('estadoPedido', 'nuevo');
-                                } else {
-                                  Get.snackbar(
-                                    'Error',
-                                    'El servicio no responde, contacte al administrador',
-                                    colorText: Colors.red,
-                                    backgroundColor: Colors.white,
-                                  );
-                                }
-                              } else {
-                                Get.snackbar(
-                                  'Error',
-                                  'No se pudo crear el pedido',
-                                  colorText: Colors.red,
-                                  backgroundColor: Colors.white,
-                                );
-                              }
-                            } catch (e) {
-                              setState(
-                                () {
-                                  Get.snackbar(
-                                    'Error',
-                                    'El servicio no responde, contacte al administrador',
-                                    colorText: Colors.red,
-                                    backgroundColor: Colors.white,
-                                  );
-                                },
-                              );
-                            } finally {
-                              setState(
-                                () {
-                                  isProcessing = false;
-                                },
-                              );
-                            }
-                          } else {
+                          final bool isConnected = await checkConnectivity();
+                          if (!isConnected) {
                             showAlertError(
                               context,
                               "No se pudo enviar el pedido, error de red, verifique conectividad por favor",
                             );
+                            setStateDialog(() => isProcessing = false);
+                            return;
+                          }
+
+                          pedidoFinal['comments'] =
+                              observacionesController.text;
+                          storage.write('pedido', pedidoFinal);
+
+                          if (mounted) {
+                            setState(() => cargando = true);
+                          }
+
+                          try {
+                            final http.Response response =
+                                await _enviarPedido(context, pedidoFinal);
+                            final Map<String, dynamic> resultado =
+                                jsonDecode(response.body);
+
+                            if (response.statusCode == 200 &&
+                                resultado['content'] != "") {
+                              final http.Response responseGeo =
+                                  await createRecordGeoLocation(
+                                locationData.latitude.toString(),
+                                locationData.longitude.toString(),
+                                GetStorage().read('usuario'),
+                                empresa,
+                                'G',
+                              );
+
+                              final Map<String, dynamic> res =
+                                  jsonDecode(responseGeo.body);
+
+                              if (res['code'] == 0) {
+                                Navigator.pop(context);
+
+                                showAlertPedidoEnviado(
+                                  context,
+                                  "Pedido: ${resultado['content']}",
+                                );
+
+                                Map<String, dynamic> actualizarPedidoGuardado =
+                                    {};
+                                final apg = GetStorage()
+                                    .read('actualizarPedidoGuardado');
+                                if (apg != null) {
+                                  actualizarPedidoGuardado = apg;
+                                  actualizarEstadoPed(
+                                    int.parse(actualizarPedidoGuardado["id"]),
+                                    resultado['content'],
+                                    'F',
+                                  );
+                                }
+
+                                storage.remove("pedido");
+                                storage.remove("itemsPedido");
+                                storage.remove("dirEnvio");
+                                storage.remove("pedidoGuardado");
+                                storage.write('estadoPedido', 'nuevo');
+                              } else {
+                                Get.snackbar(
+                                  'Error',
+                                  'El servicio no responde, contacte al administrador',
+                                  colorText: Colors.red,
+                                  backgroundColor: Colors.white,
+                                );
+                              }
+                            } else {
+                              Get.snackbar(
+                                'Error',
+                                'No se pudo crear el pedido',
+                                colorText: Colors.red,
+                                backgroundColor: Colors.white,
+                              );
+                            }
+                          } catch (_) {
+                            Get.snackbar(
+                              'Error',
+                              'El servicio no responde, contacte al administrador',
+                              colorText: Colors.red,
+                              backgroundColor: Colors.white,
+                            );
+                          } finally {
+                            setStateDialog(() => isProcessing = false);
                           }
                         }
                       : null,
-                  child: Text("SI"),
-                )
+                  child: const Text("SI"),
+                ),
               ],
             );
           },
         );
       },
-    ).then(
-      (value) {
-        setState(
-          () {
-            btnPedidoActivo = false;
-          },
-        );
-      },
-    );
+    ).then((_) {
+      if (!mounted) return;
+      setState(() => btnPedidoActivo = false);
+    });
   }
 
   Future<void> listarPedidos() async {
-    DatabaseHelper dbHelper = DatabaseHelper();
-    List<Pedido> pedidos = await dbHelper.getPedidos();
-
-    if (pedidos.isNotEmpty) {
-      for (Pedido pedido in pedidos) {
-        //print("ID: ${pedido.id}");
-        //print("Cardcode: ${pedido.cardCode}");
-        //print("Nombre: ${pedido.cardName}");
-        // ... Mostrar los demás atributos del item ...
-        //print("--------------------------");
-      }
-    }
+    final DatabaseHelper dbHelper = DatabaseHelper();
+    await dbHelper.getPedidos();
   }
 
   Future<bool> buscarClientePedido(String cardCode) async {
-    DatabaseHelper dbHelper = DatabaseHelper();
-    List<Pedido> pedidos = await dbHelper.getPedidos();
+    final DatabaseHelper dbHelper = DatabaseHelper();
+    final List<Pedido> pedidos = await dbHelper.getPedidos();
 
-    if (pedidos.isNotEmpty) {
-      for (Pedido pedido in pedidos) {
-        if (pedido.cardCode == cardCode) {
-          return true;
-        }
-      }
+    for (final Pedido pedido in pedidos) {
+      if (pedido.cardCode == cardCode) return true;
     }
     return false;
   }
 
   Future<void> insertPedidoDb(Pedido pedidoFinal) async {
-    DatabaseHelper dbHelper = DatabaseHelper();
-    int insertedPedidoId = await dbHelper.insertPedido(pedidoFinal);
-
-    if (insertedPedidoId > 0) {
-      //print("El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
-    } else {
-      //print("Error al insertar el pedido en la base de datos");
-    }
-    //idPedidoDb= insertedPedidoId;
+    final DatabaseHelper dbHelper = DatabaseHelper();
+    await dbHelper.insertPedido(pedidoFinal);
   }
 
   Future<void> actualizarEstadoPed(int idP, int docNum, String status) async {
@@ -2573,54 +2296,14 @@ class _TotalPedidoState extends State<TotalPedido> {
             docNum.toString() +
             '&status=' +
             status;
-    final response = await http.get(Uri.parse(apiUrl));
 
-    if (response.body == "true") {
-      //print("Se cambió estado a " + status);
-    } else {
-      //print("No se pudo cambiar el estado a " + status);
-    }
+    await http.get(Uri.parse(apiUrl));
   }
-
-  /*void _clearCache() {
-    // Eliminamos todos los archivos de caché.
-    for (final file in Directory('cache').listSync()) {
-      file.delete();
-    }
-  }*/
 
   Future<void> requestStoragePermission() async {
     try {
       await DefaultCacheManager().emptyCache();
-      /*ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Caché borrada con éxito'),
-        ),
-      );*/
-    } catch (e) {
-      /*ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al borrar la caché: $e'),
-        ),
-      );*/
-      //print('Error al borrar la caché: $e');
-    }
-
-    //final status = await Permission.storage.request();
-    /*if (status.isGranted) {
-      await DefaultCacheManager().emptyCache();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Caché borrada con éxito'),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No se otorgó permiso para borrar la caché'),
-        ),
-      );
-    }*/
+    } catch (_) {}
   }
 
   Future<void> deleteAppData() async {
@@ -2629,59 +2312,16 @@ class _TotalPedidoState extends State<TotalPedido> {
       final dir = Directory(directory.path);
       if (dir.existsSync()) {
         dir.deleteSync(recursive: true);
-        /*ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Datos borrados con éxito'),
-          ),
-        );*/
-      } /*else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('No se encontraron datos para eliminar.'),
-          ),
-        );
-      }*/
-    } catch (e) {
-      //print('Error al eliminar los datos de la aplicación: $e');
-    }
+      }
+    } catch (_) {}
   }
-
-  /*Future<LocationData> activeteLocation() async {
-    Location location = Location();
-    bool serviceEnabled;
-    LocationData locationData;
-    serviceEnabled = await location.serviceEnabled();
-    if (serviceEnabled) {
-      locationData = await location.getLocation();
-      return locationData;
-    } else {
-      return new LocationData.fromMap({"latitude": 0.0, "longitude": 0.0});
-    }
-  }*/
 
   Future<Position> activeteLocation() async {
     try {
-      LocationPermission permission = await Geolocator.requestPermission();
+      final LocationPermission permission =
+          await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        return new Position(
-            longitude: 0.0,
-            latitude: 0.0,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            altitudeAccuracy: 0.0,
-            heading: 0.0,
-            headingAccuracy: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0);
-      } else {
-        Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        );
-        return position;
-      }
-    } catch (e) {
-      return new Position(
+        return Position(
           longitude: 0.0,
           latitude: 0.0,
           timestamp: DateTime.now(),
@@ -2691,17 +2331,42 @@ class _TotalPedidoState extends State<TotalPedido> {
           heading: 0.0,
           headingAccuracy: 0.0,
           speed: 0.0,
-          speedAccuracy: 0.0);
+          speedAccuracy: 0.0,
+        );
+      }
+
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+    } catch (_) {
+      return Position(
+        longitude: 0.0,
+        latitude: 0.0,
+        timestamp: DateTime.now(),
+        accuracy: 0.0,
+        altitude: 0.0,
+        altitudeAccuracy: 0.0,
+        heading: 0.0,
+        headingAccuracy: 0.0,
+        speed: 0.0,
+        speedAccuracy: 0.0,
+      );
     }
   }
 
-  Future<http.Response> createRecordGeoLocation(String latitude,
-      String longitude, String slpCode, String companyName, String docType) {
-    final String url =
+  Future<http.Response> createRecordGeoLocation(
+    String latitude,
+    String longitude,
+    String slpCode,
+    String companyName,
+    String docType,
+  ) {
+    const String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/create-record-geo-location';
+
     return http.post(
       Uri.parse(url),
-      headers: <String, String>{'Content-Type': 'application/json'},
+      headers: const <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
           "slpCode": slpCode,
@@ -2716,355 +2381,332 @@ class _TotalPedidoState extends State<TotalPedido> {
 
   @override
   Widget build(BuildContext context) {
-    final numberFormat = new NumberFormat.simpleCurrency();
+    final NumberFormat numberFormat = NumberFormat.simpleCurrency();
 
-    if (GetStorage().read('pedido') != null) {
-      Map<String, dynamic> pedidoFinal = GetStorage().read('pedido');
-      if (GetStorage().read('pedidoGuardado') != null) {
-        Map<String, dynamic> pedidoFinalG = GetStorage().read('pedidoGuardado');
-        pedidoFinal['comments'] = pedidoFinalG['comments'] ?? '';
-      }
-      List<dynamic> itemsPedidoLocal = [];
-      List itemsGuardados = [];
-      int cantidadItems = 0;
-      num subtotal = 0;
+    if (GetStorage().read('pedido') == null) {
+      return const Text("Sin ítems para pedido");
+    }
 
-      String obs = "";
-      if (GetStorage().read('observaciones') != null) {
-        obs = GetStorage().read('observaciones');
-        observacionesController.text = obs;
-      }
+    Map<String, dynamic> pedidoFinal = GetStorage().read('pedido');
 
-      if (GetStorage().read('itemsPedido') == null) {
-      } else {
-        itemsPedidoLocal = GetStorage().read('itemsPedido');
-      }
-      if (GetStorage().read('items') == null) {
-      } else {
-        /////BUSCAR itemCode en lista de items para hallar el precio
-        itemsGuardados = GetStorage().read('items');
-        itemsPedidoLocal.forEach(
-          (j) {
-            itemsGuardados.forEach(
-              (k) {
-                String cantQ = j['quantity'];
-                double cantidadQ = double.parse(cantQ);
-                if (k['itemCode'] == j['itemCode']) {
-                  subtotal = subtotal + k['price'] * cantidadQ;
-                }
-              },
-            );
-          },
-        );
-      }
-      if (GetStorage().read('itemsPedido') == null) {
-        cantidadItems = 0;
-      } else {
-        itemsPedidoLocal = GetStorage().read('itemsPedido');
-        cantidadItems = itemsPedidoLocal.length;
-      }
+    final pedidoGuardado = GetStorage().read('pedidoGuardado');
+    if (pedidoGuardado != null) {
+      final Map<String, dynamic> pedidoFinalG = pedidoGuardado;
+      pedidoFinal['comments'] = pedidoFinalG['comments'] ?? '';
+    }
 
-      double iva = 0.0;
-      itemsPedidoLocal.forEach(
-        (element) {
-          var subt = double.parse(element["price"]) *
-              double.parse(element["quantity"]);
-          var ivaTemp =
-              (double.parse(element["iva"].toString()) * subt.toDouble()) / 100;
-          iva = iva + ivaTemp;
-        },
-      );
+    List<dynamic> itemsPedidoLocal = [];
+    List itemsGuardados = [];
+    int cantidadItems = 0;
+    num subtotal = 0;
 
-      String ivaTxt = numberFormat.format(iva);
-      double totalMasIva = subtotal.toDouble() + iva;
-      String subtotalTxt = numberFormat.format(subtotal);
-      String descuento = pedidoFinal['discountPercent'];
-      String estadoPedido = "";
-      double total = subtotal -
+    if (GetStorage().read('observaciones') != null) {
+      final String obs = GetStorage().read('observaciones');
+      observacionesController.text = obs;
+    }
+
+    if (GetStorage().read('itemsPedido') != null) {
+      itemsPedidoLocal = GetStorage().read('itemsPedido');
+      cantidadItems = itemsPedidoLocal.length;
+    }
+
+    if (GetStorage().read('items') != null && itemsPedidoLocal.isNotEmpty) {
+      itemsGuardados = GetStorage().read('items');
+
+      for (final j in itemsPedidoLocal) {
+        for (final k in itemsGuardados) {
+          final double cantidadQ = double.parse(j['quantity']);
+          if (k['itemCode'] == j['itemCode']) {
+            subtotal = subtotal + k['price'] * cantidadQ;
+          }
+        }
+      }
+    }
+
+    double iva = 0.0;
+    for (final element in itemsPedidoLocal) {
+      final subt =
+          double.parse(element["price"]) * double.parse(element["quantity"]);
+      final ivaTemp = (double.parse(element["iva"].toString()) * subt) / 100;
+      iva += ivaTemp;
+    }
+
+    String ivaTxt = numberFormat.format(iva);
+    String subtotalTxt = numberFormat.format(subtotal);
+
+    String descuento = pedidoFinal['discountPercent'];
+    String estadoPedido = "";
+
+    final double total = subtotal -
+        (subtotal * (double.parse(descuento).toInt() / 100)) +
+        (iva - (iva * (double.parse(descuento).toInt() / 100)));
+
+    if (subtotalTxt.contains('.')) {
+      subtotalTxt = subtotalTxt.substring(0, subtotalTxt.indexOf('.'));
+    }
+    if (descuento.contains('.')) {
+      descuento = descuento.substring(0, descuento.indexOf('.'));
+    }
+
+    ivaTxt = numberFormat.format(iva - (iva * (int.parse(descuento) / 100)));
+    if (ivaTxt.contains('.')) {
+      ivaTxt = ivaTxt.substring(0, ivaTxt.indexOf('.'));
+    }
+
+    String totalDocTxt = numberFormat.format(
+      subtotal -
           (subtotal * (double.parse(descuento).toInt() / 100)) +
-          (iva - (iva * (double.parse(descuento).toInt() / 100)));
+          (iva - (iva * (double.parse(descuento).toInt() / 100))),
+    );
+    if (totalDocTxt.contains('.')) {
+      totalDocTxt = totalDocTxt.substring(0, totalDocTxt.indexOf('.'));
+    }
 
-      if (subtotalTxt.contains('.')) {
-        int decimalIndex = subtotalTxt.indexOf('.');
-        subtotalTxt = subtotalTxt.substring(0, decimalIndex);
+    if (pedidoFinal['comments'] != null) {
+      if (GetStorage().read('estadoPedido') != null) {
+        estadoPedido = GetStorage().read('estadoPedido');
+      } else {
+        estadoPedido = "desconocido";
       }
-      if (descuento.contains('.')) {
-        int decimalIndex = descuento.indexOf('.');
-        descuento = descuento.substring(0, decimalIndex);
-      }
-      ivaTxt = numberFormat.format(iva - (iva * (int.parse(descuento) / 100)));
-      if (ivaTxt.contains('.')) {
-        int decimalIndex = ivaTxt.indexOf('.');
-        ivaTxt = ivaTxt.substring(0, decimalIndex);
-      }
-      String totalDocTxt = numberFormat.format(subtotal -
-          (subtotal * (double.parse(descuento).toInt() / 100)) +
-          (iva - (iva * (double.parse(descuento).toInt() / 100))));
-      if (totalDocTxt.contains('.')) {
-        int decimalIndex = totalDocTxt.indexOf('.');
-        totalDocTxt = totalDocTxt.substring(0, decimalIndex);
-      }
-      String textoObservaciones = "";
-      if (pedidoFinal['comments'] != null) {
-        textoObservaciones = pedidoFinal['comments'];
-        if (GetStorage().read('estadoPedido') != null) {
-          estadoPedido = GetStorage().read('estadoPedido');
-        } else {
-          estadoPedido = "desconocido";
-        }
-        if (estadoPedido == "nuevo") {
-          storage.remove('observaciones');
-          observacionesController.text;
-        }
-        if (estadoPedido == "guardado") {
-          String obs = textoObservaciones;
-          observacionesController.text = obs;
-        }
-      }
-      pedidoFinal['docTotal'] = total.toString();
 
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Card(
-              elevation: 10,
-              child: Container(
-                color: Colors.white,
-                child: SizedBox(
-                  width: 400,
-                  child: Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          pedidoFinal['nit'] + ' - ' + pedidoFinal['cardName'],
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(
-                          "Cant de ítems: " + cantidadItems.toString(),
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(
-                          "Subtotal: " + subtotalTxt,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(
-                          "Descuento: %" + descuento,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(
-                          "Iva: " + ivaTxt,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(
-                          "Total: " + totalDocTxt,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(
-                          "Observaciones:",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        SizedBox(
-                          width: 400,
-                          child: TextField(
-                            maxLines: 7,
-                            controller: observacionesController,
-                            keyboardType: TextInputType.multiline,
-                            textInputAction: TextInputAction.newline,
-                            onChanged: (text) {
-                              pedidoFinal['comments'] =
-                                  observacionesController.text;
-                              pedidoFinal['id'] = text;
-                              storage.write("observaciones",
-                                  observacionesController.text);
-                            },
-                            style: const TextStyle(color: Colors.black),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              contentPadding: const EdgeInsets.all(15),
-                              hintStyle: const TextStyle(color: Colors.black),
+      if (estadoPedido == "nuevo") {
+        storage.remove('observaciones');
+      }
+
+      if (estadoPedido == "guardado") {
+        observacionesController.text = pedidoFinal['comments'].toString();
+      }
+    }
+
+    pedidoFinal['docTotal'] = total.toString();
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Card(
+            elevation: 10,
+            child: Container(
+              color: Colors.white,
+              child: SizedBox(
+                width: 400,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        '${pedidoFinal['nit']} - ${pedidoFinal['cardName']}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Cant de ítems: $cantidadItems",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Subtotal: $subtotalTxt",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Descuento: %$descuento",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Iva: $ivaTxt",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Total: $totalDocTxt",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Observaciones:",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: 400,
+                        child: TextField(
+                          maxLines: 7,
+                          controller: observacionesController,
+                          keyboardType: TextInputType.multiline,
+                          textInputAction: TextInputAction.newline,
+                          onChanged: (_) {
+                            pedidoFinal['comments'] =
+                                observacionesController.text;
+                            storage.write(
+                                "observaciones", observacionesController.text);
+                          },
+                          style: const TextStyle(color: Colors.black),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
                             ),
+                            contentPadding: const EdgeInsets.all(15),
+                            hintStyle: const TextStyle(color: Colors.black),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-            SizedBox(
-              height: 20,
-            ),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: MaterialButton(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      disabledColor: Colors.grey,
-                      elevation: 0,
-                      color: Color.fromRGBO(30, 129, 235, 1),
-                      onPressed: btnPedidoActivo
-                          ? null
-                          : () async {
-                              storage.write('estadoPedido', 'editado');
-                              setState(
-                                () {
-                                  btnPedidoActivo = true;
-                                },
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: MaterialButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    disabledColor: Colors.grey,
+                    elevation: 0,
+                    color: const Color.fromRGBO(30, 129, 235, 1),
+                    onPressed: btnPedidoActivo
+                        ? null
+                        : () async {
+                            storage.write('estadoPedido', 'editado');
+                            setState(() => btnPedidoActivo = true);
+
+                            final dir = GetStorage().read('dirEnvio');
+                            final items = GetStorage().read('itemsPedido');
+
+                            if (dir == null ||
+                                dir == "" ||
+                                dir == "Elija un destino") {
+                              showAlertErrorDir(
+                                context,
+                                "Obligatorio seleccionar la dirección de destino.",
                               );
-                              if (GetStorage().read('dirEnvio') == null ||
-                                  GetStorage().read('dirEnvio') == "" ||
-                                  GetStorage().read('dirEnvio') ==
-                                      "Elija un destino") {
-                                showAlertErrorDir(
-                                  context,
-                                  "Obligatorio seleccionar la dirección de destino.",
-                                );
-                              } else if (GetStorage().read('itemsPedido') ==
-                                      null ||
-                                  GetStorage().read('itemsPedido') == "") {
-                                showAlertErrorDir(
-                                  context,
-                                  "Obligatorio agregar ítems en detalle.",
-                                );
-                              } else {
-                                Position locationData =
-                                    await activeteLocation();
-                                if (locationData.latitude == 0.0 ||
-                                    locationData.longitude == 0.0) {
-                                  showAlertErrorDir(
-                                    context,
-                                    "Active la ubicación del móvil, y presione de nuevo guardar pedido.",
-                                  );
-                                  Geolocator.getCurrentPosition(
-                                    desiredAccuracy: LocationAccuracy.high,
-                                  );
-                                } else {
-                                  showAlertConfirmOrder(
-                                    context,
-                                    pedidoFinal,
-                                    true,
-                                    "¿Está seguro que deseea enviar el pedido?",
-                                    locationData,
-                                  );
-                                }
-                              }
-                            },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          btnPedidoActivo ? 'Espere' : 'Enviar Pedido',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                              return;
+                            }
+
+                            if (items == null || items == "") {
+                              showAlertErrorDir(
+                                context,
+                                "Obligatorio agregar ítems en detalle.",
+                              );
+                              return;
+                            }
+
+                            final Position locationData =
+                                await activeteLocation();
+                            if (locationData.latitude == 0.0 ||
+                                locationData.longitude == 0.0) {
+                              showAlertErrorDir(
+                                context,
+                                "Active la ubicación del móvil, y presione de nuevo guardar pedido.",
+                              );
+                              Geolocator.getCurrentPosition(
+                                desiredAccuracy: LocationAccuracy.high,
+                              );
+                              return;
+                            }
+
+                            showAlertConfirmOrder(
+                              context,
+                              pedidoFinal,
+                              true,
+                              "¿Está seguro que deseea enviar el pedido?",
+                              locationData,
+                            );
+                          },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                        btnPedidoActivo ? 'Espere' : 'Enviar Pedido',
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: MaterialButton(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      disabledColor: Colors.grey,
-                      elevation: 0,
-                      color: Color.fromRGBO(30, 129, 235, 1),
-                      onPressed: btnGuardarActivo
-                          ? null
-                          : () async {
-                              storage.write('estadoPedido', 'editado');
-                              setState(
-                                () {
-                                  btnGuardarActivo = true;
-                                },
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: MaterialButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    disabledColor: Colors.grey,
+                    elevation: 0,
+                    color: const Color.fromRGBO(30, 129, 235, 1),
+                    onPressed: btnGuardarActivo
+                        ? null
+                        : () async {
+                            storage.write('estadoPedido', 'editado');
+                            setState(() => btnGuardarActivo = true);
+
+                            final dir = GetStorage().read('dirEnvio');
+                            final items = GetStorage().read('itemsPedido');
+
+                            if (dir == null ||
+                                dir == "" ||
+                                dir == "Elija un destino") {
+                              showAlertErrorDir(
+                                context,
+                                "Obligatorio seleccionar la dirección de destino.",
                               );
-                              if (GetStorage().read('dirEnvio') == null ||
-                                  GetStorage().read('dirEnvio') == "" ||
-                                  GetStorage().read('dirEnvio') ==
-                                      "Elija un destino") {
-                                showAlertErrorDir(
-                                  context,
-                                  "Obligatorio seleccionar la dirección de destino.",
-                                );
-                              } else if (GetStorage().read('itemsPedido') ==
-                                      null ||
-                                  GetStorage().read('itemsPedido') == "") {
-                                showAlertErrorDir(
-                                  context,
-                                  "Obligatorio agregar ítems en detalle.",
-                                );
-                              } else {
-                                Position locationData =
-                                    await activeteLocation();
-                                if (locationData.latitude == 0.0 ||
-                                    locationData.longitude == 0.0) {
-                                  showAlertErrorDir(
-                                    context,
-                                    "Active la ubicación del móvil, y presione de nuevo enviar pedido.",
-                                  );
-                                  Geolocator.getCurrentPosition(
-                                    desiredAccuracy: LocationAccuracy.high,
-                                  );
-                                } else {
-                                  showAlertConfirmOrderForSave(
-                                    context,
-                                    pedidoFinal,
-                                    true,
-                                    "¿Está seguro que deseea guardar el pedido?",
-                                    locationData,
-                                  );
-                                }
-                              }
-                            },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          btnGuardarActivo ? 'Espere' : 'Guardar Pedido',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                              return;
+                            }
+
+                            if (items == null || items == "") {
+                              showAlertErrorDir(
+                                context,
+                                "Obligatorio agregar ítems en detalle.",
+                              );
+                              return;
+                            }
+
+                            final Position locationData =
+                                await activeteLocation();
+                            if (locationData.latitude == 0.0 ||
+                                locationData.longitude == 0.0) {
+                              showAlertErrorDir(
+                                context,
+                                "Active la ubicación del móvil, y presione de nuevo enviar pedido.",
+                              );
+                              Geolocator.getCurrentPosition(
+                                desiredAccuracy: LocationAccuracy.high,
+                              );
+                              return;
+                            }
+
+                            showAlertConfirmOrderForSave(
+                              context,
+                              pedidoFinal,
+                              true,
+                              "¿Está seguro que deseea guardar el pedido?",
+                              locationData,
+                            );
+                          },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                        btnGuardarActivo ? 'Espere' : 'Guardar Pedido',
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
-      );
-    } else
-      return Text("Sin ítems para pedido");
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

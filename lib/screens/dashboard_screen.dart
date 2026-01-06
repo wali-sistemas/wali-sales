@@ -18,38 +18,26 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  Timer? timer;
+  Timer? _timer;
 
-  @override
-  void initState() {
-    super.initState();
-    // Ejecuta el método después de 15 segundos.
-    Timer.periodic(
-      Duration(seconds: 15),
-      (Timer t) {
-        sendNotification();
-      },
-    );
-  }
-
-  var dataMap = <String, double>{
-    "Ventas": 0,
-    "Presupuesto": 0,
-    "Pend. por facturar": 0,
+  final dataMap = <String, double>{
+    'Ventas': 0,
+    'Presupuesto': 0,
+    'Pend. por facturar': 0,
   };
 
   final colorList = <Color>[
-    const Color.fromRGBO(242, 83, 75, 1),
-    const Color.fromRGBO(51, 51, 51, 1),
-    const Color.fromRGBO(201, 204, 209, 1),
-    const Color(0xffe17055),
-    const Color(0xff6c5ce7),
+    Color.fromRGBO(242, 83, 75, 1),
+    Color.fromRGBO(51, 51, 51, 1),
+    Color.fromRGBO(201, 204, 209, 1),
+    Color(0xffe17055),
+    Color(0xff6c5ce7),
   ];
 
-  GetStorage storage = GetStorage();
-  String? usuario = GetStorage().read('usuario');
-  String? empresa = GetStorage().read('empresa');
-  DateTime now = new DateTime.now();
+  final GetStorage storage = GetStorage();
+  final String? usuario = GetStorage().read('usuario');
+  final String? empresa = GetStorage().read('empresa');
+  final DateTime now = DateTime.now();
   int presupuestoT = 0;
   double presupuestoP = 0;
   double ventasT = 0;
@@ -58,16 +46,44 @@ class _DashboardPageState extends State<DashboardPage> {
   double efectividad = 0;
   int nroOrderSaved = 0;
   double valorOrderSaved = 0;
-  var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
 
-  void sendNotification() async {
-    dynamic response = await _findOrderExtranetInprogress();
+  final NumberFormat numberFormat = NumberFormat('#,##0.00', 'en_Us');
+
+  late final Future<Map<String, dynamic>> _dashboardFuture;
+  late final Future<Map<String, dynamic>> _barrasFuture;
+  late final Future<Map<String, dynamic>> _savedOrdersFuture;
+  late final Future<dynamic> _budgetByBrandFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _dashboardFuture = _datosDashboard2();
+    _barrasFuture = _datosBarras();
+    _savedOrdersFuture = _getSavedOrdersReport();
+    _budgetByBrandFuture = _findSalesBudgetByBrandAndSeller();
+
+    _timer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => sendNotification(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> sendNotification() async {
+    final response = await _findOrderExtranetInprogress();
+
+    if (!mounted) return;
 
     if (response != null) {
-      WidgetsFlutterBinding.ensureInitialized();
       showNotification(response);
-      //actualiza el estado de la orden 'NOTIFICADO APP'
-      _updateStatusNotificationOrderExtranet(response["docNum"]);
+      // actualiza el estado de la orden 'NOTIFICADO APP'
+      await _updateStatusNotificationOrderExtranet(response['docNum']);
     }
   }
 
@@ -81,29 +97,29 @@ class _DashboardPageState extends State<DashboardPage> {
             now.year.toString() +
             '&month=' +
             now.month.toString();
+
     final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
-    Map<String, dynamic> data = {};
-    if (!resp["content"].toString().contains("Ocurrio un error")) {
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+
+    if (!resp['content'].toString().contains('Ocurrio un error')) {
       return resp;
-    } else {
-      data = {
-        "code": 0,
-        "content": [
-          {
-            "year": 2023,
-            "slpCode": "56",
-            "companyName": "IGB",
-            "month": "04",
-            "ventas": 00.00,
-            "presupuesto": 00,
-            "pendiente": 00.00,
-            "whsDefTire": "01"
-          }
-        ]
-      };
-      return data;
     }
+
+    return {
+      'code': 0,
+      'content': [
+        {
+          'year': now.year,
+          'slpCode': usuario,
+          'companyName': empresa,
+          'month': now.month.toString(),
+          'ventas': 0.0,
+          'presupuesto': 0,
+          'pendiente': 0.0,
+          'whsDefTire': '01'
+        }
+      ]
+    };
   }
 
   Future<Map<String, dynamic>> _datosBarras() async {
@@ -116,33 +132,30 @@ class _DashboardPageState extends State<DashboardPage> {
             now.year.toString() +
             '&month=' +
             now.month.toString();
-    final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp1 = jsonDecode(response.body);
-    Map<String, dynamic> data = {};
-    if (!resp1["content"].toString().contains("Ocurrio un error") ||
-        !resp1["content"].toString().contains("No se encontraron")) {
-      setState(() {
-        efectividad = resp1["content"]["effectiveness"];
-      });
 
+    final response = await http.get(Uri.parse(apiUrl));
+    final Map<String, dynamic> resp1 = jsonDecode(response.body);
+
+    final String contentStr = resp1['content'].toString();
+    final bool ok = !contentStr.contains('Ocurrio un error') &&
+        !contentStr.contains('No se encontraron');
+
+    if (ok) {
       return resp1;
-    } else {
-      data = {
-        "code": 0,
-        "content": [
-          {
-            "slpCode": "56",
-            "slpName": "SEBASTIAN KIZA LANCHEROS",
-            "year": 2023,
-            "month": 1,
-            "base": 0,
-            "impact": 0,
-            "effectiveness": 0
-          }
-        ]
-      };
-      return data;
     }
+
+    return {
+      'code': 0,
+      'content': {
+        'slpCode': usuario ?? '',
+        'slpName': '',
+        'year': now.year,
+        'month': now.month,
+        'base': 0,
+        'impact': 0,
+        'effectiveness': 0
+      }
+    };
   }
 
   Future<Map<String, dynamic>> _getSavedOrdersReport() async {
@@ -151,51 +164,51 @@ class _DashboardPageState extends State<DashboardPage> {
             empresa! +
             '?slpcode=' +
             usuario!;
+
     final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
-    Map<String, dynamic> data = {};
-    if (resp["code"] == 0) {
-      data = {
-        "code": 0,
-        "content": [
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+
+    if (resp['code'] == 0) {
+      return {
+        'code': 0,
+        'content': [
           {
-            "nroOrder": resp["content"][0],
-            "valorOrder": resp["content"][1],
+            'nroOrder': resp['content'][0],
+            'valorOrder': resp['content'][1],
           }
         ]
       };
-      return data;
-    } else {
-      return resp;
     }
+
+    return resp;
   }
 
   Future<dynamic> _findOrderExtranetInprogress() async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/find-order-extranet-inprogress/' +
             empresa! +
-            "/" +
+            '/' +
             usuario!;
+
     final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
-    if (resp["code"] == 0) {
-      return resp["content"];
-    } else {
-      return null;
-    }
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+
+    if (resp['code'] == 0) return resp['content'];
+    return null;
   }
 
   Future<void> _updateStatusNotificationOrderExtranet(String docNum) async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/update-status-order-extranet/' +
             empresa! +
-            "/" +
+            '/' +
             docNum;
-    final response = await http.put(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
 
-    if (resp["code"] == 0) {
-      resp["content"];
+    final response = await http.put(Uri.parse(apiUrl));
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+
+    if (resp['code'] == 0) {
+      resp['content'];
     }
   }
 
@@ -205,24 +218,21 @@ class _DashboardPageState extends State<DashboardPage> {
             empresa! +
             '?slpcode=' +
             usuario!;
+
     final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
-    if (resp["code"] == 0) {
-      return resp["content"];
-    } else {
-      return null;
-    }
+    final Map<String, dynamic> resp = jsonDecode(response.body);
+
+    if (resp['code'] == 0) return resp['content'];
+    return null;
   }
 
   void showAlertDialog(BuildContext context) {
-    Widget cancelButton = ElevatedButton(
-      child: Text("NO"),
-      onPressed: () {
-        Navigator.pop(context);
-      },
+    final Widget cancelButton = ElevatedButton(
+      onPressed: () => Navigator.pop(context),
+      child: const Text('NO'),
     );
-    Widget continueButton = ElevatedButton(
-      child: Text("SI"),
+
+    final Widget continueButton = ElevatedButton(
       onPressed: () {
         storage.remove('emailAsesor');
         storage.remove('nombreAsesor');
@@ -236,29 +246,24 @@ class _DashboardPageState extends State<DashboardPage> {
           MaterialPageRoute(builder: (context) => LoginScreen()),
         );
       },
+      child: const Text('SI'),
     );
-    AlertDialog alert = AlertDialog(
+
+    final AlertDialog alert = AlertDialog(
       title: Row(
-        children: [
-          Icon(
-            Icons.error,
-            color: Colors.orange,
-          ),
+        children: const [
+          Icon(Icons.error, color: Colors.orange),
           SizedBox(width: 8),
-          Text("Atención!"),
+          Text('Atención!'),
         ],
       ),
-      content: Text("¿Está seguro que desea salir de la aplicación?"),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
+      content: const Text('¿Está seguro que desea salir de la aplicación?'),
+      actions: [cancelButton, continueButton],
     );
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
+      builder: (BuildContext context) => alert,
     );
   }
 
@@ -271,72 +276,80 @@ class _DashboardPageState extends State<DashboardPage> {
           toY: 100,
           width: 40,
           borderRadius: BorderRadius.circular(4),
+          rodStackItems: const [],
+        ),
+      ],
+    ).copyWith(
+      barRods: [
+        BarChartRodData(
+          toY: 100,
+          width: 40,
+          borderRadius: BorderRadius.circular(4),
           rodStackItems: [
-            BarChartRodStackItem(0, x1, Color.fromRGBO(15, 178, 242, 1)),
-            BarChartRodStackItem(x1, x1 + x2, Color.fromRGBO(207, 240, 252, 1)),
+            BarChartRodStackItem(0, 0, Color.fromRGBO(15, 178, 242, 1))
+                .copyWith(toY: x1),
+            BarChartRodStackItem(
+              x1,
+              x1 + x2,
+              const Color.fromRGBO(207, 240, 252, 1),
+            ),
           ],
         ),
       ],
     );
   }
 
+  String _monthName(int m) {
+    switch (m) {
+      case 1:
+        return 'Enero';
+      case 2:
+        return 'Febrero';
+      case 3:
+        return 'Marzo';
+      case 4:
+        return 'Abril';
+      case 5:
+        return 'Mayo';
+      case 6:
+        return 'Junio';
+      case 7:
+        return 'Julio';
+      case 8:
+        return 'Agosto';
+      case 9:
+        return 'Septiembre';
+      case 10:
+        return 'Octubre';
+      case 11:
+        return 'Noviembre';
+      case 12:
+        return 'Diciembre';
+      default:
+        return 'Sin Definir';
+    }
+  }
+
+  String _convertMoney(dynamic v) {
+    String t = numberFormat.format(v);
+    final p = t.indexOf('.');
+    if (p != -1) t = t.substring(0, p);
+    return '\$$t';
+  }
+
   @override
   Widget build(BuildContext context) {
-    String monthName = "";
-    switch (now.month) {
-      case 01:
-        monthName = "Enero";
-        break;
-      case 02:
-        monthName = "Febrero";
-        break;
-      case 03:
-        monthName = "Marzo";
-        break;
-      case 04:
-        monthName = "Abril";
-        break;
-      case 05:
-        monthName = "Mayo";
-        break;
-      case 06:
-        monthName = "Junio";
-        break;
-      case 07:
-        monthName = "Julio";
-        break;
-      case 08:
-        monthName = "Agosto";
-        break;
-      case 09:
-        monthName = "Septiembre";
-        break;
-      case 10:
-        monthName = "Octubre";
-        break;
-      case 11:
-        monthName = "Noviembre";
-        break;
-      case 12:
-        monthName = "Diciembre";
-        break;
-      default:
-        monthName = "Sin Definir";
-    }
+    final String monthName = _monthName(now.month);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
         leading: GestureDetector(
-          child: Icon(
-            Icons.arrow_back_ios,
-            color: Colors.white,
-          ),
-          onTap: () {
-            showAlertDialog(context);
-          },
+          child: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onTap: () => showAlertDialog(context),
         ),
-        actions: [
+        actions: const [
           CarritoPedido(),
         ],
         title: const Text(
@@ -348,115 +361,85 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           children: [
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: FutureBuilder<Map<String, dynamic>>(
-                future: _datosDashboard2(),
+                future: _dashboardFuture,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     double ventasPendientes = 0.0;
                     double presupuestoPendiente = 0.0;
-                    ventasT = snapshot.data!["content"][0]["ventas"];
-                    presupuestoT = snapshot.data!["content"][0]["presupuesto"];
-                    presupuestoP = snapshot.data!["content"][0]["pendiente"];
-                    storage.write("nombreAsesor",
-                        snapshot.data!["content"][0]["slpName"]);
+
+                    ventasT = snapshot.data!['content'][0]['ventas'];
+                    presupuestoT = snapshot.data!['content'][0]['presupuesto'];
+                    presupuestoP = snapshot.data!['content'][0]['pendiente'];
+
+                    storage.write('nombreAsesor',
+                        snapshot.data!['content'][0]['slpName']);
                     storage.write(
-                        "emailAsesor", snapshot.data!["content"][0]["mail"]);
+                        'emailAsesor', snapshot.data!['content'][0]['mail']);
                     storage.write(
-                        "zona", snapshot.data!["content"][0]["whsDefTire"]);
-                    storage.write("urlFoto",
-                        snapshot.data!["content"][0]["urlSlpPicture"]);
+                        'zona', snapshot.data!['content'][0]['whsDefTire']);
+                    storage.write('urlFoto',
+                        snapshot.data!['content'][0]['urlSlpPicture']);
+
                     if (presupuestoT == 0 || presupuestoT.isNaN) {
-                      dataMap["Ventas"] = 0;
-                      dataMap["Presupuesto"] = 0;
-                      dataMap["Pend. por facturar"] = 0;
+                      dataMap['Ventas'] = 0;
+                      dataMap['Presupuesto'] = 0;
+                      dataMap['Pend. por facturar'] = 0;
                     } else {
                       ventasPendientes = (ventasT / presupuestoT) * 100;
                       ventasPendientes =
-                          double.parse((ventasPendientes).toStringAsFixed(2));
+                          double.parse(ventasPendientes.toStringAsFixed(2));
+
                       presupuestoPendiente =
                           (presupuestoP / presupuestoT) * 100;
-                      presupuestoPendiente = double.parse(
-                          (presupuestoPendiente).toStringAsFixed(2));
-                      dataMap["Ventas"] = ventasT;
-                      dataMap["Presupuesto"] =
+                      presupuestoPendiente =
+                          double.parse(presupuestoPendiente.toStringAsFixed(2));
+
+                      dataMap['Ventas'] = ventasT;
+                      dataMap['Presupuesto'] =
                           presupuestoT.toDouble() - ventasT;
-                      dataMap["Pend. por facturar"] = presupuestoP.toDouble();
+                      dataMap['Pend. por facturar'] = presupuestoP.toDouble();
                     }
 
-                    String presupuestoTstr = numberFormat.format(presupuestoT);
-                    if (presupuestoTstr.length > 2)
-                      presupuestoTstr =
-                          "\$" + presupuestoTstr.replaceAll(".00", "");
+                    final String presupuestoTstr = _convertMoney(presupuestoT);
+                    final String ventastStr = _convertMoney(ventasT);
+                    final String presupuestoPstr = _convertMoney(presupuestoP);
 
-                    String ventastStr = numberFormat.format(ventasT);
-                    if (ventastStr.contains('.')) {
-                      int decimalIndex = ventastStr.indexOf('.');
-                      ventastStr = "\$" + ventastStr.substring(0, decimalIndex);
-                    }
-
-                    String presupuestoPstr = numberFormat.format(presupuestoP);
-                    if (presupuestoPstr.contains('.')) {
-                      int decimalIndex = presupuestoPstr.indexOf('.');
-                      presupuestoPstr =
-                          "\$" + presupuestoPstr.substring(0, decimalIndex);
-                    }
                     return Column(
                       children: [
-                        SizedBox(height: 5),
-                        Text(
-                          "Presupuesto de ventas",
-                          style: TextStyle(
-                            fontSize: 20,
-                          ),
+                        const SizedBox(height: 5),
+                        const Text(
+                          'Presupuesto de ventas',
+                          style: TextStyle(fontSize: 20),
                         ),
                         Text(
-                          monthName + " - " + now.year.toString(),
-                          style: TextStyle(
-                            fontSize: 15,
-                          ),
+                          monthName + ' - ' + now.year.toString(),
+                          style: const TextStyle(fontSize: 15),
                         ),
-                        SizedBox(height: 0),
+                        const SizedBox(height: 0),
                         Text(
                           presupuestoTstr,
-                          style: TextStyle(
-                            fontSize: 20,
-                          ),
+                          style: const TextStyle(fontSize: 20),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Center(
                           child: Row(
                             children: [
                               Expanded(
                                 child: Column(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            child: Center(
-                                              child: Text(
-                                                '%$ventasPendientes',
-                                                style: TextStyle(fontSize: 20),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    Center(
+                                      child: Text(
+                                        '%$ventasPendientes',
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
                                     ),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            child: Center(
-                                              child: Text(
-                                                'Ventas',
-                                                style: TextStyle(fontSize: 12),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    const Center(
+                                      child: Text(
+                                        'Ventas',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -464,33 +447,17 @@ class _DashboardPageState extends State<DashboardPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            child: Center(
-                                              child: Text(
-                                                '%$presupuestoPendiente',
-                                                style: TextStyle(fontSize: 20),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    Center(
+                                      child: Text(
+                                        '%$presupuestoPendiente',
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
                                     ),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            child: Center(
-                                              child: Text(
-                                                'Pendiente por facturar',
-                                                style: TextStyle(fontSize: 12),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    const Center(
+                                      child: Text(
+                                        'Pendiente por facturar',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -498,51 +465,35 @@ class _DashboardPageState extends State<DashboardPage> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         pc.PieChart(
                           dataMap: dataMap,
                           chartType: pc.ChartType.ring,
                           baseChartColor: Colors.grey[50]!.withOpacity(0.15),
                           colorList: colorList,
-                          chartValuesOptions: pc.ChartValuesOptions(
+                          chartValuesOptions: const pc.ChartValuesOptions(
                             showChartValues: false,
                             showChartValuesInPercentage: false,
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         Center(
                           child: Row(
                             children: [
                               Expanded(
                                 child: Column(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            child: Center(
-                                              child: Text(
-                                                '$ventastStr',
-                                                style: TextStyle(fontSize: 20),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    Center(
+                                      child: Text(
+                                        ventastStr,
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
                                     ),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            child: Center(
-                                              child: Text(
-                                                'Ventas',
-                                                style: TextStyle(fontSize: 12),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    const Center(
+                                      child: Text(
+                                        'Ventas',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -550,33 +501,17 @@ class _DashboardPageState extends State<DashboardPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            child: Center(
-                                              child: Text(
-                                                '$presupuestoPstr',
-                                                style: TextStyle(fontSize: 20),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    Center(
+                                      child: Text(
+                                        presupuestoPstr,
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
                                     ),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            child: Center(
-                                              child: Text(
-                                                'Pendiente por facturar',
-                                                style: TextStyle(fontSize: 12),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    const Center(
+                                      child: Text(
+                                        'Pendiente por facturar',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -587,32 +522,25 @@ class _DashboardPageState extends State<DashboardPage> {
                       ],
                     );
                   } else if (snapshot.hasError) {
-                    return Text('Error al tratar de realizar la consulta');
+                    return const Text(
+                      'Error al tratar de realizar la consulta',
+                    );
                   }
                   return const CircularProgressIndicator();
                 },
               ),
             ),
-            Divider(),
+            const Divider(),
             Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Column(
                 children: [
-                  Center(
-                    child: Column(
-                      children: [
-                        Text(
-                          'Efectividad de clientes',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Text(
-                          '%$efectividad',
-                          style: TextStyle(
-                            fontSize: 20,
-                          ),
-                        ),
-                      ],
-                    ),
+                  const Text(
+                    'Efectividad de clientes',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Text(
+                    '%$efectividad',
+                    style: const TextStyle(fontSize: 20),
                   ),
                 ],
               ),
@@ -622,7 +550,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 horizontal: MediaQuery.of(context).size.width * 0.1,
               ),
               child: FutureBuilder<Map<String, dynamic>>(
-                future: _datosBarras(),
+                future: _barrasFuture,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     if (snapshot.data!["content"]
@@ -631,31 +559,37 @@ class _DashboardPageState extends State<DashboardPage> {
                         snapshot.data!["content"] ==
                             "No se encontraron datos para graficar la efectividad.") {
                     } else {
-                      base = snapshot.data!["content"]["base"];
-                      impacto = snapshot.data!["content"]["impact"];
-                      efectividad = snapshot.data!["content"]["effectiveness"];
+                      base = (snapshot.data!["content"]["base"] as num).toInt();
+                      impacto =
+                          (snapshot.data!["content"]["impact"] as num).toInt();
+                      efectividad =
+                          (snapshot.data!["content"]["effectiveness"] as num)
+                              .toDouble();
+                      if (base <= 0 || impacto <= 0 || efectividad <= 0) {
+                        return const Text(
+                          'En el momento no tiene asignación de efectividad',
+                          textAlign: TextAlign.center,
+                        );
+                      }
                     }
                     return Row(
                       children: [
                         Expanded(
                           child: Column(
-                            textBaseline: TextBaseline.ideographic,
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
                             children: [
-                              SizedBox(height: 10),
+                              const SizedBox(height: 10),
                               Row(
-                                textBaseline: TextBaseline.ideographic,
-                                crossAxisAlignment: CrossAxisAlignment.end,
                                 mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   BarraGrafica(
-                                    color: Color.fromRGBO(0, 55, 114, 1),
+                                    color: const Color.fromRGBO(0, 55, 114, 1),
                                     valor: base.toDouble(),
                                     etiqueta: base.toString(),
                                   ),
-                                  SizedBox(width: 10),
+                                  const SizedBox(width: 10),
                                   BarraGrafica(
-                                    color: Color.fromRGBO(51, 51, 51, 1),
+                                    color: const Color.fromRGBO(51, 51, 51, 1),
                                     valor: impacto.toDouble(),
                                     etiqueta: impacto.toString(),
                                   ),
@@ -666,7 +600,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                          children: const [
                             EtiquetaBullet(
                               color: Color.fromRGBO(0, 55, 114, 1),
                               texto: 'Clientes efectivos',
@@ -680,7 +614,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ],
                     );
                   } else if (snapshot.hasError) {
-                    return Text(
+                    return const Text(
                       'En el momento no tiene asignación de efectividad',
                       textAlign: TextAlign.center,
                     );
@@ -689,838 +623,193 @@ class _DashboardPageState extends State<DashboardPage> {
                 },
               ),
             ),
-            Divider(),
-            SizedBox(height: 5),
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Center(
-                    child: Column(
+            const Divider(),
+            const SizedBox(height: 5),
+            const Center(
+              child: Text(
+                'Ordenes guardadas',
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+            FutureBuilder<Map<String, dynamic>>(
+              future: _savedOrdersFuture,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  String valorOrderSavedStr = '\$0';
+                  if (snapshot.data!['code'] == 0) {
+                    nroOrderSaved = snapshot.data!['content'][0]['nroOrder'];
+                    valorOrderSaved =
+                        snapshot.data!['content'][0]['valorOrder'];
+                    valorOrderSavedStr = _convertMoney(valorOrderSaved);
+                  }
+                  return Center(
+                    child: Row(
                       children: [
-                        Text(
-                          'Ordenes guardadas',
-                          style: TextStyle(fontSize: 20),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                '$nroOrderSaved',
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const Text('#', style: TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                valorOrderSavedStr,
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const Text(
+                                'Total',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  );
+                } else if (snapshot.hasError) {
+                  return const Text('Error al tratar de realizar la consulta');
+                }
+                return const CircularProgressIndicator();
+              },
+            ),
+            const Divider(),
+            const SizedBox(height: 5),
+            const Center(
+              child: Text(
+                'Presupuesto por marcas',
+                style: TextStyle(fontSize: 20),
               ),
             ),
-            Container(
-              child: FutureBuilder<Map<String, dynamic>>(
-                future: _getSavedOrdersReport(),
+            const SizedBox(height: 5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                EtiquetaBullet(
+                  color: Color.fromRGBO(15, 178, 242, 1),
+                  texto: 'Facturado',
+                ),
+                SizedBox(width: 20),
+                EtiquetaBullet(
+                  color: Color.fromRGBO(207, 240, 252, 1),
+                  texto: 'Presupuesto',
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            if (empresa == 'IGB' || empresa == 'VARROC')
+              FutureBuilder<dynamic>(
+                future: _budgetByBrandFuture,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    String valorOrderSavedStr = "\$0";
-                    if (snapshot.data!["code"] == 0) {
-                      nroOrderSaved = snapshot.data!["content"][0]["nroOrder"];
-                      valorOrderSaved =
-                          snapshot.data!["content"][0]["valorOrder"];
-                      valorOrderSavedStr = numberFormat.format(valorOrderSaved);
-                      if (valorOrderSavedStr.contains('.')) {
-                        int decimalIndex = valorOrderSavedStr.indexOf('.');
-                        valorOrderSavedStr = "\$" +
-                            valorOrderSavedStr.substring(0, decimalIndex);
-                      }
+                    final data = snapshot.data;
+                    if (data == null) {
+                      return const Text(
+                        'En el momento no tiene presupuesto de marca asignado',
+                        textAlign: TextAlign.center,
+                      );
                     }
-                    return Center(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        child: Center(
-                                          child: Text(
-                                            '$nroOrderSaved',
-                                            style: TextStyle(fontSize: 20),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        child: Center(
-                                          child: Text(
-                                            '#',
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+
+                    final int count = (empresa == 'IGB') ? 8 : 6;
+
+                    return Container(
+                      height: 500,
+                      padding: const EdgeInsets.all(15),
+                      child: RotatedBox(
+                        quarterTurns: 1,
+                        child: BarChart(
+                          BarChartData(
+                            alignment: BarChartAlignment.spaceAround,
+                            barGroups: List.generate(
+                              count,
+                              (i) => makeGroupData(
+                                i,
+                                (data[i]['percent'] as num).toDouble(),
+                                100,
+                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        child: Center(
-                                          child: Text(
-                                            '$valorOrderSavedStr',
-                                            style: TextStyle(fontSize: 20),
+                            titlesData: FlTitlesData(
+                              leftTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 150,
+                                  getTitlesWidget: (value, meta) {
+                                    final int i = value.toInt();
+                                    if (i < 0 || i >= count) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return RotatedBox(
+                                      quarterTurns: -1,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            data[i]['result'].toString(),
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.blueGrey,
+                                            ),
+                                            textAlign: TextAlign.center,
                                           ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        child: Center(
-                                          child: Text(
-                                            'Total',
-                                            style: TextStyle(fontSize: 12),
+                                          Text(
+                                            data[i]['brand'].toString(),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            textAlign: TextAlign.center,
                                           ),
-                                        ),
+                                          Text(
+                                            data[i]['percent'].toString() + '%',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.blueGrey,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
+                                    );
+                                  },
                                 ),
-                              ],
+                              ),
+                              rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
                             ),
+                            gridData: const FlGridData(show: false),
+                            borderData: FlBorderData(show: false),
+                            barTouchData: BarTouchData(enabled: true),
                           ),
-                        ],
+                        ),
                       ),
                     );
                   } else if (snapshot.hasError) {
-                    return Text('Error al tratar de realizar la consulta');
+                    return const Text(
+                      'Error al tratar de realizar la consulta',
+                    );
+                  } else if (!snapshot.hasData) {
+                    return const Text(
+                      'En el momento no tiene presupuesto de marca asignado',
+                      textAlign: TextAlign.center,
+                    );
                   }
                   return const CircularProgressIndicator();
                 },
               ),
-            ),
-            Divider(),
-            SizedBox(height: 5),
-            Container(
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            'Presupuesto por marcas',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 5),
-            Container(
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        EtiquetaBullet(
-                          color: Color.fromRGBO(15, 178, 242, 1),
-                          texto: 'Facturado',
-                        ),
-                      ],
-                    ),
-                    SizedBox(width: 20),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        EtiquetaBullet(
-                          color: Color.fromRGBO(207, 240, 252, 1),
-                          texto: 'Presupuesto',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 5,
-            ),
-            if (empresa == "IGB")
-              Container(
-                child: FutureBuilder<dynamic>(
-                  future: _findSalesBudgetByBrandAndSeller(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Container(
-                        height: 500,
-                        padding: EdgeInsets.all(15),
-                        child: RotatedBox(
-                          quarterTurns: 1,
-                          child: BarChart(
-                            BarChartData(
-                              alignment: BarChartAlignment.spaceAround,
-                              barGroups: [
-                                makeGroupData(
-                                  0,
-                                  snapshot.data![0]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  1,
-                                  snapshot.data![1]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  2,
-                                  snapshot.data![2]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  3,
-                                  snapshot.data![3]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  4,
-                                  snapshot.data![4]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  5,
-                                  snapshot.data![5]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  6,
-                                  snapshot.data![6]["percent"].toDouble(),
-                                  100,
-                                ),
-                              ],
-                              titlesData: FlTitlesData(
-                                leftTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: false,
-                                  ),
-                                ),
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 150,
-                                    getTitlesWidget: (value, meta) {
-                                      switch (value.toInt()) {
-                                        case 0:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  snapshot.data![0]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![0]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![0]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 1:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![1]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![1]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![1]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 2:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![2]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![2]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![2]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 3:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![3]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![3]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![3]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 4:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![4]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![4]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![4]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 5:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![5]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![5]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![5]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 6:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![6]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![6]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![6]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        default:
-                                          return const SizedBox();
-                                      }
-                                    },
-                                  ),
-                                ),
-                                rightTitles: AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                                topTitles: AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                              ),
-                              gridData: FlGridData(show: false),
-                              borderData: FlBorderData(show: false),
-                              barTouchData: BarTouchData(enabled: true),
-                            ),
-                          ),
-                        ),
-                      );
-                    } else if (snapshot.hasError) {
-                      return const Text(
-                        'Error al tratar de realizar la consulta',
-                      );
-                    } else if (snapshot.data == null) {
-                      return const Text(
-                        'En el momento no tiene presupuesto de marca asignado',
-                        textAlign: TextAlign.center,
-                      );
-                    }
-                    return const CircularProgressIndicator();
-                  },
-                ),
-              ),
-            if (empresa == "VARROC")
-              Container(
-                child: FutureBuilder<dynamic>(
-                  future: _findSalesBudgetByBrandAndSeller(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Container(
-                        height: 500,
-                        padding: EdgeInsets.all(15),
-                        child: RotatedBox(
-                          quarterTurns: 1,
-                          child: BarChart(
-                            BarChartData(
-                              alignment: BarChartAlignment.spaceAround,
-                              barGroups: [
-                                makeGroupData(
-                                  0,
-                                  snapshot.data![0]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  1,
-                                  snapshot.data![1]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  2,
-                                  snapshot.data![2]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  3,
-                                  snapshot.data![3]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  4,
-                                  snapshot.data![4]["percent"].toDouble(),
-                                  100,
-                                ),
-                                makeGroupData(
-                                  5,
-                                  snapshot.data![5]["percent"].toDouble(),
-                                  100,
-                                ),
-                              ],
-                              titlesData: FlTitlesData(
-                                leftTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: false,
-                                  ),
-                                ),
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 150,
-                                    getTitlesWidget: (value, meta) {
-                                      switch (value.toInt()) {
-                                        case 0:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  snapshot.data![0]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![0]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![0]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 1:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![1]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![1]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![1]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 2:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![2]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![2]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![2]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 3:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  snapshot.data![3]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![3]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![3]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 4:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  snapshot.data![4]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![4]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![4]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 5:
-                                          return RotatedBox(
-                                            quarterTurns: -1,
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  snapshot.data![5]["result"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![5]["brand"]
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Text(
-                                                  snapshot.data![5]["percent"]
-                                                          .toString() +
-                                                      '%',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blueGrey,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        default:
-                                          return const SizedBox();
-                                      }
-                                    },
-                                  ),
-                                ),
-                                rightTitles: AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                                topTitles: AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                              ),
-                              gridData: FlGridData(show: false),
-                              borderData: FlBorderData(show: false),
-                              barTouchData: BarTouchData(enabled: true),
-                            ),
-                          ),
-                        ),
-                      );
-                    } else if (snapshot.hasError) {
-                      return const Text(
-                        'Error al tratar de realizar la consulta',
-                      );
-                    } else if (snapshot.data == null) {
-                      return const Text(
-                        'En el momento no tiene presupuesto de marca asignado',
-                        textAlign: TextAlign.center,
-                      );
-                    }
-                    return const CircularProgressIndicator();
-                  },
-                ),
-              ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -1533,8 +822,12 @@ class BarraGrafica extends StatelessWidget {
   final double valor;
   final String etiqueta;
 
-  const BarraGrafica(
-      {required this.color, required this.valor, required this.etiqueta});
+  const BarraGrafica({
+    super.key,
+    required this.color,
+    required this.valor,
+    required this.etiqueta,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1546,7 +839,7 @@ class BarraGrafica extends StatelessWidget {
           height: valor,
           color: color,
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -1556,7 +849,11 @@ class EtiquetaBullet extends StatelessWidget {
   final Color color;
   final String texto;
 
-  const EtiquetaBullet({required this.color, required this.texto});
+  const EtiquetaBullet({
+    super.key,
+    required this.color,
+    required this.texto,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1570,10 +867,10 @@ class EtiquetaBullet extends StatelessWidget {
             color: color,
           ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Text(
           texto,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),

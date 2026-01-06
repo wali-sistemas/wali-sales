@@ -10,8 +10,8 @@ import 'package:http/http.dart' as http;
 import 'package:productos_app/icomoon.dart';
 
 List itemsGuardados = [];
-List<String> allNames = [""];
-List<String> allNames2 = [""];
+List<String> allNames = [''];
+List<String> allNames2 = [''];
 var mainColor = Color(0xff1B3954);
 var textColor = Color(0xff727272);
 var accentColor = Color(0xff16ADE1);
@@ -19,7 +19,7 @@ var whiteText = Color(0xffF5F5F5);
 List _stockB = [];
 
 class CustomSearchDelegate extends SearchDelegate {
-  var suggestion = [""];
+  var suggestion = [''];
   List<String> searchResult = [];
   TextEditingController cantidadController = TextEditingController();
   TextEditingController observacionesController = TextEditingController();
@@ -55,7 +55,6 @@ class CustomSearchDelegate extends SearchDelegate {
     List _inventario = [];
 
     if (GetStorage().read('items') == null) {
-      //print("allnames VACIO :  *******__________________________________");
     } else {
       _itemsBuscador.clear();
       itemsGuardados = GetStorage().read('items');
@@ -88,6 +87,7 @@ class CustomSearchDelegate extends SearchDelegate {
         .where((element) =>
             element.toLowerCase().contains(query.trim().toLowerCase()))
         .toList();
+
     return Container(
       margin: EdgeInsets.all(20),
       child: ListView.builder(
@@ -114,7 +114,7 @@ class CustomSearchDelegate extends SearchDelegate {
                     fontSize: 15,
                   ),
                 ),
-                subtitle: Text("Sku: " + _itemsBuscador[indexB]['itemCode']),
+                subtitle: Text('Sku: ' + _itemsBuscador[indexB]['itemCode']),
                 leading: GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -141,7 +141,6 @@ class CustomSearchDelegate extends SearchDelegate {
                 ),
                 trailing: TextButton.icon(
                   onPressed: () {
-                    ///BUSCAR ITEM SELLECCIONADO
                     int i = 0;
                     int indexSeleccionado = 0;
                     itemsGuardados.forEach(
@@ -153,7 +152,7 @@ class CustomSearchDelegate extends SearchDelegate {
                         i++;
                       },
                     );
-                    storage.write("index", indexSeleccionado);
+                    storage.write('index', indexSeleccionado);
                     showDialog(
                       context: context,
                       builder: (_) {
@@ -175,7 +174,6 @@ class CustomSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     if (GetStorage().read('items') == null) {
-      //print("allnames VACIO :  *******__________________________________");
     } else {
       _itemsBuscador2.clear();
       allNames2.clear();
@@ -192,9 +190,9 @@ class CustomSearchDelegate extends SearchDelegate {
           palabras2.forEach(
             (element2) {
               if (element2.length > 1) {
-                if (k['itemName'].toLowerCase().contains(element2.toLowerCase())
-                    // || k['itemCode'].toLowerCase().contains(element2.trim().toLowerCase())
-                    ) {
+                if (k['itemName']
+                    .toLowerCase()
+                    .contains(element2.toLowerCase())) {
                   m++;
                 }
               }
@@ -208,9 +206,10 @@ class CustomSearchDelegate extends SearchDelegate {
       );
     }
 
-    if (query == "" || query == " ") {
+    if (query == '' || query == ' ') {
       _itemsBuscador2.clear();
     }
+
     return ListView.builder(
       itemBuilder: (context, index) => ListTile(
         onTap: () {
@@ -221,7 +220,6 @@ class CustomSearchDelegate extends SearchDelegate {
         leading: Icon(query.isEmpty ? Icons.history : Icons.search),
         trailing: TextButton.icon(
           onPressed: () {
-            ///BUSCAR ITEM SELLECCIONADO
             int i = 0;
             int indexSeleccionado = 0;
             itemsGuardados.forEach(
@@ -233,7 +231,7 @@ class CustomSearchDelegate extends SearchDelegate {
               },
             );
 
-            storage.write("index", indexSeleccionado);
+            storage.write('index', indexSeleccionado);
             showDialog(
               context: context,
               builder: (_) {
@@ -246,9 +244,9 @@ class CustomSearchDelegate extends SearchDelegate {
         ),
         title: RichText(
           text: TextSpan(
-            text: _itemsBuscador2[index]["itemName"] +
+            text: _itemsBuscador2[index]['itemName'] +
                 '\n' +
-                _itemsBuscador2[index]["itemCode"],
+                _itemsBuscador2[index]['itemCode'],
             style: TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,
@@ -281,11 +279,11 @@ class _MyDialogState extends State<MyDialog> {
   List<dynamic> itemsPedido = [];
   String dropdownvalueBodega = 'Elija una bodega';
   String empresa = GetStorage().read('empresa');
-  String mensaje = "";
+  String mensaje = '';
   bool btnSoldOutActivo = false;
   final numberFormat = new NumberFormat.simpleCurrency();
   var whsCodeStockItem;
-  String zona = "";
+  String zona = '';
   String usuario = GetStorage().read('usuario');
   List _stockFull = [];
   int idPedidoDb = 0;
@@ -295,18 +293,18 @@ class _MyDialogState extends State<MyDialog> {
 
   Connectivity _connectivity = Connectivity();
   final itemTemp = {
-    "quantity": "",
-    "itemCode": "",
-    "itemName": "",
-    "group": "",
-    "whsCode": "",
-    "presentation": "",
-    "price": "",
-    "discountItem": "",
-    "discountPorc": "",
-    "iva": ""
+    'quantity': '',
+    'itemCode': '',
+    'itemName': '',
+    'group': '',
+    'whsCode': '',
+    'presentation': '',
+    'price': '',
+    'discountItem': '',
+    'discountPorc': '',
+    'iva': ''
   };
-  final actualizarPedidoGuardado = {"id": "", "docNum": ""};
+  final actualizarPedidoGuardado = {'id': '', 'docNum': ''};
 
   @override
   void initState() {
@@ -319,16 +317,12 @@ class _MyDialogState extends State<MyDialog> {
         'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    final data = resp["content"];
+    final data = resp['content'];
     if (!mounted) return;
     setState(
       () {
         _items = data;
-
-        /// GUARDAR EN SHAREDPREFERENCES MIENTRAS SE HACE CON SQL
-        //String itemsG = jsonEncode(_items);
         storage.write('items', _items);
-        //_guardarItems();
       },
     );
   }
@@ -344,9 +338,9 @@ class _MyDialogState extends State<MyDialog> {
             '&slpcode=0';
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    final codigoError = resp["code"];
+    final codigoError = resp['code'];
     if (codigoError == 0) {
-      final data = resp["content"];
+      final data = resp['content'];
       return data[0]['stockFull'];
     } else {
       return 0;
@@ -377,7 +371,7 @@ class _MyDialogState extends State<MyDialog> {
     int insertedItemId = await dbHelper.insertItem(newItem);
     idLocal = insertedItemId;
     if (insertedItemId > 0) {
-      //print("El item ha sido insertado con éxito con el ID: $insertedItemId");
+      //print('El item ha sido insertado con éxito con el ID: $insertedItemId');
     }
   }
 
@@ -387,10 +381,10 @@ class _MyDialogState extends State<MyDialog> {
 
     if (items.isNotEmpty) {
       for (Item item in items) {
-        // print("ID: ${item.id}");
-        // print("ID Pedido: ${item.idPedido}");
-        // print("Quantity: ${item.quantity}");
-        // print("--------------------------");
+        // print('ID: ${item.id}');
+        // print('ID Pedido: ${item.idPedido}');
+        // print('Quantity: ${item.quantity}');
+        // print('--------------------------');
       }
     }
   }
@@ -401,29 +395,29 @@ class _MyDialogState extends State<MyDialog> {
 
     if (pedidos.isNotEmpty) {
       for (Pedido pedido in pedidos) {
-        //print("ID: ${pedido.id}");
-        //print("Cardcode: ${pedido.cardCode}");
-        //print("Nombre: ${pedido.cardName}");
+        //print('ID: ${pedido.id}');
+        //print('Cardcode: ${pedido.cardCode}');
+        //print('Nombre: ${pedido.cardName}');
         // ... Mostrar los demás atributos del item ...
-        //print("--------------------------");
+        //print('--------------------------');
       }
     }
   }
 
   Future<void> insertPedidoDb() async {
     Pedido newPedido = Pedido(
-      cardCode: "C12345",
-      cardName: "Cliente Ejemplo",
-      comments: "Pedido de prueba",
-      companyName: "Empresa Ejemplo",
-      numAtCard: "123456",
-      shipToCode: "S123",
-      payToCode: "P123",
+      cardCode: 'C12345',
+      cardName: 'Cliente Ejemplo',
+      comments: 'Pedido de prueba',
+      companyName: 'Empresa Ejemplo',
+      numAtCard: '123456',
+      shipToCode: 'S123',
+      payToCode: 'P123',
       slpCode: 5,
       discountPercent: 0.1,
       docTotal: 100.0,
-      lineNum: "L001",
-      detailSalesOrder: "Detalle del pedido",
+      lineNum: 'L001',
+      detailSalesOrder: 'Detalle del pedido',
     );
 
     // Insertar el nuevo pedido en la base de datos y obtener el ID asignado
@@ -431,9 +425,9 @@ class _MyDialogState extends State<MyDialog> {
     int insertedPedidoId = await dbHelper.insertPedido(newPedido);
 
     if (insertedPedidoId > 0) {
-      //print("El pedido ha sido insertado con éxito con el ID: $insertedPedidoId");
+      //print('El pedido ha sido insertado con éxito con el ID: $insertedPedidoId');
     } else {
-      //print("Error al insertar el pedido en la base de datos");
+      //print('Error al insertar el pedido en la base de datos');
     }
     idPedidoDb = insertedPedidoId;
   }
@@ -453,13 +447,13 @@ class _MyDialogState extends State<MyDialog> {
       headers: <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
-          "itemCode": itemCode,
-          "itemName": itemName,
-          "quantity": quantity,
-          "slpCode": usuario,
-          "companyName": empresa,
-          "origen": origen,
-          "whsName": whsName
+          'itemCode': itemCode,
+          'itemName': itemName,
+          'quantity': quantity,
+          'slpCode': usuario,
+          'companyName': empresa,
+          'origen': origen,
+          'whsName': whsName
         },
       ),
     );
@@ -477,7 +471,7 @@ class _MyDialogState extends State<MyDialog> {
     }
 
     if (GetStorage().read('zona') == null) {
-      zona = "01";
+      zona = '01';
     } else {
       zona = GetStorage().read('zona');
     }
@@ -488,20 +482,20 @@ class _MyDialogState extends State<MyDialog> {
       index = GetStorage().read('index');
     }
     //Activar seleccion de bodega para las llantas
-    if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-        itemsGuardados[index]["marca"] == 'XCELINK') {
+    if (itemsGuardados[index]['grupo'] == 'LLANTAS' &&
+        itemsGuardados[index]['marca'] == 'XCELINK') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
       isVisibleBod = true;
     }
     //Activar seleccion de bodega para los lubricantes de REVO bodega 35-MAGNUN BOGOTA y 01-CEDI MEDELLÍN
-    if (itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
-        itemsGuardados[index]["marca"] == 'REVO') {
+    if (itemsGuardados[index]['subgrupo'] == 'LUBRICANTES' &&
+        itemsGuardados[index]['marca'] == 'REVO') {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ'];
       isVisibleBod = true;
     }
     //Activar seleccion de bodega para las llantas TIMSUN bodega 35-MAGNUN BOGOTA, 26-MAGNUN CALI, 05-MAGNUM CARTAGENA y 45-ALMAVIVA MEDELLÍN
-    if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-        itemsGuardados[index]["marca"] == 'TIMSUN') {
+    if (itemsGuardados[index]['grupo'] == 'LLANTAS' &&
+        itemsGuardados[index]['marca'] == 'TIMSUN') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ', 'MEDELLÍN'];
       isVisibleBod = true;
     }
@@ -512,7 +506,7 @@ class _MyDialogState extends State<MyDialog> {
         _stockFull = GetStorage().read('stockFull');
         _stockFull.forEach(
           (j) {
-            if (itemsGuardados[index]["itemCode"] == j["itemCode"]) {
+            if (itemsGuardados[index]['itemCode'] == j['itemCode']) {
               _stockTemp.add(j);
             }
           },
@@ -538,7 +532,7 @@ class _MyDialogState extends State<MyDialog> {
         whsCodeStockItem = bodega['whsCode'];
         fullStock = bodega['quantity'];
       } else {
-        whsCodeStockItem = itemsGuardados[index]["whsCode"];
+        whsCodeStockItem = itemsGuardados[index]['whsCode'];
         stockSuma = stockSuma + bodega['quantity'];
       }
     }
@@ -596,12 +590,12 @@ class _MyDialogState extends State<MyDialog> {
                           whsCode = '26';
                           break;
                         case 'MEDELLÍN':
-                          if (itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-                              itemsGuardados[index]["marca"] == 'TIMSUN') {
+                          if (itemsGuardados[index]['grupo'] == 'LLANTAS' &&
+                              itemsGuardados[index]['marca'] == 'TIMSUN') {
                             whsCode = '45';
-                          } else if (itemsGuardados[index]["subgrupo"] ==
+                          } else if (itemsGuardados[index]['subgrupo'] ==
                                   'LUBRICANTES' &&
-                              itemsGuardados[index]["marca"] == 'REVO') {
+                              itemsGuardados[index]['marca'] == 'REVO') {
                             whsCode = '01';
                           }
                           break;
@@ -655,7 +649,7 @@ class _MyDialogState extends State<MyDialog> {
           height: 35,
           child: TextField(
             onChanged: (text) {
-              if (empresa != "REDPLAS") {
+              if (empresa != 'REDPLAS') {
                 RegExp regex = RegExp(r'0+[1-9]');
                 if (text.length == 0) {
                   setState(
@@ -670,7 +664,7 @@ class _MyDialogState extends State<MyDialog> {
                   if (!areAllCharactersNumbers(text)) {
                     setState(
                       () {
-                        mensaje = "Cantidad debe ser numérica";
+                        mensaje = 'Cantidad debe ser numérica';
                         textoVisible = true;
                         btnSoldOutActivo = false;
                       },
@@ -679,7 +673,7 @@ class _MyDialogState extends State<MyDialog> {
                     if (regex.hasMatch(text)) {
                       setState(
                         () {
-                          mensaje = "Cantidad contiene 0 a la izq";
+                          mensaje = 'Cantidad contiene 0 a la izq';
                           textoVisible = true;
                           btnSoldOutActivo = false;
                         },
@@ -688,7 +682,7 @@ class _MyDialogState extends State<MyDialog> {
                       if (int.parse(text) < 1) {
                         setState(
                           () {
-                            mensaje = "Cantidad debe ser mayor a 0";
+                            mensaje = 'Cantidad debe ser mayor a 0';
                             textoVisible = true;
                             btnSoldOutActivo = false;
                           },
@@ -697,15 +691,13 @@ class _MyDialogState extends State<MyDialog> {
                         if (int.parse(text) > fullStock) {
                           setState(
                             () {
-                              //mensaje = "Cantidad es mayor al stock";
-                              //textoVisible = true;
                               btnSoldOutActivo = true;
                             },
                           );
                         } else {
                           setState(
                             () {
-                              mensaje = "";
+                              mensaje = '';
                               textoVisible = false;
                               btnSoldOutActivo = false;
                             },
@@ -718,7 +710,7 @@ class _MyDialogState extends State<MyDialog> {
               } else {
                 setState(
                   () {
-                    mensaje = "";
+                    mensaje = '';
                     textoVisible = false;
                     btnSoldOutActivo = true;
                   },
@@ -786,25 +778,25 @@ class _MyDialogState extends State<MyDialog> {
                           itemsGuardados[index]['itemCode'],
                           itemsGuardados[index]['itemName'],
                           int.parse(cantidadController.text),
-                          "CATALOGO",
+                          'CATALOGO',
                           whsName);
                       bool res = jsonDecode(response.body);
                       if (res) {
                         setState(
                           () {
-                            mensaje = "Agotado reportado con éxito";
+                            mensaje = 'Agotado reportado con éxito';
                             textoVisible = true;
                             btnSoldOutActivo = false;
-                            cantidadController.text = "";
+                            cantidadController.text = '';
                           },
                         );
                       } else {
                         setState(
                           () {
-                            mensaje = "No se pudo reportar el agotado";
+                            mensaje = 'No se pudo reportar el agotado';
                             textoVisible = true;
                             btnSoldOutActivo = true;
-                            cantidadController.text = "";
+                            cantidadController.text = '';
                           },
                         );
                       }

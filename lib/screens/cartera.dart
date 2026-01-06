@@ -14,6 +14,7 @@ import 'package:flutter_email_sender/flutter_email_sender.dart';
 
 class CarteraPage extends StatefulWidget {
   const CarteraPage({Key? key}) : super(key: key);
+
   @override
   State<CarteraPage> createState() => CarteraPageState();
 }
@@ -30,7 +31,7 @@ class CarteraPageState extends State<CarteraPage> {
   List<Map<String, dynamic>> detalleCartera = [];
   List<Map<String, dynamic>> detallePortafolio = [];
 
-  var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
+  final NumberFormat numberFormat = NumberFormat('#,##0.00', 'en_Us');
 
   @override
   void initState() {
@@ -45,7 +46,6 @@ class CarteraPageState extends State<CarteraPage> {
   }
 
   Future<void> _fetchDataCartera() async {
-    //if (GetStorage().read('datosCartera') == null) {
     String apiUrl = '';
     if (GetStorage().read('nitFiltroCartera') == null) {
       apiUrl =
@@ -65,38 +65,26 @@ class CarteraPageState extends State<CarteraPage> {
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    String texto = "No se encontro cartera para asesor " +
+    String texto = 'No se encontro cartera para asesor ' +
         codigo +
-        " en la empresa " +
+        ' en la empresa ' +
         empresa;
 
-    final codigoError = resp["code"];
+    final codigoError = resp['code'];
     if (codigoError == -1) {
-      var snackBar = SnackBar(
+      final snackBar = SnackBar(
         content: Text(texto),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
 
-    final data = resp["content"];
+    final data = resp['content'];
     if (!mounted) return;
+
     setState(() {
       _cartera = data;
-
-      /// GUARDAR EN LOCAL STORAGE
-      _guardarDatos();
+      storage.write('datosCartera', _cartera);
     });
-    /*} else {
-      _cartera = GetStorage().read('datosCartera');
-    }*/
-  }
-
-  Future<void> _guardarDatos() async {
-    // SharedPreferences pref = await SharedPreferences.getInstance();
-    // //Map json = jsonDecode(jsonString);
-    // String user = jsonEncode(_cartera);
-    // pref.setString('datosCartera', user);
-    storage.write('datosCartera', _cartera);
   }
 
   Map<String, dynamic>? findElementByCardCode(
@@ -129,28 +117,26 @@ class CarteraPageState extends State<CarteraPage> {
 
     final response = await http.get(Uri.parse(endpoint));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    String texto = "No se encontraron datos de cartera para el usuario " +
+    String texto = 'No se encontraron datos de cartera para el usuario ' +
         codigo +
-        " y empresa " +
+        ' y empresa ' +
         empresa;
 
-    final codigoError = resp["content"];
+    final codigoError = resp['content'];
     if (codigoError == -1) {
-      var snackBar = SnackBar(
+      final snackBar = SnackBar(
         content: Text(texto),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
-    final data = resp["content"];
+    final data = resp['content'];
 
     if (!mounted) return;
-    setState(
-      () {
-        List<Map<String, dynamic>> contentMapList =
-            data.cast<Map<String, dynamic>>();
-        detalleCartera = contentMapList;
-      },
-    );
+    setState(() {
+      List<Map<String, dynamic>> contentMapList =
+          data.cast<Map<String, dynamic>>();
+      detalleCartera = contentMapList;
+    });
   }
 
   Future<void> _launchPhone(String phone) async {
@@ -165,19 +151,20 @@ class CarteraPageState extends State<CarteraPage> {
 
   Future<http.Response> _generateReport(
       String id, String document, String origen) async {
-    final String url =
+    const String url =
         'http://wali.igbcolombia.com:8080/manager/res/report/generate-report';
+
     return http.post(
       Uri.parse(url),
-      headers: <String, String>{'Content-Type': 'application/json'},
+      headers: const <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
-          "id": id,
-          "copias": 0,
-          "documento": document,
-          "companyName": empresa,
-          "origen": origen,
-          "imprimir": false
+          'id': id,
+          'copias': 0,
+          'documento': document,
+          'companyName': empresa,
+          'origen': origen,
+          'imprimir': false
         },
       ),
     );
@@ -189,7 +176,6 @@ class CarteraPageState extends State<CarteraPage> {
 
     if (response.statusCode == 200) {
       final Uint8List pdfBytes = response.bodyBytes;
-      //final directory = await Directory.systemTemp.createTemp();
       final pdfFile = File('/storage/emulated/0/Download/' +
           document +
           '-' +
@@ -203,13 +189,20 @@ class CarteraPageState extends State<CarteraPage> {
     }
   }
 
+  String _convertMoney(dynamic v) {
+    String t = numberFormat.format(v);
+    final p = t.indexOf('.');
+    if (p != -1) t = t.substring(0, p);
+    return '\$$t';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
         leading: GestureDetector(
-          child: Icon(
+          child: const Icon(
             Icons.arrow_back_ios,
             color: Colors.white,
           ),
@@ -224,21 +217,20 @@ class CarteraPageState extends State<CarteraPage> {
         actions: [
           IconButton(
             color: Colors.white,
-            icon: Icon(Icons.download_outlined),
+            icon: const Icon(Icons.download_outlined),
             onPressed: () async {
-              DateTime now = DateTime.now();
               try {
                 http.Response response = await _generateReport(
-                    GetStorage().read('usuario'), "collection", "S");
+                    GetStorage().read('usuario'), 'collection', 'S');
                 Map<String, dynamic> resultado = jsonDecode(response.body);
 
-                if (response.statusCode == 200 && resultado['content'] != "") {
+                if (response.statusCode == 200 && resultado['content'] != '') {
                   final Uri url = Uri.parse(
-                    "https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/" +
+                    'https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/' +
                         GetStorage().read('empresa') +
-                        "/collection/" +
+                        '/collection/' +
                         GetStorage().read('usuario') +
-                        ".pdf",
+                        '.pdf',
                   );
 
                   if (await canLaunchUrl(url)) {
@@ -246,27 +238,9 @@ class CarteraPageState extends State<CarteraPage> {
                   } else {
                     launchUrl(url);
                   }
-
-                  /*_downloadReportPDF(
-                    'http://wali.igbcolombia.com:8080/shared/' +
-                        GetStorage().read('empresa') +
-                        '/collection/' +
-                        GetStorage().read('usuario') +
-                        '.pdf',
-                    DateFormat("yyyyMMdd-hhmm").format(now),
-                    "CarteraGeneral",
-                    "",
-                  );
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Cartera general guardada en descargas'),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );*/
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text(
                         'No se pudo guardar el pedido, error de red, verifique conectividad por favor',
                       ),
@@ -276,7 +250,7 @@ class CarteraPageState extends State<CarteraPage> {
                 }
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text(
                       'Error al generar el reporte de cartera general',
                     ),
@@ -294,7 +268,7 @@ class CarteraPageState extends State<CarteraPage> {
               delegate: CustomSearchDelegateCartera(),
             );
           },
-          title: Text(
+          title: const Text(
             'Buscar cartera',
             style: TextStyle(color: Colors.white),
           ),
@@ -303,7 +277,7 @@ class CarteraPageState extends State<CarteraPage> {
       body: Center(
         child: Column(
           children: [
-            Container(
+            SizedBox(
               height: 80,
               child: Flex(
                 direction: Axis.horizontal,
@@ -314,11 +288,9 @@ class CarteraPageState extends State<CarteraPage> {
                 ],
               ),
             ),
-            Container(
-              child: Expanded(
-                child: cartera(context),
-              ),
-            )
+            Expanded(
+              child: cartera(context),
+            ),
           ],
         ),
       ),
@@ -327,15 +299,11 @@ class CarteraPageState extends State<CarteraPage> {
 
   Widget tituloCartera(BuildContext context) {
     int total = 0;
-    detalleCartera.forEach((element) {
-      total = element["total"];
-    });
-
-    String totalCartGen = numberFormat.format(total);
-    if (totalCartGen.contains('.')) {
-      int decimalIndex = totalCartGen.indexOf('.');
-      totalCartGen = "\$" + totalCartGen.substring(0, decimalIndex);
+    for (final element in detalleCartera) {
+      total = element['total'];
     }
+
+    final String totalCartGen = _convertMoney(total);
 
     return Card(
       child: Container(
@@ -345,7 +313,7 @@ class CarteraPageState extends State<CarteraPage> {
           title: Center(
             child: Text(
               'CL(' + _cartera.length.toString() + ') - ' + totalCartGen + '\n',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
               ),
             ),
@@ -361,155 +329,115 @@ class CarteraPageState extends State<CarteraPage> {
         itemCount: _cartera.length,
         itemBuilder: (context, index) {
           Map<String, dynamic>? resultado = findElementByCardCode(
-              detalleCartera, _cartera[index]["cardCode"].toString());
-          String ageSinVencer = "0";
-          String age0a30 = "0";
-          String age30a60 = "0";
-          String age61a90 = "0";
-          String age91a120 = "0";
-          String ageMas120 = "0";
-          String totalCarteraS = "0";
-          String cupo = "0";
-          String phone = "0";
-          String emailCL = "";
+              detalleCartera, _cartera[index]['cardCode'].toString());
+
+          String ageSinVencer = '0';
+          String age0a30 = '0';
+          String age30a60 = '0';
+          String age61a90 = '0';
+          String age91a120 = '0';
+          String ageMas120 = '0';
+          String totalCarteraS = '0';
+          String cupo = '0';
+          String phone = '0';
+          String emailCL = '';
 
           if (resultado != null) {
-            ageSinVencer = numberFormat.format(resultado["ageSinVencer"]);
-            if (ageSinVencer.contains('.')) {
-              int decimalIndex = ageSinVencer.indexOf('.');
-              ageSinVencer = "\$" + ageSinVencer.substring(0, decimalIndex);
-            }
+            ageSinVencer = _convertMoney(resultado['ageSinVencer']);
+            age0a30 = _convertMoney(resultado['age0a30']);
+            age30a60 = _convertMoney(resultado['age30a60']);
+            age61a90 = _convertMoney(resultado['age61a90']);
+            age91a120 = _convertMoney(resultado['age91a120']);
+            ageMas120 = _convertMoney(resultado['ageMas120']);
+            totalCarteraS = _convertMoney(resultado['subTotal']);
+            cupo = _convertMoney(_cartera[index]['cupo']);
 
-            age0a30 = numberFormat.format(resultado["age0a30"]);
-            if (age0a30.contains('.')) {
-              int decimalIndex = age0a30.indexOf('.');
-              age0a30 = "\$" + age0a30.substring(0, decimalIndex);
-            }
-
-            age30a60 = numberFormat.format(resultado["age30a60"]);
-            if (age30a60.contains('.')) {
-              int decimalIndex = age30a60.indexOf('.');
-              age30a60 = "\$" + age30a60.substring(0, decimalIndex);
-            }
-
-            age61a90 = numberFormat.format(resultado["age61a90"]);
-            if (age61a90.contains('.')) {
-              int decimalIndex = age61a90.indexOf('.');
-              age61a90 = "\$" + age61a90.substring(0, decimalIndex);
-            }
-
-            age91a120 = numberFormat.format(resultado["age91a120"]);
-            if (age91a120.contains('.')) {
-              int decimalIndex = age91a120.indexOf('.');
-              age91a120 = "\$" + age91a120.substring(0, decimalIndex);
-            }
-
-            ageMas120 = numberFormat.format(resultado["ageMas120"]);
-            if (ageMas120.contains('.')) {
-              int decimalIndex = ageMas120.indexOf('.');
-              ageMas120 = "\$" + ageMas120.substring(0, decimalIndex);
-            }
-
-            totalCarteraS = numberFormat.format(resultado["subTotal"]);
-            if (totalCarteraS.contains('.')) {
-              int decimalIndex = totalCarteraS.indexOf('.');
-              totalCarteraS = "\$" + totalCarteraS.substring(0, decimalIndex);
-            }
-
-            cupo = numberFormat.format(_cartera[index]["cupo"]);
-            if (cupo.contains('.')) {
-              int decimalIndex = cupo.indexOf('.');
-              cupo = "\$" + cupo.substring(0, decimalIndex);
-            }
-
-            phone = resultado["phone"].toString();
-            emailCL = resultado["email"].toString();
+            phone = resultado['phone'].toString();
+            emailCL = resultado['email'].toString();
           }
 
           return Card(
             child: Container(
               color: Colors.white,
-              padding: EdgeInsets.all(15.0),
+              padding: const EdgeInsets.all(15.0),
               child: Column(
                 children: [
                   Row(
                     children: [
                       RichText(
                         text: TextSpan(
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.black,
                             fontSize: 17,
                             height: 1.5,
                           ),
-                          children: empresa == "REDPLAS"
+                          children: empresa == 'REDPLAS'
                               ? [
                                   TextSpan(
                                     text:
-                                        _cartera[index]["cardCode"].toString() +
+                                        _cartera[index]['cardCode'].toString() +
                                             '\n',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
                                     ),
                                   ),
                                   TextSpan(
                                     text:
-                                        _cartera[index]["cardName"].toString() +
+                                        _cartera[index]['cardName'].toString() +
                                             '\n',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),
                                   ),
                                   TextSpan(
-                                    text: _cartera[index]["payCondition"]
+                                    text: _cartera[index]['payCondition']
                                             .toString() +
                                         '  -  Cupo Disponible: ' +
                                         cupo.toString() +
                                         '\n\n',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                    ),
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                   TextSpan(
                                     text: 'Sin vencer    ' +
                                         ageSinVencer.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '1 - 30 días  ' +
                                         age0a30.toString() +
                                         '  \n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '31 - 45 días    ' +
                                         age30a60.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '46 - 60 días    ' +
                                         age61a90.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '61 - 90 días    ' +
                                         age91a120.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '+ 90 días    ' +
                                         ageMas120.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: 'Total: ' + totalCarteraS,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -518,35 +446,33 @@ class CarteraPageState extends State<CarteraPage> {
                               : [
                                   TextSpan(
                                     text:
-                                        _cartera[index]["cardCode"].toString() +
+                                        _cartera[index]['cardCode'].toString() +
                                             '\n',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
                                     ),
                                   ),
                                   TextSpan(
                                     text:
-                                        _cartera[index]["cardName"].toString() +
+                                        _cartera[index]['cardName'].toString() +
                                             '\n',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),
                                   ),
                                   TextSpan(
-                                    text: _cartera[index]["payCondition"]
+                                    text: _cartera[index]['payCondition']
                                             .toString() +
                                         '  -  Cupo Disponible: ' +
                                         cupo.toString() +
                                         '\n',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                    ),
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                   TextSpan(
                                     text: 'Tel: ' + phone + '\n\n',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -555,41 +481,41 @@ class CarteraPageState extends State<CarteraPage> {
                                     text: 'Sin vencer    ' +
                                         ageSinVencer.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '1 - 30 días  ' +
                                         age0a30.toString() +
                                         '  \n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '31 - 60 días    ' +
                                         age30a60.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '61 - 90 días    ' +
                                         age61a90.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '91 - 120 días    ' +
                                         age91a120.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: '+ 120 días    ' +
                                         ageMas120.toString() +
                                         '\n',
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   TextSpan(
                                     text: 'Total: ' + totalCarteraS,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -603,59 +529,58 @@ class CarteraPageState extends State<CarteraPage> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.phone_outlined),
+                        icon: const Icon(Icons.phone_outlined),
                         onPressed: () {
                           _launchPhone(phone);
                         },
                       ),
-                      Container(
-                        child: Text(_cartera[index]["totalDoc"].toString()),
-                      ),
+                      Text(_cartera[index]['totalDoc'].toString()),
                       IconButton(
-                        icon: Icon(Icons.wallet_outlined),
+                        icon: const Icon(Icons.wallet_outlined),
                         onPressed: () {
-                          //Vaciar valores del descuento ingresado
+                          // Vaciar valores del descuento ingresado
                           for (var detail in _cartera[index]
-                              ["detailPortfolio"]) {
-                            detail["discApplied"] = "0";
+                              ['detailPortfolio']) {
+                            detail['discApplied'] = '0';
                           }
 
                           storage.write('clienteDetalle', _cartera[index]);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CarteraDetalle(),
+                              builder: (context) => const CarteraDetalle(),
                             ),
                           );
                         },
                       ),
                       IconButton(
-                        icon: Icon(Icons.mail_outline),
+                        icon: const Icon(Icons.mail_outline),
                         onPressed: () async {
                           DateTime now = DateTime.now();
                           try {
                             http.Response response = await _generateReport(
-                                _cartera[index]["cardCode"].toString(),
-                                "accountSetting",
-                                "S");
+                              _cartera[index]['cardCode'].toString(),
+                              'accountSetting',
+                              'S',
+                            );
                             Map<String, dynamic> resultado =
                                 jsonDecode(response.body);
 
                             if (response.statusCode == 200 &&
-                                resultado['content'] != "") {
+                                resultado['content'] != '') {
                               _downloadReportPDF(
                                 'http://wali.igbcolombia.com:8080/shared/' +
                                     GetStorage().read('empresa') +
                                     '/accountSetting/' +
-                                    _cartera[index]["cardCode"].toString() +
+                                    _cartera[index]['cardCode'].toString() +
                                     '.pdf',
-                                DateFormat("yyyyMMdd-hhmm").format(now),
-                                "EstadoCuenta",
-                                _cartera[index]["cardCode"].toString(),
+                                DateFormat('yyyyMMdd-hhmm').format(now),
+                                'EstadoCuenta',
+                                _cartera[index]['cardCode'].toString(),
                               );
 
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
+                                const SnackBar(
                                   content: Text(
                                     'Estado de cuenta guardada en descargas',
                                   ),
@@ -664,7 +589,7 @@ class CarteraPageState extends State<CarteraPage> {
                               );
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
+                                const SnackBar(
                                   content: Text(
                                     'No se pudo guardar el pedido, error de red, verifique conectividad por favor',
                                   ),
@@ -674,7 +599,7 @@ class CarteraPageState extends State<CarteraPage> {
                             }
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
+                              const SnackBar(
                                 content: Text(
                                   'Error al generar el reporte de estado de cuenta',
                                 ),
@@ -684,39 +609,37 @@ class CarteraPageState extends State<CarteraPage> {
                           }
 
                           final Email email = Email(
-                            subject: "Edad de Cartera Cliente: " +
-                                _cartera[index]["cardCode"].toString(),
-                            body: _cartera[index]["cardName"].toString() +
-                                "\n\nSin Vencer: " +
+                            subject: 'Edad de Cartera Cliente: ' +
+                                _cartera[index]['cardCode'].toString(),
+                            body: _cartera[index]['cardName'].toString() +
+                                '\n\nSin Vencer: ' +
                                 ageSinVencer.toString() +
-                                "\n1 a 3 0 días: " +
+                                '\n1 a 3 0 días: ' +
                                 age0a30.toString() +
-                                "\n30 a 60 días: " +
+                                '\n30 a 60 días: ' +
                                 age30a60.toString() +
-                                "\n61 a 90 días: " +
+                                '\n61 a 90 días: ' +
                                 age61a90.toString() +
-                                "\n91 a 120 días: " +
+                                '\n91 a 120 días: ' +
                                 age91a120.toString() +
-                                "\nMás 120 días: " +
+                                '\nMás 120 días: ' +
                                 ageMas120.toString() +
-                                "\nTotal: " +
+                                '\nTotal: ' +
                                 totalCarteraS.toString() +
-                                "\nCupo Disponible: " +
+                                '\nCupo Disponible: ' +
                                 cupo.toString(),
                             recipients: [emailCL],
                             attachmentPaths: [
                               '/storage/emulated/0/Download/EstadoCuenta-' +
-                                  _cartera[index]["cardCode"].toString() +
+                                  _cartera[index]['cardCode'].toString() +
                                   '[' +
-                                  DateFormat("yyyyMMdd-hhmm").format(now) +
+                                  DateFormat('yyyyMMdd-hhmm').format(now) +
                                   '].pdf'
                             ],
                           );
                           try {
                             await FlutterEmailSender.send(email);
-                          } catch (error) {
-                            /*print('Error al enviar el correo: $error');*/
-                          }
+                          } catch (e) {}
                         },
                       )
                     ],
@@ -731,35 +654,36 @@ class CarteraPageState extends State<CarteraPage> {
   }
 
   showAlertDialog(BuildContext context, String nit) {
-    Widget cancelButton = ElevatedButton(
-      child: Text("NO"),
+    final Widget cancelButton = ElevatedButton(
       onPressed: () {
         Navigator.pop(context);
       },
+      child: const Text('NO'),
     );
-    Widget continueButton = ElevatedButton(
-      child: Text("SI"),
+
+    final Widget continueButton = ElevatedButton(
       onPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const PedidosPage()),
         );
       },
+      child: const Text('SI'),
     );
 
-    AlertDialog alert = AlertDialog(
+    final AlertDialog alert = AlertDialog(
       title: Row(
-        children: [
+        children: const [
           Icon(
             Icons.error,
             color: Colors.orange,
           ),
           SizedBox(width: 8),
-          Text("Atención!"),
+          Text('Atención!'),
         ],
       ),
-      content: Text(
-        "Tiene ítmes pendientes para otro cliente, si continúa se borrarán e inciará un pedido nuevo.\n¿Desea continuar?",
+      content: const Text(
+        'Tiene ítmes pendientes para otro cliente, si continúa se borrarán e inciará un pedido nuevo.\n¿Desea continuar?',
       ),
       actions: [
         cancelButton,
@@ -787,84 +711,87 @@ Future<http.Response> _generateReportDiscount(
   List<Map<String, dynamic>> dataList = [];
   for (var data in detailCartera) {
     String valorDescTxt = NumberFormat('#,##0.00', 'en_Us')
-        .format(data["totalBruto"] * int.parse(data["discApplied"]) / 100)
+        .format(data['totalBruto'] * int.parse(data['discApplied']) / 100)
         .toString();
     if (valorDescTxt.contains('.')) {
       int decimalIndex = valorDescTxt.indexOf('.');
-      valorDescTxt = "\$" + valorDescTxt.substring(0, decimalIndex);
+      valorDescTxt = '\$' + valorDescTxt.substring(0, decimalIndex);
     }
 
     String valorPagoTxt = NumberFormat('#,##0.00', 'en_Us')
-        .format(data["docTotal"] -
-            (data["totalBruto"] * int.parse(data["discApplied"]) / 100))
+        .format(data['docTotal'] -
+            (data['totalBruto'] * int.parse(data['discApplied']) / 100))
         .toString();
     if (valorPagoTxt.contains('.')) {
       int decimalIndex = valorPagoTxt.indexOf('.');
-      valorPagoTxt = "\$" + valorPagoTxt.substring(0, decimalIndex);
+      valorPagoTxt = '\$' + valorPagoTxt.substring(0, decimalIndex);
     }
 
     String valorDocTxt =
-        NumberFormat('#,##0.00', 'en_Us').format(data["docTotal"]).toString();
+        NumberFormat('#,##0.00', 'en_Us').format(data['docTotal']).toString();
     if (valorDocTxt.contains('.')) {
       int decimalIndex = valorDocTxt.indexOf('.');
-      valorDocTxt = "\$" + valorDocTxt.substring(0, decimalIndex);
+      valorDocTxt = '\$' + valorDocTxt.substring(0, decimalIndex);
     }
 
     Map<String, dynamic> detail = {
-      "NombreCliente": cardName,
-      "Nit": cardCode,
-      "Telefono": "",
-      "Direccion": "",
-      "Tipo": "Factura",
-      "NoDoc": data["docNum"].toString(),
-      "FDoc": data["docDate"],
-      "FVen": data["docDueDate"],
-      "Dias": data["expiredDays"].toString(),
-      "ValorDoc": valorDocTxt,
-      "ValorPago": valorPagoTxt,
-      "ValorDesc": valorDescTxt,
-      "companyName": GetStorage().read('empresa') == "IGB"
-          ? "1"
-          : GetStorage().read('empresa') == "VARROC"
-              ? "2"
-              : "3",
-      "Disc": data["discApplied"].toString()
+      'NombreCliente': cardName,
+      'Nit': cardCode,
+      'Telefono': '',
+      'Direccion': '',
+      'Tipo': 'Factura',
+      'NoDoc': data['docNum'].toString(),
+      'FDoc': data['docDate'],
+      'FVen': data['docDueDate'],
+      'Dias': data['expiredDays'].toString(),
+      'ValorDoc': valorDocTxt,
+      'ValorPago': valorPagoTxt,
+      'ValorDesc': valorDescTxt,
+      'companyName': GetStorage().read('empresa') == 'IGB'
+          ? '1'
+          : GetStorage().read('empresa') == 'VARROC'
+              ? '2'
+              : '3',
+      'Disc': data['discApplied'].toString()
     };
     dataList.add(detail);
   }
 
   return http.post(
     Uri.parse(url),
-    headers: <String, String>{'Content-Type': 'application/json'},
+    headers: const <String, String>{'Content-Type': 'application/json'},
     body: jsonEncode(dataList),
   );
 }
 
 class CarteraDetalle extends StatefulWidget {
   const CarteraDetalle({Key? key}) : super(key: key);
+
   @override
   State<CarteraDetalle> createState() => CarteraDetalleState();
 }
 
 class CarteraDetalleState extends State<CarteraDetalle> {
-  Map<String, dynamic> clienteDetalle = {};
-  bool generateDiscountReport = false;
+  late final Map<String, dynamic> clienteDetalle;
+  late final bool generateDiscountReport;
+
+  @override
+  void initState() {
+    super.initState();
+    clienteDetalle = GetStorage().read('clienteDetalle');
+
+    // Calculado una sola vez
+    generateDiscountReport = (clienteDetalle['detailPortfolio'] as List)
+        .any((detalle) => detalle['activeCalc'] == 'Y');
+  }
 
   @override
   Widget build(BuildContext context) {
-    clienteDetalle = GetStorage().read('clienteDetalle');
-
-    for (var detalle in clienteDetalle["detailPortfolio"]) {
-      if (detalle["activeCalc"] == "Y") {
-        generateDiscountReport = true;
-        break;
-      }
-    }
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(30, 129, 235, 1),
+        backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
         leading: GestureDetector(
-          child: Icon(
+          child: const Icon(
             Icons.arrow_back_ios,
             color: Colors.white,
           ),
@@ -872,38 +799,36 @@ class CarteraDetalleState extends State<CarteraDetalle> {
             Navigator.pop(context);
           },
         ),
-        /*actions: [
-          CarritoPedido(),
-        ],*/
         actions: [
           if (generateDiscountReport)
             IconButton(
               color: Colors.white,
-              icon: Icon(Icons.calculate_rounded),
+              icon: const Icon(Icons.calculate_rounded),
               onPressed: () async {
                 List<Map<String, dynamic>> detailCartera = [];
-                for (var detail in clienteDetalle["detailPortfolio"]) {
+                for (var detail in clienteDetalle['detailPortfolio']) {
                   detailCartera.add(detail);
                 }
 
                 try {
                   http.Response response = await _generateReportDiscount(
                     detailCartera,
-                    clienteDetalle["cardCode"].toString(),
-                    clienteDetalle["cardName"].toString(),
+                    clienteDetalle['cardCode'].toString(),
+                    clienteDetalle['cardName'].toString(),
                   );
 
                   Map<String, dynamic> resultado = jsonDecode(response.body);
 
                   if (response.statusCode == 200 &&
-                      resultado['content'] != "") {
-                    //Vaciar valores del descuento ingresado
-                    for (var detail in clienteDetalle["detailPortfolio"]) {
-                      detail["discApplied"] = "0";
+                      resultado['content'] != '') {
+                    // Vaciar valores del descuento ingresado
+                    for (var detail in clienteDetalle['detailPortfolio']) {
+                      detail['discApplied'] = '0';
                     }
                     final Uri url = Uri.parse(
-                        "https://drive.google.com/viewerng/viewer?embedded=true&url=" +
-                            resultado['content'].toString());
+                      'https://drive.google.com/viewerng/viewer?embedded=true&url=' +
+                          resultado['content'].toString(),
+                    );
                     if (await canLaunchUrl(url)) {
                       await launchUrl(url,
                           mode: LaunchMode.externalApplication);
@@ -912,7 +837,7 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                      const SnackBar(
                         content: Text(
                           'No se pudo generar el reporte, error de red, verifique conectividad por favor',
                         ),
@@ -922,7 +847,7 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                   }
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text(
                         'Error al generar el reporte de cartera general',
                       ),
@@ -933,7 +858,7 @@ class CarteraDetalleState extends State<CarteraDetalle> {
               },
             ),
         ],
-        title: Text(
+        title: const Text(
           'Detalle de cartera',
           style: TextStyle(color: Colors.white),
         ),
@@ -941,7 +866,7 @@ class CarteraDetalleState extends State<CarteraDetalle> {
       body: Center(
         child: Column(
           children: [
-            Container(
+            SizedBox(
               height: 80,
               child: Flex(
                 direction: Axis.horizontal,
@@ -952,10 +877,8 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                 ],
               ),
             ),
-            Container(
-              child: Expanded(
-                child: carteraDetalle(context),
-              ),
+            Expanded(
+              child: carteraDetalle(context),
             ),
           ],
         ),
@@ -964,7 +887,6 @@ class CarteraDetalleState extends State<CarteraDetalle> {
   }
 
   Widget tituloDetalle(BuildContext context) {
-    Map<String, dynamic> clienteDetalle = GetStorage().read('clienteDetalle');
     return Card(
       child: Container(
         height: 100,
@@ -974,19 +896,19 @@ class CarteraDetalleState extends State<CarteraDetalle> {
             child: RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   color: Colors.black,
                 ),
                 children: [
                   TextSpan(
-                    text: clienteDetalle["cardName"].toString() + '\n',
-                    style: TextStyle(
+                    text: clienteDetalle['cardName'].toString() + '\n',
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   TextSpan(
-                    text: clienteDetalle["cardCode"].toString() + '\n',
+                    text: clienteDetalle['cardCode'].toString() + '\n',
                   ),
                 ],
               ),
@@ -998,30 +920,28 @@ class CarteraDetalleState extends State<CarteraDetalle> {
   }
 
   Widget carteraDetalle(BuildContext context) {
-    Map<String, dynamic> clienteDetalle = GetStorage().read('clienteDetalle');
-    var numberFormat = new NumberFormat('#,##0.00', 'en_Us');
-    List detallPortafolio = clienteDetalle["detailPortfolio"];
+    final numberFormat = NumberFormat('#,##0.00', 'en_Us');
+    final List detallPortafolio = clienteDetalle['detailPortfolio'];
+
+    String money(dynamic v) {
+      String t = numberFormat.format(v);
+      final p = t.indexOf('.');
+      if (p != -1) t = t.substring(0, p);
+      return '\$$t';
+    }
 
     return SafeArea(
       child: ListView.builder(
         itemCount: detallPortafolio.length,
         itemBuilder: (context, index) {
-          bool showButtonCalculator =
-              clienteDetalle["detailPortfolio"][index]["activeCalc"] == 'Y'
-                  ? true
-                  : false;
-          String saldo = numberFormat
-              .format(clienteDetalle["detailPortfolio"][index]["balance"]);
-          if (saldo.contains('.')) {
-            int decimalIndex = saldo.indexOf('.');
-            saldo = "\$" + saldo.substring(0, decimalIndex);
-          }
-          String valor = numberFormat
-              .format(clienteDetalle["detailPortfolio"][index]["docTotal"]);
-          if (valor.contains('.')) {
-            int decimalIndex = valor.indexOf('.');
-            valor = "\$" + valor.substring(0, decimalIndex);
-          }
+          final bool showButtonCalculator =
+              clienteDetalle['detailPortfolio'][index]['activeCalc'] == 'Y';
+
+          String saldo =
+              money(clienteDetalle['detailPortfolio'][index]['balance']);
+          String valor =
+              money(clienteDetalle['detailPortfolio'][index]['docTotal']);
+
           return Card(
             child: Container(
               color: Colors.white,
@@ -1033,13 +953,13 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                       child: ListTile(
                         title: RichText(
                           text: TextSpan(
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 17,
                               color: Colors.black,
                               height: 1.5,
                             ),
                             children: [
-                              TextSpan(
+                              const TextSpan(
                                 text: '\nTipo de documento: ',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1047,15 +967,13 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                 ),
                               ),
                               TextSpan(
-                                text: clienteDetalle["detailPortfolio"][index]
-                                            ["docType"]
+                                text: clienteDetalle['detailPortfolio'][index]
+                                            ['docType']
                                         .toString() +
                                     '\n',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                ),
+                                style: const TextStyle(fontSize: 17),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Nro de documento: ',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1063,15 +981,13 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                 ),
                               ),
                               TextSpan(
-                                text: clienteDetalle["detailPortfolio"][index]
-                                            ["docNum"]
+                                text: clienteDetalle['detailPortfolio'][index]
+                                            ['docNum']
                                         .toString() +
                                     '\n',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                ),
+                                style: const TextStyle(fontSize: 17),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Creado: ',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1079,15 +995,13 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                 ),
                               ),
                               TextSpan(
-                                text: clienteDetalle["detailPortfolio"][index]
-                                            ["docDate"]
+                                text: clienteDetalle['detailPortfolio'][index]
+                                            ['docDate']
                                         .toString() +
                                     '\n',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                ),
+                                style: const TextStyle(fontSize: 17),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Vencimiento: ',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1095,15 +1009,13 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                 ),
                               ),
                               TextSpan(
-                                text: clienteDetalle["detailPortfolio"][index]
-                                            ["docDueDate"]
+                                text: clienteDetalle['detailPortfolio'][index]
+                                            ['docDueDate']
                                         .toString() +
                                     '\n',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                ),
+                                style: const TextStyle(fontSize: 17),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Saldo Pendiente: ',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1112,11 +1024,9 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                               ),
                               TextSpan(
                                 text: saldo + '\n',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                ),
+                                style: const TextStyle(fontSize: 17),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Valor Factura: ',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1125,11 +1035,9 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                               ),
                               TextSpan(
                                 text: valor + '\n',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                ),
+                                style: const TextStyle(fontSize: 17),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Días vencidos: ',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1137,15 +1045,13 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                 ),
                               ),
                               TextSpan(
-                                text: clienteDetalle["detailPortfolio"][index]
-                                            ["expiredDays"]
+                                text: clienteDetalle['detailPortfolio'][index]
+                                            ['expiredDays']
                                         .toString() +
                                     '\n',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                ),
+                                style: const TextStyle(fontSize: 17),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Comentario: ',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1153,12 +1059,10 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                 ),
                               ),
                               TextSpan(
-                                text: clienteDetalle["detailPortfolio"][index]
-                                        ["comment"]
+                                text: clienteDetalle['detailPortfolio'][index]
+                                        ['comment']
                                     .toString(),
-                                style: TextStyle(
-                                  fontSize: 15,
-                                ),
+                                style: const TextStyle(fontSize: 15),
                               ),
                             ],
                           ),
@@ -1171,7 +1075,7 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         showButtonCalculator
-                            ? Container(
+                            ? SizedBox(
                                 width: 245,
                                 child: Row(
                                   children: [
@@ -1179,7 +1083,7 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                       child: TextFormField(
                                         keyboardType: TextInputType.number,
                                         maxLength: 3,
-                                        decoration: InputDecoration(
+                                        decoration: const InputDecoration(
                                           border: UnderlineInputBorder(),
                                           labelText: 'Ingrese % descuento',
                                           labelStyle: TextStyle(fontSize: 13),
@@ -1187,25 +1091,25 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                               FloatingLabelBehavior.auto,
                                         ),
                                         onChanged: (value) {
-                                          clienteDetalle["detailPortfolio"]
-                                              [index]["discApplied"] = value;
+                                          clienteDetalle['detailPortfolio']
+                                              [index]['discApplied'] = value;
                                         },
                                       ),
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.calculate_rounded),
+                                      icon: const Icon(Icons.calculate_rounded),
                                       onPressed: () {
                                         showDialog(
                                           context: context,
                                           builder: (_) {
                                             return CalculatorDialogWidget(
                                               totalBruto: clienteDetalle[
-                                                          "detailPortfolio"]
-                                                      [index]["totalBruto"]
+                                                          'detailPortfolio']
+                                                      [index]['totalBruto']
                                                   .toDouble(),
                                               docTotal: clienteDetalle[
-                                                          "detailPortfolio"]
-                                                      [index]["docTotal"]
+                                                          'detailPortfolio']
+                                                      [index]['docTotal']
                                                   .toDouble(),
                                             );
                                           },
@@ -1215,65 +1119,63 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                   ],
                                 ),
                               )
-                            : SizedBox.shrink(),
+                            : const SizedBox.shrink(),
                         IconButton(
-                          icon: Icon(Icons.picture_as_pdf_outlined),
+                          icon: const Icon(Icons.picture_as_pdf_outlined),
                           onPressed: () {
                             final Uri url = Uri.parse(
-                              clienteDetalle["detailPortfolio"][index]["urlFE"]
+                              clienteDetalle['detailPortfolio'][index]['urlFE']
                                   .toString(),
                             );
                             launchUrl(url);
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.mail_outline),
+                          icon: const Icon(Icons.mail_outline),
                           onPressed: () async {
                             final Email email = Email(
-                              subject: "Detalle de cartera " +
-                                  clienteDetalle["detailPortfolio"][index]
-                                      ["docType"] +
-                                  " #" +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["docNum"]
+                              subject: 'Detalle de cartera ' +
+                                  clienteDetalle['detailPortfolio'][index]
+                                      ['docType'] +
+                                  ' #' +
+                                  clienteDetalle['detailPortfolio'][index]
+                                          ['docNum']
                                       .toString(),
-                              body: "Tipo de documento: " +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["docType"]
+                              body: 'Tipo de documento: ' +
+                                  clienteDetalle['detailPortfolio'][index]
+                                          ['docType']
                                       .toString() +
                                   '\nNro de documento: ' +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["docNum"]
+                                  clienteDetalle['detailPortfolio'][index]
+                                          ['docNum']
                                       .toString() +
                                   '\nFecha de creación: ' +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["docDate"]
+                                  clienteDetalle['detailPortfolio'][index]
+                                          ['docDate']
                                       .toString() +
                                   '\nFecha de vencimiento: ' +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["docDueDate"]
+                                  clienteDetalle['detailPortfolio'][index]
+                                          ['docDueDate']
                                       .toString() +
                                   '\nSaldo pendiente: ' +
                                   saldo +
                                   '\nValor factura: ' +
                                   valor +
                                   '\nDías vencidos: ' +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["expiredDays"]
+                                  clienteDetalle['detailPortfolio'][index]
+                                          ['expiredDays']
                                       .toString() +
-                                  "\n\nFactura electrónica:\n\nPara visualizar el documento por favor copie la siguiente url en su navegador favorito:\n\n" +
-                                  clienteDetalle["detailPortfolio"][index]
-                                          ["urlFE"]
+                                  '\n\nFactura electrónica:\n\nPara visualizar el documento por favor copie la siguiente url en su navegador favorito:\n\n' +
+                                  clienteDetalle['detailPortfolio'][index]
+                                          ['urlFE']
                                       .toString(),
                               recipients: [
-                                clienteDetalle["emailFE"].toString()
+                                clienteDetalle['emailFE'].toString()
                               ],
                             );
                             try {
                               await FlutterEmailSender.send(email);
-                            } catch (error) {
-                              /*print('Error al enviar el correo: $error');*/
-                            }
+                            } catch (e) {}
                           },
                         )
                       ],
@@ -1292,14 +1194,20 @@ class CarteraDetalleState extends State<CarteraDetalle> {
 class CalculatorDialogWidget extends StatefulWidget {
   final double totalBruto;
   final double docTotal;
-  CalculatorDialogWidget({required this.totalBruto, required this.docTotal});
+
+  const CalculatorDialogWidget({
+    super.key,
+    required this.totalBruto,
+    required this.docTotal,
+  });
+
   @override
-  CalculatorDialogState createState() => new CalculatorDialogState();
+  CalculatorDialogState createState() => CalculatorDialogState();
 }
 
 class CalculatorDialogState extends State<CalculatorDialogWidget> {
-  String discount = "";
-  FocusNode _focusNode = FocusNode();
+  String discount = '';
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -1313,7 +1221,7 @@ class CalculatorDialogState extends State<CalculatorDialogWidget> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         ElevatedButton(
-          child: Icon(
+          child: const Icon(
             Icons.close_rounded,
             color: Colors.black87,
           ),
@@ -1322,55 +1230,52 @@ class CalculatorDialogState extends State<CalculatorDialogWidget> {
           },
         ),
         ElevatedButton(
-          child: Icon(
+          child: const Icon(
             Icons.point_of_sale_rounded,
             color: Colors.black87,
           ),
           onPressed: () {
-            setState(
-              () {
-                String totalBruto = NumberFormat('#,##0.00', 'en_Us').format(
-                    widget.docTotal -
-                        (widget.totalBruto * (double.parse(discount) / 100)));
+            setState(() {
+              String totalBruto = NumberFormat('#,##0.00', 'en_Us').format(
+                widget.docTotal -
+                    (widget.totalBruto * (double.parse(discount) / 100)),
+              );
 
-                if (totalBruto.contains('.')) {
-                  int decimalIndex = totalBruto.indexOf('.');
-                  totalBruto = "\$" + totalBruto.substring(0, decimalIndex);
-                }
-                discount = totalBruto;
-              },
-            );
+              final p = totalBruto.indexOf('.');
+              if (p != -1) totalBruto = '\$' + totalBruto.substring(0, p);
+
+              discount = totalBruto;
+            });
           },
         ),
       ],
     );
 
     return AlertDialog(
-      title: Text(
-        "Calcular descuento financiero",
+      title: const Text(
+        'Calcular descuento financiero',
         style: TextStyle(fontSize: 16),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
+            focusNode: _focusNode,
             keyboardType: TextInputType.number,
             maxLength: 3,
-            decoration: InputDecoration(
-              labelText: "Ingrese % descuento",
+            decoration: const InputDecoration(
+              labelText: 'Ingrese % descuento',
               border: OutlineInputBorder(),
             ),
             onChanged: (value) {
               discount = value;
             },
           ),
-          SizedBox(
-            height: 10,
-          ),
+          const SizedBox(height: 10),
           TextField(
             decoration: InputDecoration(
               labelText: discount.toString(),
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
             enabled: false,
           )
