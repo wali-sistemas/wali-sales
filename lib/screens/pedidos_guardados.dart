@@ -9,6 +9,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:productos_app/models/DatabaseHelper.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PedidosGuardadosPage extends StatefulWidget {
   const PedidosGuardadosPage({Key? key}) : super(key: key);
@@ -201,6 +202,26 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     final response = await http.get(Uri.parse(apiUrl));
     data = jsonDecode(response.body);
     return data;
+  }
+
+  Future<http.Response> _generateReportOrderSaved(String docNum) async {
+    const String url =
+        'http://wali.igbcolombia.com:8080/manager/res/report/generate-report';
+
+    return http.post(
+      Uri.parse(url),
+      headers: const <String, String>{'Content-Type': 'application/json'},
+      body: jsonEncode(
+        <String, dynamic>{
+          'id': docNum,
+          'copias': 0,
+          'documento': 'orderSaved',
+          'companyName': empresa,
+          'origen': 'W',
+          'imprimir': false,
+        },
+      ),
+    );
   }
 
   void showAlertDialogItemsInShoppingCart(BuildContext context) {
@@ -410,7 +431,63 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         SizedBox(
-                          height: 40,
+                          child: IconButton(
+                            icon: const Icon(Icons.picture_as_pdf_outlined),
+                            onPressed: () async {
+                              print("Generar reporte");
+
+                              try {
+                                final http.Response response =
+                                    await _generateReportOrderSaved(
+                                  data[index]["id"].toString(),
+                                );
+
+                                final Map<String, dynamic> resultado =
+                                    jsonDecode(response.body);
+
+                                if (response.statusCode == 200 &&
+                                    resultado['content'] != "") {
+                                  final Uri url = Uri.parse(
+                                    "https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/" +
+                                        GetStorage().read('empresa') +
+                                        "/sales/orderSaved/" +
+                                        data[index]["id"].toString() +
+                                        ".pdf",
+                                  );
+
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(
+                                      url,
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  } else {
+                                    await launchUrl(url);
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'No se pudo generar el documento, error de red, verifique conectividad por favor',
+                                      ),
+                                      duration: Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'No fue posible ver el detalle de la orden guardada.',
+                                    ),
+                                    duration: Duration(seconds: 3),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          width: 50,
+                        ),
+                        SizedBox(
                           child: IconButton(
                             icon: const Icon(Icons.add),
                             onPressed: () {

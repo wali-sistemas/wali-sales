@@ -2076,7 +2076,10 @@ class _TotalPedidoState extends State<TotalPedido> {
 
                                 final pg = GetStorage().read('pedidoGuardado');
                                 if (pg != null) {
-                                  actualizarEstadoPed(pg['id'], 0, 'C');
+                                  try {
+                                    actualizarEstadoPed(
+                                        int.parse(pg['id']), 0, 'C');
+                                  } catch (e) {}
                                 }
                               } else {
                                 Get.snackbar(
@@ -2087,9 +2090,11 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 );
                               }
                             } else {
-                              showAlertError(
-                                context,
-                                "No se pudo guardar el pedido, error de red, verifique conectividad por favor",
+                              Get.snackbar(
+                                'Error',
+                                'No se pudo guardar el pedido',
+                                colorText: Colors.red,
+                                backgroundColor: Colors.white,
                               );
                             }
                           } catch (_) {
@@ -2142,38 +2147,22 @@ class _TotalPedidoState extends State<TotalPedido> {
               content: Text(message),
               actions: [
                 ElevatedButton(
-                  onPressed: btnConfirmarEnvio && !isProcessing
+                  onPressed: btnConfirmarEnvio
                       ? () {
-                          setStateDialog(() {
-                            isProcessing = true;
-                            btnConfirmarEnvio = false;
-                          });
+                          setStateDialog(() => btnConfirmarEnvio = false);
                           Navigator.pop(context);
                         }
                       : null,
                   child: const Text("NO"),
                 ),
                 ElevatedButton(
-                  onPressed: btnConfirmarEnvio
+                  onPressed: btnConfirmarEnvio && !isProcessing
                       ? () async {
                           setStateDialog(() {
+                            isProcessing = true;
                             btnConfirmarEnvio = false;
                             message = 'Procesando pedido. Por favor espere...';
                           });
-
-                          final bool isConnected = await checkConnectivity();
-                          if (!isConnected) {
-                            showAlertError(
-                              context,
-                              "No se pudo enviar el pedido, error de red, verifique conectividad por favor",
-                            );
-                            setStateDialog(() => isProcessing = false);
-                            return;
-                          }
-
-                          pedidoFinal['comments'] =
-                              observacionesController.text;
-                          storage.write('pedido', pedidoFinal);
 
                           if (mounted) {
                             setState(() => cargando = true);
@@ -2207,24 +2196,17 @@ class _TotalPedidoState extends State<TotalPedido> {
                                   "Pedido: ${resultado['content']}",
                                 );
 
-                                Map<String, dynamic> actualizarPedidoGuardado =
-                                    {};
-                                final apg = GetStorage()
+                                final pg = GetStorage()
                                     .read('actualizarPedidoGuardado');
-                                if (apg != null) {
-                                  actualizarPedidoGuardado = apg;
-                                  actualizarEstadoPed(
-                                    int.parse(actualizarPedidoGuardado["id"]),
-                                    resultado['content'],
-                                    'F',
-                                  );
-                                }
 
-                                storage.remove("pedido");
-                                storage.remove("itemsPedido");
-                                storage.remove("dirEnvio");
-                                storage.remove("pedidoGuardado");
-                                storage.write('estadoPedido', 'nuevo');
+                                if (pg != null) {
+                                  try {
+                                    await actualizarEstadoPed(
+                                        int.parse(pg['id']),
+                                        resultado['content'],
+                                        'F');
+                                  } catch (e) {}
+                                }
                               } else {
                                 Get.snackbar(
                                   'Error',
@@ -2577,6 +2559,9 @@ class _TotalPedidoState extends State<TotalPedido> {
                     onPressed: btnPedidoActivo
                         ? null
                         : () async {
+                            // Quita el foco y cierra el teclado
+                            FocusScope.of(context).unfocus();
+
                             storage.write('estadoPedido', 'editado');
                             setState(() => btnPedidoActivo = true);
 
@@ -2647,6 +2632,9 @@ class _TotalPedidoState extends State<TotalPedido> {
                     onPressed: btnGuardarActivo
                         ? null
                         : () async {
+                            // Quita el foco y cierra el teclado
+                            FocusScope.of(context).unfocus();
+
                             storage.write('estadoPedido', 'editado');
                             setState(() => btnGuardarActivo = true);
 

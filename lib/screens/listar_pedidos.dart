@@ -318,6 +318,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                       ),
                     ),
                     IconButton(
+                      icon: const Icon(Icons.picture_as_pdf_outlined),
                       onPressed: () async {
                         try {
                           final http.Response response =
@@ -350,7 +351,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                  'No se pudo guardar el pedido, error de red, verifique conectividad por favor',
+                                  'No se pudo generar el documento, error de red, verifique conectividad por favor',
                                 ),
                                 duration: Duration(seconds: 3),
                               ),
@@ -360,14 +361,13 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                'Error al generar el reporte para ver el detalle de la orden',
+                                'No fue posible ver el detalle de la orden.',
                               ),
                               duration: Duration(seconds: 3),
                             ),
                           );
                         }
                       },
-                      icon: const Icon(Icons.remove_red_eye_outlined),
                     ),
                   ],
                 ),
