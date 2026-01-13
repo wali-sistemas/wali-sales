@@ -141,7 +141,7 @@ class EmployeePage extends StatelessWidget {
 }
 
 Future<http.Response> _generateReportPaystub(
-    String id, String month, String day) {
+    String id, String year, String month, String day) {
   String companyName = '';
   String idLogo = '';
 
@@ -166,7 +166,7 @@ Future<http.Response> _generateReportPaystub(
 
   Map<String, dynamic> data = {
     "id": int.parse(id),
-    "year": DateTime.now().year,
+    "year": int.parse(year),
     "month": int.parse(month),
     "day": int.parse(day),
     "logo": idLogo.toString(),
@@ -208,8 +208,8 @@ Future<http.Response> _generateReportJobCertify(String id, String sendto) {
 
   Map<String, dynamic> data = {
     "id": int.parse(id),
-    "year": DateTime.now().year,
-    "month": DateTime.now().month - 1,
+    "year": "2025",
+    "month": DateTime.now().month,
     "day": 15,
     "sendto": sendto.isEmpty ? "A QUIEN PUEDA INTERESAR" : sendto
   };
@@ -415,9 +415,12 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
   final TextEditingController documentoController = TextEditingController();
 
   String? periodoSeleccionado;
+  String? yearSeleccionado;
   String? mesSeleccionado;
 
   List<String> periodos = [];
+
+  static const List<String> years = ['2023', '2024', '2025', '2026'];
 
   static const List<String> meses = [
     '1',
@@ -465,6 +468,22 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              value: yearSeleccionado,
+              decoration: const InputDecoration(labelText: 'Seleccionar año'),
+              items: years
+                  .map((year) => DropdownMenuItem<String>(
+                        value: year,
+                        child: Text(year),
+                      ))
+                  .toList(),
+              onChanged: (valor) {
+                setState(() {
+                  yearSeleccionado = valor;
+                });
+              },
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
@@ -522,6 +541,7 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
           ),
           onPressed: () async {
             final String periodo = periodoSeleccionado ?? '';
+            final String year = yearSeleccionado ?? '';
             final String mes = mesSeleccionado ?? '';
             final String documento = documentoController.text;
 
@@ -538,7 +558,7 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
 
             try {
               final http.Response response =
-                  await _generateReportPaystub(documento, mes, periodo);
+                  await _generateReportPaystub(documento, year, mes, periodo);
 
               final Map<String, dynamic> resultado = jsonDecode(response.body);
 
