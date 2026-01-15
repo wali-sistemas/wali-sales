@@ -592,7 +592,7 @@ class _MyDialogState extends State<MyDialog> {
                         case 'MEDELLÍN':
                           if (itemsGuardados[index]['grupo'] == 'LLANTAS' &&
                               itemsGuardados[index]['marca'] == 'TIMSUN') {
-                            whsCode = '45';
+                            whsCode = '60';
                           } else if (itemsGuardados[index]['subgrupo'] ==
                                   'LUBRICANTES' &&
                               itemsGuardados[index]['marca'] == 'REVO') {

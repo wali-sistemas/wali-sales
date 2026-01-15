@@ -545,7 +545,7 @@ class _MyDialogState extends State<MyDialog> {
                           case 'MEDELLÍN':
                             if (item["grupo"] == 'LLANTAS' &&
                                 item["marca"] == 'TIMSUN') {
-                              whsCode = '45';
+                              whsCode = '60';
                             } else if (item["subgrupo"] == 'LUBRICANTES' &&
                                 item["marca"] == 'REVO LUBRICANTES') {
                               whsCode = '01';
