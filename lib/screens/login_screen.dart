@@ -90,10 +90,8 @@ class _LoginFormState extends State<_LoginForm> {
 
   Future<void> sincronizarItems(String company, String slpcode) async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
-            company +
-            "?slpcode=" +
-            slpcode;
+        'http://wali.igbcolombia.com:8080/manager/res/app/items/$company?slpcode=$slpcode';
+
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
     final codigoError = resp["code"];

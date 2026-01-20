@@ -364,163 +364,167 @@ class CarteraPageState extends State<CarteraPage> {
                 children: [
                   Row(
                     children: [
-                      RichText(
-                        text: TextSpan(
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 17,
-                            height: 1.5,
+                      Expanded(
+                        child: RichText(
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 12,
+                          text: TextSpan(
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 17,
+                              height: 1.5,
+                            ),
+                            children: empresa == 'REDPLAS'
+                                ? [
+                                    TextSpan(
+                                      text: _cartera[index]['cardCode']
+                                              .toString() +
+                                          '\n',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: _cartera[index]['cardName']
+                                              .toString() +
+                                          '\n',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: _cartera[index]['payCondition']
+                                              .toString() +
+                                          '  -  Cupo Disponible: ' +
+                                          cupo.toString() +
+                                          '\n\n',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                    TextSpan(
+                                      text: 'Sin vencer    ' +
+                                          ageSinVencer.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '1 - 30 días  ' +
+                                          age0a30.toString() +
+                                          '  \n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '31 - 45 días    ' +
+                                          age30a60.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '46 - 60 días    ' +
+                                          age61a90.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '61 - 90 días    ' +
+                                          age91a120.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '+ 90 días    ' +
+                                          ageMas120.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: 'Total: ' + totalCarteraS,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ]
+                                : [
+                                    TextSpan(
+                                      text: _cartera[index]['cardCode']
+                                              .toString() +
+                                          '\n',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: _cartera[index]['cardName']
+                                              .toString() +
+                                          '\n',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: _cartera[index]['payCondition']
+                                              .toString() +
+                                          '  -  Cupo Disponible: ' +
+                                          cupo.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                    TextSpan(
+                                      text: 'Tel: ' + phone + '\n\n',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: 'Sin vencer    ' +
+                                          ageSinVencer.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '1 - 30 días  ' +
+                                          age0a30.toString() +
+                                          '  \n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '31 - 60 días    ' +
+                                          age30a60.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '61 - 90 días    ' +
+                                          age61a90.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '91 - 120 días    ' +
+                                          age91a120.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: '+ 120 días    ' +
+                                          ageMas120.toString() +
+                                          '\n',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    TextSpan(
+                                      text: 'Total: ' + totalCarteraS,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                           ),
-                          children: empresa == 'REDPLAS'
-                              ? [
-                                  TextSpan(
-                                    text:
-                                        _cartera[index]['cardCode'].toString() +
-                                            '\n',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text:
-                                        _cartera[index]['cardName'].toString() +
-                                            '\n',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: _cartera[index]['payCondition']
-                                            .toString() +
-                                        '  -  Cupo Disponible: ' +
-                                        cupo.toString() +
-                                        '\n\n',
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                  TextSpan(
-                                    text: 'Sin vencer    ' +
-                                        ageSinVencer.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '1 - 30 días  ' +
-                                        age0a30.toString() +
-                                        '  \n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '31 - 45 días    ' +
-                                        age30a60.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '46 - 60 días    ' +
-                                        age61a90.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '61 - 90 días    ' +
-                                        age91a120.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '+ 90 días    ' +
-                                        ageMas120.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: 'Total: ' + totalCarteraS,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ]
-                              : [
-                                  TextSpan(
-                                    text:
-                                        _cartera[index]['cardCode'].toString() +
-                                            '\n',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text:
-                                        _cartera[index]['cardName'].toString() +
-                                            '\n',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: _cartera[index]['payCondition']
-                                            .toString() +
-                                        '  -  Cupo Disponible: ' +
-                                        cupo.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                  TextSpan(
-                                    text: 'Tel: ' + phone + '\n\n',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: 'Sin vencer    ' +
-                                        ageSinVencer.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '1 - 30 días  ' +
-                                        age0a30.toString() +
-                                        '  \n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '31 - 60 días    ' +
-                                        age30a60.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '61 - 90 días    ' +
-                                        age61a90.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '91 - 120 días    ' +
-                                        age91a120.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: '+ 120 días    ' +
-                                        ageMas120.toString() +
-                                        '\n',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  TextSpan(
-                                    text: 'Total: ' + totalCarteraS,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
                         ),
                       ),
                     ],
@@ -930,6 +934,23 @@ class CarteraDetalleState extends State<CarteraDetalle> {
       return '\$$t';
     }
 
+    final Map<int, TextEditingController> _discControllers = {};
+
+    TextEditingController _getDiscController(int index, String currentValue) {
+      return _discControllers.putIfAbsent(
+        index,
+        () => TextEditingController(text: currentValue),
+      );
+    }
+
+    @override
+    void dispose() {
+      for (final c in _discControllers.values) {
+        c.dispose();
+      }
+      super.dispose();
+    }
+
     return SafeArea(
       child: ListView.builder(
         itemCount: detallPortafolio.length,
@@ -1081,6 +1102,14 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                                   children: [
                                     Expanded(
                                       child: TextFormField(
+                                        key: ValueKey('disc_$index'),
+                                        controller: _getDiscController(
+                                          index,
+                                          (clienteDetalle['detailPortfolio']
+                                                      [index]['discApplied'] ??
+                                                  '')
+                                              .toString(),
+                                        ),
                                         keyboardType: TextInputType.number,
                                         maxLength: 3,
                                         decoration: const InputDecoration(

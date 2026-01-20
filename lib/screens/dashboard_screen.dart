@@ -716,7 +716,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       );
                     }
 
-                    final int count = (empresa == 'IGB') ? 8 : 6;
+                    final int count = (empresa == 'IGB') ? 8 : 7;
 
                     return Container(
                       height: 500,

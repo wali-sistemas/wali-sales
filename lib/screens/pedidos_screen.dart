@@ -248,10 +248,7 @@ class _PedidosPageState extends State<PedidosPage>
     }
 
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
-            empresa +
-            '?slpcode=' +
-            usuario;
+        'http://wali.igbcolombia.com:8080/manager/res/app/items/$empresa?slpcode=$usuario';
 
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);
@@ -803,10 +800,7 @@ class _MyDialogState extends State<MyDialog> {
   Future<void> _listarItems() async {
     if (GetStorage().read('items') == null) {
       final String apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/items/' +
-              empresa +
-              '?slpcode=' +
-              usuario;
+          'http://wali.igbcolombia.com:8080/manager/res/app/items/$empresa?slpcode=$usuario';
 
       final response = await http.get(Uri.parse(apiUrl));
       final Map<String, dynamic> resp = jsonDecode(response.body);
