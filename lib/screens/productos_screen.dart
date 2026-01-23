@@ -65,9 +65,15 @@ class _ProductosPageState extends State<ProductosPage> {
                 delegate: CustomSearchDelegate(),
               );
             },
-            title: const Text(
-              'Buscar producto',
-              style: TextStyle(color: Colors.white),
+            title: const Row(
+              children: [
+                Icon(Icons.search, color: Colors.white),
+                SizedBox(width: 5),
+                Text(
+                  'Buscar ítems',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
             ),
           ),
           bottom: const TabBar(

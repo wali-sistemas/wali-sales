@@ -42,10 +42,7 @@ class _ClientesPageState extends State<ClientesPage> {
 
   Future<void> sincClientes() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
-            codigo +
-            '/' +
-            empresa;
+        'http://wali.igbcolombia.com:8080/manager/res/app/customers/$codigo/$empresa';
 
     final bool isConnected = await checkConnectivity();
     if (!isConnected) return;
@@ -67,9 +64,7 @@ class _ClientesPageState extends State<ClientesPage> {
 
   Future<void> sincronizarStock() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
-            empresa +
-            '?itemcode=0&whscode=0&slpcode=0';
+        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/$empresa?itemcode=0&whscode=0&slpcode=0';
 
     final bool isConnected = await checkConnectivity();
     if (!isConnected) return;
@@ -99,10 +94,7 @@ class _ClientesPageState extends State<ClientesPage> {
     }
 
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
-            codigo +
-            '/' +
-            empresa;
+        'http://wali.igbcolombia.com:8080/manager/res/app/customers/$codigo/$empresa';
 
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);
@@ -132,43 +124,77 @@ class _ClientesPageState extends State<ClientesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
-        leading: GestureDetector(
-          child: const Icon(
-            Icons.arrow_back_ios,
-            color: Colors.white,
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
+            leading: GestureDetector(
+              child: const Icon(
+                Icons.arrow_back_ios,
+                color: Colors.white,
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => HomePage()),
+                );
+              },
+            ),
+            actions: const [
+              CarritoPedido(),
+            ],
+            title: ListTile(
+              onTap: () {
+                showSearch(
+                  context: context,
+                  delegate: CustomSearchDelegateClientes(),
+                );
+              },
+              title: const Row(
+                children: [
+                  Icon(Icons.search, color: Colors.white),
+                  SizedBox(width: 5),
+                  Text(
+                    'Buscar cliente',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            bottom: const TabBar(
+              tabs: [
+                Tab(
+                  child: Text(
+                    'Clientes',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    'Prospecto',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomePage()),
-            );
-          },
-        ),
-        actions: const [
-          CarritoPedido(),
-        ],
-        title: ListTile(
-          onTap: () {
-            showSearch(
-              context: context,
-              delegate: CustomSearchDelegateClientes(),
-            );
-          },
-          title: const Text(
-            'Buscar cliente',
-            style: TextStyle(color: Colors.white),
+          body: TabBarView(
+            children: [
+              clientes(context),
+              prospecto(context),
+            ],
           ),
         ),
       ),
-      body: _clientesWidget(context),
     );
   }
 
-  Widget _clientesWidget(BuildContext context) {
+  @override
+  Widget clientes(BuildContext context) {
     return SafeArea(
       child: ListView.builder(
         itemCount: _clientes.length,
@@ -225,6 +251,13 @@ class _ClientesPageState extends State<ClientesPage> {
           );
         },
       ),
+    );
+  }
+
+  @override
+  Widget prospecto(BuildContext context) {
+    return const Center(
+      child: Text('Prospectos (pendiente)'),
     );
   }
 

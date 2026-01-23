@@ -187,9 +187,15 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
               delegate: CustomSearchDelegatePedidos(),
             );
           },
-          title: const Text(
-            'Buscar enviados',
-            style: TextStyle(color: Colors.white),
+          title: const Row(
+            children: [
+              Icon(Icons.search, color: Colors.white),
+              SizedBox(width: 5),
+              Text(
+                'Buscar enviados',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
           ),
         ),
       ),

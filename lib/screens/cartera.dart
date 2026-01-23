@@ -101,31 +101,22 @@ class CarteraPageState extends State<CarteraPage> {
     String endpoint = '';
     if (GetStorage().read('nitFiltroCartera') == null) {
       endpoint =
-          'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/' +
-              empresa +
-              '?slpcode=' +
-              codigo;
+          'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/$empresa?slpcode=$codigo';
     } else {
       endpoint =
-          'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/' +
-              empresa +
-              '?slpcode=' +
-              codigo +
-              '&cardcode=' +
+          'http://wali.igbcolombia.com:8080/manager/res/app/detail-age-customer-portfolio/$empresa?slpcode=$codigo&cardcode=' +
               GetStorage().read('nitFiltroCartera');
     }
 
     final response = await http.get(Uri.parse(endpoint));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    String texto = 'No se encontraron datos de cartera para el usuario ' +
-        codigo +
-        ' y empresa ' +
-        empresa;
 
     final codigoError = resp['content'];
     if (codigoError == -1) {
       final snackBar = SnackBar(
-        content: Text(texto),
+        content: Text(
+          'No se encontraron datos de cartera para el usuario $codigo de la empresa $empresa',
+        ),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
@@ -268,9 +259,15 @@ class CarteraPageState extends State<CarteraPage> {
               delegate: CustomSearchDelegateCartera(),
             );
           },
-          title: const Text(
-            'Buscar cartera',
-            style: TextStyle(color: Colors.white),
+          title: const Row(
+            children: [
+              Icon(Icons.search, color: Colors.white),
+              SizedBox(width: 5),
+              Text(
+                'Buscar cartera',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
           ),
         ),
       ),
@@ -826,9 +823,12 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                   if (response.statusCode == 200 &&
                       resultado['content'] != '') {
                     // Vaciar valores del descuento ingresado
-                    for (var detail in clienteDetalle['detailPortfolio']) {
-                      detail['discApplied'] = '0';
-                    }
+                    /*setState(() {
+                      for (var detail in clienteDetalle['detailPortfolio']) {
+                        detail['discApplied'] = '0';
+                      }
+                    });*/
+
                     final Uri url = Uri.parse(
                       'https://drive.google.com/viewerng/viewer?embedded=true&url=' +
                           resultado['content'].toString(),
