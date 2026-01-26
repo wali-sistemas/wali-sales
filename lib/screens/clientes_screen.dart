@@ -256,8 +256,111 @@ class _ClientesPageState extends State<ClientesPage> {
 
   @override
   Widget prospecto(BuildContext context) {
-    return const Center(
-      child: Text('Prospectos (pendiente)'),
+    final _formKey = GlobalKey<FormState>();
+
+    final documentoCtrl = TextEditingController();
+    final razonCtrl = TextEditingController();
+    final telefonoCtrl = TextEditingController();
+    final direccionCtrl = TextEditingController();
+    final ciudadCtrl = TextEditingController();
+    final departamentoCtrl = TextEditingController();
+    final correoCtrl = TextEditingController();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _input(
+                controller: documentoCtrl,
+                label: 'Documento',
+                type: TextInputType.number,
+              ),
+              _input(
+                controller: razonCtrl,
+                label: 'Razón social',
+              ),
+              _input(
+                controller: telefonoCtrl,
+                label: 'Teléfono',
+                type: TextInputType.phone,
+              ),
+              _input(
+                controller: direccionCtrl,
+                label: 'Dirección',
+              ),
+              _input(
+                controller: ciudadCtrl,
+                label: 'Ciudad',
+              ),
+              _input(
+                controller: departamentoCtrl,
+                label: 'Departamento',
+              ),
+              _input(
+                controller: correoCtrl,
+                label: 'Correo',
+                type: TextInputType.emailAddress,
+                isEmail: true,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    final cliente = {
+                      "documento": documentoCtrl.text,
+                      "razon": razonCtrl.text,
+                      "telefono": telefonoCtrl.text,
+                      "direccion": direccionCtrl.text,
+                      "ciudad": ciudadCtrl.text,
+                      "departamento": departamentoCtrl.text,
+                      "correo": correoCtrl.text,
+                    };
+
+                    print(cliente); // aquí ya tienes todo validado
+                  }
+                },
+                child: const Text('Guardar cliente'),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _input(
+      {required TextEditingController controller,
+      required String label,
+      TextInputType type = TextInputType.text,
+      bool isEmail = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: type,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Campo obligatorio';
+          }
+
+          if (isEmail) {
+            final emailReg = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+            if (!emailReg.hasMatch(value)) {
+              return 'Correo inválido';
+            }
+          }
+
+          return null;
+        },
+      ),
     );
   }
 
