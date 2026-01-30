@@ -434,8 +434,6 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
                           child: IconButton(
                             icon: const Icon(Icons.picture_as_pdf_outlined),
                             onPressed: () async {
-                              print("Generar reporte");
-
                               try {
                                 final http.Response response =
                                     await _generateReportOrderSaved(

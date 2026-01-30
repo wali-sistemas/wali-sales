@@ -49,31 +49,22 @@ class CarteraPageState extends State<CarteraPage> {
     String apiUrl = '';
     if (GetStorage().read('nitFiltroCartera') == null) {
       apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/' +
-              empresa +
-              '?slpcode=' +
-              codigo;
+          'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/$empresa?slpcode=$codigo';
     } else {
       apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/' +
-              empresa +
-              '?slpcode=' +
-              codigo +
-              '&cardcode=' +
+          'http://wali.igbcolombia.com:8080/manager/res/app/customers-portfolio/$empresa?slpcode=$codigo&cardcode=' +
               GetStorage().read('nitFiltroCartera');
     }
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
-    String texto = 'No se encontro cartera para asesor ' +
-        codigo +
-        ' en la empresa ' +
-        empresa;
 
     final codigoError = resp['code'];
     if (codigoError == -1) {
       final snackBar = SnackBar(
-        content: Text(texto),
+        content: Text(
+          'No se encontro cartera para asesor $codigo en la empresa $empresa',
+        ),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }

@@ -86,11 +86,14 @@ class _HomePageState extends State<HomePage> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
+        resizeToAvoidBottomInset: false,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             showModalBottomSheet(
               context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
               builder: (BuildContext context) {
                 return SizedBox(
                   height: 400,

@@ -7,6 +7,7 @@ import 'buscador_clientes.dart';
 import 'package:productos_app/screens/home_screen.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:productos_app/screens/screens.dart';
 
 class ClientesPage extends StatefulWidget {
   const ClientesPage({Key? key}) : super(key: key);
@@ -15,7 +16,11 @@ class ClientesPage extends StatefulWidget {
   State<ClientesPage> createState() => _ClientesPageState();
 }
 
-class _ClientesPageState extends State<ClientesPage> {
+class _ClientesPageState extends State<ClientesPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   List _clientes = [];
   final String codigo = GetStorage().read('slpCode');
   final GetStorage storage = GetStorage();
@@ -27,12 +32,35 @@ class _ClientesPageState extends State<ClientesPage> {
   Map<String, dynamic> pedidoLocal = {};
   List<dynamic> itemsPedidoLocal = [];
 
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController documentoCtrl = TextEditingController();
+  final TextEditingController razonCtrl = TextEditingController();
+  final TextEditingController telefonoCtrl = TextEditingController();
+  final TextEditingController direccionCtrl = TextEditingController();
+  final TextEditingController ciudadCtrl = TextEditingController();
+  final TextEditingController departamentoCtrl = TextEditingController();
+  final TextEditingController correoCtrl = TextEditingController();
+
+  bool btnProspectoActivo = false;
+
   @override
   void initState() {
     super.initState();
     sincClientes();
     sincronizarStock();
     _fetchData();
+  }
+
+  @override
+  void dispose() {
+    documentoCtrl.dispose();
+    razonCtrl.dispose();
+    telefonoCtrl.dispose();
+    direccionCtrl.dispose();
+    ciudadCtrl.dispose();
+    departamentoCtrl.dispose();
+    correoCtrl.dispose();
+    super.dispose();
   }
 
   Future<bool> checkConnectivity() async {
@@ -88,7 +116,6 @@ class _ClientesPageState extends State<ClientesPage> {
     final cached = GetStorage().read('datosClientes');
     if (cached != null) {
       _clientes = cached;
-
       if (mounted) setState(() {});
       return;
     }
@@ -122,78 +149,99 @@ class _ClientesPageState extends State<ClientesPage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
-            leading: GestureDetector(
-              child: const Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => HomePage()),
-                );
-              },
-            ),
-            actions: const [
-              CarritoPedido(),
-            ],
-            title: ListTile(
-              onTap: () {
-                showSearch(
-                  context: context,
-                  delegate: CustomSearchDelegateClientes(),
-                );
-              },
-              title: const Row(
-                children: [
-                  Icon(Icons.search, color: Colors.white),
-                  SizedBox(width: 5),
-                  Text(
-                    'Buscar cliente',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-            bottom: const TabBar(
-              tabs: [
-                Tab(
-                  child: Text(
-                    'Clientes',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                Tab(
-                  child: Text(
-                    'Prospecto',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          body: TabBarView(
-            children: [
-              clientes(context),
-              prospecto(context),
-            ],
-          ),
-        ),
+  Future<http.Response> _createCustomerLead(Map<String, String> cliente) async {
+    final String apiUrl =
+        'http://192.168.10.69:8080/manager/res/app/create-customer-lead';
+
+    return http.post(
+      Uri.parse(apiUrl),
+      headers: const <String, String>{'Content-Type': 'application/json'},
+      body: jsonEncode(
+        <String, dynamic>{
+          "document": cliente["documento"],
+          "cardName": cliente["razonSocial"].toString().toUpperCase(),
+          "cellular": cliente["telefono"],
+          "mail": cliente["correo"].toString().toUpperCase(),
+          "slpCode": usuario,
+          "companyName": empresa,
+          "address": cliente["direccion"].toString().toUpperCase(),
+          "departament": cliente["departamento"].toString().toUpperCase(),
+          "city": cliente["ciudad"].toString().toUpperCase()
+        },
       ),
     );
   }
 
   @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
+          leading: GestureDetector(
+            child: const Icon(
+              Icons.arrow_back_ios,
+              color: Colors.white,
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => HomePage()),
+              );
+            },
+          ),
+          actions: const [
+            CarritoPedido(),
+          ],
+          title: ListTile(
+            onTap: () {
+              showSearch(
+                context: context,
+                delegate: CustomSearchDelegateClientes(),
+              );
+            },
+            title: const Row(
+              children: [
+                Icon(Icons.search, color: Colors.white),
+                SizedBox(width: 5),
+                Text(
+                  'Buscar cliente',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+          bottom: const TabBar(
+            tabs: [
+              Tab(
+                child: Text(
+                  'Clientes',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              Tab(
+                child: Text(
+                  'Prospecto',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            clientes(context),
+            prospecto(context),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget clientes(BuildContext context) {
     return SafeArea(
       child: ListView.builder(
@@ -254,22 +302,11 @@ class _ClientesPageState extends State<ClientesPage> {
     );
   }
 
-  @override
   Widget prospecto(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-
-    final documentoCtrl = TextEditingController();
-    final razonCtrl = TextEditingController();
-    final telefonoCtrl = TextEditingController();
-    final direccionCtrl = TextEditingController();
-    final ciudadCtrl = TextEditingController();
-    final departamentoCtrl = TextEditingController();
-    final correoCtrl = TextEditingController();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+    return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
         child: Form(
           key: _formKey,
           child: Column(
@@ -281,7 +318,7 @@ class _ClientesPageState extends State<ClientesPage> {
               ),
               _input(
                 controller: razonCtrl,
-                label: 'Razón social',
+                label: 'Cliente',
               ),
               _input(
                 controller: telefonoCtrl,
@@ -289,42 +326,99 @@ class _ClientesPageState extends State<ClientesPage> {
                 type: TextInputType.phone,
               ),
               _input(
-                controller: direccionCtrl,
-                label: 'Dirección',
-              ),
-              _input(
-                controller: ciudadCtrl,
-                label: 'Ciudad',
+                controller: correoCtrl,
+                label: 'Correo',
+                type: TextInputType.emailAddress,
+                isEmail: true,
               ),
               _input(
                 controller: departamentoCtrl,
                 label: 'Departamento',
               ),
               _input(
-                controller: correoCtrl,
-                label: 'Correo',
-                type: TextInputType.emailAddress,
-                isEmail: true,
+                controller: ciudadCtrl,
+                label: 'Ciudad',
+              ),
+              _input(
+                controller: direccionCtrl,
+                label: 'Dirección',
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    final cliente = {
-                      "documento": documentoCtrl.text,
-                      "razon": razonCtrl.text,
-                      "telefono": telefonoCtrl.text,
-                      "direccion": direccionCtrl.text,
-                      "ciudad": ciudadCtrl.text,
-                      "departamento": departamentoCtrl.text,
-                      "correo": correoCtrl.text,
-                    };
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+                onPressed: btnProspectoActivo
+                    ? null
+                    : () async {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() => btnProspectoActivo = true);
 
-                    print(cliente); // aquí ya tienes todo validado
-                  }
-                },
-                child: const Text('Guardar cliente'),
-              )
+                          final cliente = <String, String>{
+                            "documento": documentoCtrl.text,
+                            "razonSocial": razonCtrl.text,
+                            "telefono": telefonoCtrl.text,
+                            "direccion": direccionCtrl.text,
+                            "ciudad": ciudadCtrl.text,
+                            "departamento": departamentoCtrl.text,
+                            "correo": correoCtrl.text,
+                          };
+
+                          try {
+                            final http.Response response =
+                                await _createCustomerLead(cliente);
+                            final Map<String, dynamic> resultado =
+                                jsonDecode(response.body);
+
+                            if (resultado["code"] >= 0) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ClientesPage(),
+                                ),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Prospecto creado.'),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Ups, algo falló. Inténtalo nuevamente.',
+                                  ),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            print(e);
+                          }
+                        }
+                      },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.person_add,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        btnProspectoActivo ? 'Espere' : 'Crear',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -332,20 +426,20 @@ class _ClientesPageState extends State<ClientesPage> {
     );
   }
 
-  Widget _input(
-      {required TextEditingController controller,
-      required String label,
-      TextInputType type = TextInputType.text,
-      bool isEmail = false}) {
+  Widget _input({
+    required TextEditingController controller,
+    required String label,
+    TextInputType type = TextInputType.text,
+    bool isEmail = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: controller,
         keyboardType: type,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+        ).copyWith(labelText: label),
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
             return 'Campo obligatorio';
@@ -357,7 +451,6 @@ class _ClientesPageState extends State<ClientesPage> {
               return 'Correo inválido';
             }
           }
-
           return null;
         },
       ),
@@ -384,9 +477,7 @@ class _ClientesPageState extends State<ClientesPage> {
 
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const PedidosPage(),
-          ),
+          MaterialPageRoute(builder: (context) => const PedidosPage()),
         );
       },
       child: const Text('SI'),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:productos_app/providers/login_form_provider.dart';
+import 'package:productos_app/screens/home_screen.dart';
 import 'package:productos_app/services/services.dart';
 import 'package:provider/provider.dart';
 import 'package:get_storage/get_storage.dart';
@@ -340,7 +341,7 @@ class _LoginFormState extends State<_LoginForm> {
                                   GetStorage().read('empresa'),
                                   loginForm.email,
                                 );
-                                Navigator.pushReplacementNamed(context, 'home');
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
                               } else {
                                 NotificationsService.showSnackbar(
                                   res['content'],

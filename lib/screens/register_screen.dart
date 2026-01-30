@@ -38,7 +38,7 @@ class RegisterScreen extends StatelessWidget {
                     Navigator.pushReplacementNamed(context, 'login'),
                 style: ButtonStyle(
                   overlayColor: WidgetStateProperty.all(
-                    Colors.indigo.withOpacity(0.1), // no puede ser const
+                    Colors.indigo.withOpacity(0.1),
                   ),
                   shape: WidgetStateProperty.all(const StadiumBorder()),
                 ),

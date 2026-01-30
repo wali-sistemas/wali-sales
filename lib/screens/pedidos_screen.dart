@@ -123,86 +123,84 @@ class _PedidosPageState extends State<PedidosPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: DefaultTabController(
-        length: 4,
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
-            leading: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              child: const Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-              ),
-              onTap: () {
-                if (GetStorage().read('estadoPedido') == "nuevo") {
-                  Navigator.pushReplacementNamed(context, 'home');
-                } else {
-                  showExitEditOrderConfirmation(
-                    context,
-                    "Estás editando un pedido. Si sales, perderás los cambios.\n\n¿Deseas salir definitivamente?",
-                  );
-                }
-              },
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: const Color.fromRGBO(30, 129, 235, 1),
+          leading: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            child: const Icon(
+              Icons.arrow_back_ios,
+              color: Colors.white,
             ),
-            title: ListTile(
-              onTap: () {
-                showSearch(
-                  context: context,
-                  delegate: CustomSearchDelegate(),
+            onTap: () {
+              if (GetStorage().read('estadoPedido') == "nuevo") {
+                Navigator.pushReplacement(
+                    context, MaterialPageRoute(builder: (_) => HomePage()));
+              } else {
+                showExitEditOrderConfirmation(
+                  context,
+                  "Estás editando un pedido. Si sales, perderás los cambios.\n\n¿Deseas salir definitivamente?",
                 );
-              },
-              title: const Row(
-                children: [
-                  Icon(Icons.search, color: Colors.white),
-                  SizedBox(width: 5),
-                  Text(
-                    'Buscar ítems',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-            bottom: const TabBar(
-              tabs: [
-                Tab(
-                  child: Text(
-                    'Cliente',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                Tab(
-                  child: Text(
-                    'Items',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                Tab(
-                  child: Text(
-                    'Detalle',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                Tab(
-                  child: Text(
-                    'Total',
-                    style: TextStyle(color: Colors.white),
-                  ),
+              }
+            },
+          ),
+          title: ListTile(
+            onTap: () {
+              showSearch(
+                context: context,
+                delegate: CustomSearchDelegate(),
+              );
+            },
+            title: const Row(
+              children: [
+                Icon(Icons.search, color: Colors.white),
+                SizedBox(width: 5),
+                Text(
+                  'Buscar ítems',
+                  style: TextStyle(color: Colors.white),
                 ),
               ],
             ),
           ),
-          body: TabBarView(
-            children: [
-              formulario(context),
-              items(context),
-              detalle(context),
-              total(context),
+          bottom: const TabBar(
+            tabs: [
+              Tab(
+                child: Text(
+                  'Cliente',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              Tab(
+                child: Text(
+                  'Items',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              Tab(
+                child: Text(
+                  'Detalle',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              Tab(
+                child: Text(
+                  'Total',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
             ],
           ),
+        ),
+        body: TabBarView(
+          children: [
+            formulario(context),
+            items(context),
+            detalle(context),
+            total(context),
+          ],
         ),
       ),
     );
@@ -231,7 +229,8 @@ class _PedidosPageState extends State<PedidosPage>
                 storage.remove('itemsPedido');
 
                 Navigator.of(context, rootNavigator: true).pop();
-                Navigator.pushReplacementNamed(context, 'home');
+                Navigator.pushReplacement(
+                    context, MaterialPageRoute(builder: (_) => HomePage()));
               },
               child: const Text('Si'),
             ),
@@ -2077,8 +2076,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 final pg = GetStorage().read('pedidoGuardado');
                                 if (pg != null) {
                                   try {
-                                    actualizarEstadoPed(
-                                        int.parse(pg['id']), 0, 'C');
+                                    actualizarEstadoPed(pg['id'], 0, 'C');
                                   } catch (e) {}
                                 }
                               } else {
