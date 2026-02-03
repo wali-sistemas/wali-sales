@@ -314,7 +314,7 @@ class _MyDialogState extends State<MyDialog> {
 
   Future<void> _listarItems() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/items/' + empresa;
+        'http://wali.igbcolombia.com:8080/manager/res/app/items/$empresa';
 
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
@@ -330,13 +330,8 @@ class _MyDialogState extends State<MyDialog> {
 
   Future<int> _getStockByItemAndWhsCode(String item, String whsCode) async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
-            empresa +
-            '?itemcode=' +
-            item +
-            '&whscode=' +
-            whsCode +
-            '&slpcode=0';
+        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/$empresa?itemcode=$item&whscode=$whsCode&slpcode=0';
+
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
     final codigoError = resp['code'];

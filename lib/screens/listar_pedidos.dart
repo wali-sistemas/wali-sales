@@ -114,16 +114,7 @@ class _ListarPedidosPageState extends State<ListarPedidosPage> {
 
     if (isConnected) {
       final String apiUrl =
-          'http://wali.igbcolombia.com:8080/manager/res/app/list-order/' +
-              empresa +
-              '?slpcode=' +
-              usuario +
-              '&year=' +
-              year +
-              '&month=' +
-              mes +
-              '&day=' +
-              dia;
+          'http://wali.igbcolombia.com:8080/manager/res/app/list-order/$empresa?slpcode=$usuario&year=$year&month=$mes&day=$dia';
 
       final response = await http.get(Uri.parse(apiUrl));
       final Map<String, dynamic> resp = jsonDecode(response.body);

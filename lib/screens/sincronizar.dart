@@ -53,16 +53,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
 
   Future<void> sincronizarVentas() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/list-order/' +
-            empresa +
-            '?slpcode=' +
-            usuario +
-            '&year=' +
-            now.year.toString() +
-            '&month=' +
-            now.month.toString() +
-            '&day=' +
-            now.day.toString();
+        'http://wali.igbcolombia.com:8080/manager/res/app/list-order/$empresa?slpcode=$usuario&year=${now.year}&month=${now.month}&day=${now.day}';
 
     final bool isConnected = await checkConnectivity();
     if (!isConnected) {
@@ -217,10 +208,7 @@ class _SincronizarPageState extends State<SincronizarPage> {
 
   Future<void> sincClientes() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/customers/' +
-            codigo +
-            '/' +
-            empresa;
+        'http://wali.igbcolombia.com:8080/manager/res/app/customers/$codigo/$empresa';
 
     final bool isConnected = await checkConnectivity();
     if (!isConnected) {

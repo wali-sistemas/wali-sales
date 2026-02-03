@@ -824,13 +824,7 @@ class _MyDialogState extends State<MyDialog> {
 
   Future<int> _getStockByItemAndWhsCode(String item, String whsCode) async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/' +
-            empresa +
-            '?itemcode=' +
-            item +
-            '&whscode=' +
-            whsCode +
-            '&slpcode=0';
+        'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/$empresa?itemcode=$item&whscode=$whsCode&slpcode=0';
 
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);
@@ -1000,8 +994,10 @@ class _MyDialogState extends State<MyDialog> {
         whsCodeStockItem = bodega['whsCode'];
         fullStock = bodega['quantity'];
       } else {
-        whsCodeStockItem = _itemsGuardados[index]["whsCode"];
         stockSuma = stockSuma + bodega['quantity'];
+        if (whsCodeStockItem == null) {
+          fullStock = 0;
+        }
       }
     }
 
@@ -2268,14 +2264,7 @@ class _TotalPedidoState extends State<TotalPedido> {
 
   Future<void> actualizarEstadoPed(int idP, int docNum, String status) async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/process-saved-order/' +
-            empresa +
-            '?id=' +
-            idP.toString() +
-            '&docNum=' +
-            docNum.toString() +
-            '&status=' +
-            status;
+        'http://wali.igbcolombia.com:8080/manager/res/app/process-saved-order/$empresa?id=${idP.toString()}&docNum=${docNum.toString()}&status=$status';
 
     await http.get(Uri.parse(apiUrl));
   }

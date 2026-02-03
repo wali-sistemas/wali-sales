@@ -89,14 +89,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<Map<String, dynamic>> _datosDashboard2() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/budget-sales/' +
-            empresa! +
-            '?slpcode=' +
-            usuario! +
-            '+&year=' +
-            now.year.toString() +
-            '&month=' +
-            now.month.toString();
+        'http://wali.igbcolombia.com:8080/manager/res/app/budget-sales/$empresa?slpcode=$usuario&year=${now.year}&month=${now.month}';
 
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);
@@ -124,14 +117,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<Map<String, dynamic>> _datosBarras() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/effectiveness-sales/' +
-            empresa! +
-            '?slpcode=' +
-            usuario! +
-            '+&year=' +
-            now.year.toString() +
-            '&month=' +
-            now.month.toString();
+        'http://wali.igbcolombia.com:8080/manager/res/app/effectiveness-sales/$empresa?slpcode=$usuario&year=${now.year}&month=${now.month}';
 
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp1 = jsonDecode(response.body);
@@ -160,10 +146,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<Map<String, dynamic>> _getSavedOrdersReport() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/report-saved-order/' +
-            empresa! +
-            '?slpcode=' +
-            usuario!;
+        'http://wali.igbcolombia.com:8080/manager/res/app/report-saved-order/$empresa?slpcode=$usuario';
 
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);
@@ -185,10 +168,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<dynamic> _findOrderExtranetInprogress() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/find-order-extranet-inprogress/' +
-            empresa! +
-            '/' +
-            usuario!;
+        'http://wali.igbcolombia.com:8080/manager/res/app/find-order-extranet-inprogress/$empresa/$usuario';
 
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);
@@ -199,10 +179,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _updateStatusNotificationOrderExtranet(String docNum) async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/update-status-order-extranet/' +
-            empresa! +
-            '/' +
-            docNum;
+        'http://wali.igbcolombia.com:8080/manager/res/app/update-status-order-extranet/$empresa/$docNum';
 
     final response = await http.put(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);
@@ -214,10 +191,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<dynamic> _findSalesBudgetByBrandAndSeller() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/list-budget-brand/' +
-            empresa! +
-            '?slpcode=' +
-            usuario!;
+        'http://wali.igbcolombia.com:8080/manager/res/app/list-budget-brand/$empresa?slpcode=$usuario';
 
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);

@@ -72,6 +72,7 @@ class _LoginFormState extends State<_LoginForm> {
   Future<void> sincronizarStock() async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/stock-current/IGB?itemcode=0&whscode=0&slpcode=0';
+
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
     final codigoError = resp["code"];
