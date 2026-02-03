@@ -100,10 +100,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
 
   Future<void> getOrdersMarkedDays() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/marked-days-saved-order/' +
-            empresa +
-            '?slpcode=' +
-            usuario;
+        'http://wali.igbcolombia.com:8080/manager/res/app/marked-days-saved-order/$empresa?slpcode=$usuario';
 
     final response = await http.get(Uri.parse(apiUrl));
     data = jsonDecode(response.body);
@@ -123,11 +120,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
 
   Future<void> actualizarEstadoPedGuardado(int idP) async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/process-saved-order/' +
-            empresa +
-            '?id=' +
-            idP.toString() +
-            '&docNum=0&status=C';
+        'http://wali.igbcolombia.com:8080/manager/res/app/process-saved-order/$empresa?id=${idP.toString()}&docNum=0&status=C';
 
     await http.get(Uri.parse(apiUrl));
   }
@@ -188,16 +181,7 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
 
   Future<List<dynamic>> getOrdenesGuardadasServidor() async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/list-order-saves/' +
-            empresa +
-            '?slpcode=' +
-            usuario +
-            '&year=' +
-            year +
-            '&month=' +
-            mes +
-            '&day=' +
-            dia;
+        'http://wali.igbcolombia.com:8080/manager/res/app/list-order-saves/$empresa?slpcode=$usuario&year=$year&month=$mes&day=$dia';
 
     final response = await http.get(Uri.parse(apiUrl));
     data = jsonDecode(response.body);

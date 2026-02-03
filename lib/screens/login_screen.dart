@@ -168,12 +168,8 @@ class _LoginFormState extends State<_LoginForm> {
 
   Future<bool> createRecordLogin(String empresa, String slpCode) async {
     final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/create-record-login/' +
-            empresa +
-            '/' +
-            slpCode +
-            '/' +
-            versionApp;
+        'http://wali.igbcolombia.com:8080/manager/res/app/create-record-login/$empresa/$slpCode/$versionApp';
+
     final response = await http.get(Uri.parse(apiUrl));
     Map<String, dynamic> resp = jsonDecode(response.body);
     final data = resp["content"];
@@ -342,7 +338,10 @@ class _LoginFormState extends State<_LoginForm> {
                                   GetStorage().read('empresa'),
                                   loginForm.email,
                                 );
-                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
+                                Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => HomePage()));
                               } else {
                                 NotificationsService.showSnackbar(
                                   res['content'],
