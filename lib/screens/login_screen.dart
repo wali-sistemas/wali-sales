@@ -56,7 +56,7 @@ class _LoginFormState extends State<_LoginForm> {
   String dropdownvalue = 'Elija una empresa';
   String? usuario = "";
   String? clave = "";
-  String versionApp = "12.4";
+  String versionApp = "12.5";
   String isSincStock = "";
   String isSincItems = "";
   var loginForm;

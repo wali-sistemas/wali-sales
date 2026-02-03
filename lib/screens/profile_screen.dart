@@ -90,7 +90,7 @@ class ProfilePage extends StatelessWidget {
                         height: 100,
                       ),
                       const SizedBox(height: 5),
-                      const Text('Versión 12.4'),
+                      const Text('Versión 12.5'),
                       const Text('WALI COLOMBIA SAS'),
                       const Text('Todos los derechos reservados'),
                       const SizedBox(height: 10),

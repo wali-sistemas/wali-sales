@@ -151,7 +151,7 @@ class _ClientesPageState extends State<ClientesPage>
 
   Future<http.Response> _createCustomerLead(Map<String, String> cliente) async {
     final String apiUrl =
-        'http://192.168.10.69:8080/manager/res/app/create-customer-lead';
+        'http://wali.igbcolombia.com:8080/manager/res/app/create-customer-lead';
 
     return http.post(
       Uri.parse(apiUrl),
@@ -247,17 +247,22 @@ class _ClientesPageState extends State<ClientesPage>
       child: ListView.builder(
         itemCount: _clientes.length,
         itemBuilder: (context, index) {
+          final String cardCode = _clientes[index]['cardCode'];
+          final bool isLead = cardCode.startsWith('L');
           return Card(
             child: Container(
-              color: const Color.fromRGBO(250, 251, 253, 1),
+              color: isLead
+                  ? const Color.fromRGBO(230, 230, 230, 1)
+                  : const Color.fromRGBO(250, 251, 253, 1),
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: ListTile(
                   title: Text(
-                    _clientes[index]['cardCode'] +
-                        ' - ' +
-                        _clientes[index]['cardName'],
-                    style: const TextStyle(fontSize: 15),
+                    '$cardCode - ${_clientes[index]['cardName']}',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: isLead ? FontWeight.bold : FontWeight.normal,
+                    ),
                   ),
                   trailing: TextButton.icon(
                     onPressed: () {
@@ -268,17 +273,17 @@ class _ClientesPageState extends State<ClientesPage>
                         pedidoLocal = GetStorage().read('pedido');
                       }
 
-                      if (pedidoLocal['cardCode'] !=
-                              _clientes[index]['cardCode'] &&
+                      if (pedidoLocal['cardCode'] != cardCode &&
                           itemsPedidoLocal.isNotEmpty) {
                         showAlertDialogItemsInShoppingCart(
                           context,
-                          _clientes[index]['cardCode'],
+                          cardCode,
                         );
                       } else {
                         storage.write('estadoPedido', 'nuevo');
                         storage.write('nit', _clientes[index]['nit']);
-                        storage.write('cardCode', _clientes[index]['cardCode']);
+                        storage.write('cardCode', cardCode);
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -318,7 +323,7 @@ class _ClientesPageState extends State<ClientesPage>
               ),
               _input(
                 controller: razonCtrl,
-                label: 'Cliente',
+                label: 'Nombre completo',
               ),
               _input(
                 controller: telefonoCtrl,
