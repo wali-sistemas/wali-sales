@@ -695,37 +695,28 @@ class DetailScreen extends StatelessWidget {
 
 class _MyDialogState extends State<MyDialog> {
   int index = 0;
+  int idPedidoDb = 0;
+  int idLocal = 0;
+  int fullStock = 0;
   List _items = [];
   List _stock = [];
   List listaItems = [];
   List _inventario = [];
-
-  final GetStorage storage = GetStorage();
-  bool textoVisible = false;
-
-  final TextEditingController cantidadController = TextEditingController();
-
   List<dynamic> itemsPedidoLocal = [];
   List<dynamic> itemsPedido = [];
-
+  List _stockFull = [];
   String dropdownvalueBodega = 'Elija una bodega';
-  final String empresa = GetStorage().read('empresa');
   String mensaje = "";
-
+  String? whsCodeStockItem;
+  String zona = "";
   bool btnAgregarActivo = false;
   bool btnSoldOutActivo = false;
-
+  bool textoVisible = false;
+  final GetStorage storage = GetStorage();
   final NumberFormat numberFormat = NumberFormat.simpleCurrency();
-  var whsCodeStockItem;
-
-  String zona = "";
   final String usuario = GetStorage().read('usuario');
-
-  List _stockFull = [];
-  int idPedidoDb = 0;
-  int idLocal = 0;
-  int fullStock = 0;
-
+  final String empresa = GetStorage().read('empresa');
+  final TextEditingController cantidadController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   final Connectivity _connectivity = Connectivity();
 
@@ -759,7 +750,7 @@ class _MyDialogState extends State<MyDialog> {
 
   Future<void> _initData() async {
     // zona
-    zona = GetStorage().read('zona') ?? "01";
+    //zona = GetStorage().read('zona') ?? "01";
     // index
     index = GetStorage().read('index') ?? 0;
     // items
@@ -988,16 +979,46 @@ class _MyDialogState extends State<MyDialog> {
       fullStock = _stock[0]['stockFull'];
     }
 
-    num stockSuma = 0;
-    for (final bodega in _inventario) {
-      if (bodega['quantity'] > 0 && bodega['whsCode'] == zona) {
-        whsCodeStockItem = bodega['whsCode'];
-        fullStock = bodega['quantity'];
-      } else {
-        stockSuma = stockSuma + bodega['quantity'];
-        if (whsCodeStockItem == null) {
-          fullStock = 0;
+    print("---------------------");
+    print(whsCodeStockItem);
+    print("---------------------");
+
+    if (isVisibleBod == true) {
+      if (whsCodeStockItem == null) {
+        fullStock = 0;
+      }
+    } else {
+      // Ordenar por stock
+      num stockSuma = 0;
+      for (int i = 0; i < _inventario.length - 1; i++) {
+        for (int j = 0; j < _inventario.length - i - 1; j++) {
+          if (_inventario[j]['quantity'] < _inventario[j + 1]['quantity']) {
+            final temp = _inventario[j];
+            _inventario[j] = _inventario[j + 1];
+            _inventario[j + 1] = temp;
+          }
         }
+      }
+
+      // Buscar primero la bodega de la zona
+      for (final bodega in _inventario) {
+        if (bodega['quantity'] > 0 && bodega['whsCode'] == zona) {
+          whsCodeStockItem = bodega['whsCode'];
+          fullStock = bodega['quantity'];
+          break;
+        }
+      }
+
+      // Si no hay stock en la zona, usar la que más tenga
+      if (whsCodeStockItem == null && _inventario.isNotEmpty) {
+        final mejor = _inventario.first;
+        whsCodeStockItem = mejor['whsCode'];
+        fullStock = mejor['quantity'];
+      }
+
+      // Sumar el stock total
+      for (final bodega in _inventario) {
+        stockSuma += bodega['quantity'];
       }
     }
 
