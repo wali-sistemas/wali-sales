@@ -22,6 +22,7 @@ class _ClientesPageState extends State<ClientesPage>
   bool get wantKeepAlive => true;
 
   List _clientes = [];
+  List _municipios = [];
   final String codigo = GetStorage().read('slpCode');
   final GetStorage storage = GetStorage();
   final String empresa = GetStorage().read('empresa');
@@ -172,6 +173,21 @@ class _ClientesPageState extends State<ClientesPage>
     );
   }
 
+  Future<void> _listMunicipios(String? codeDepartment) async {
+    final String apiUrl =
+        'http://192.168.10.69:8080/manager/res/pedbox/list-municipios/IGB?departamento=$codeDepartment';
+
+    final response = await http.get(Uri.parse(apiUrl));
+    Map<String, dynamic> resp = jsonDecode(response.body);
+    final data = resp['content'];
+    if (!mounted) return;
+    setState(
+      () {
+        _municipios = data;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -307,7 +323,45 @@ class _ClientesPageState extends State<ClientesPage>
     );
   }
 
+  String? departamentoSeleccionado;
+  String? municipioSeleccionado;
   Widget prospecto(BuildContext context) {
+    final List<Map<String, String>> departamentos = [
+      {"code": "05", "name": "ANTIOQUIA"},
+      {"code": "08", "name": "ATLANTICO"},
+      {"code": "11", "name": "BOGOTÁ"},
+      {"code": "13", "name": "BOLIVAR"},
+      {"code": "15", "name": "BOYACÁ"},
+      {"code": "17", "name": "CALDAS"},
+      {"code": "18", "name": "CAQUETÁ"},
+      {"code": "19", "name": "CAUCA"},
+      {"code": "20", "name": "CESAR"},
+      {"code": "23", "name": "CÓRDOBA"},
+      {"code": "25", "name": "CUNDINAMARCA"},
+      {"code": "27", "name": "CHOCÓ"},
+      {"code": "41", "name": "HUILA"},
+      {"code": "44", "name": "GUAJIRA"},
+      {"code": "47", "name": "MAGDALENA"},
+      {"code": "50", "name": "META"},
+      {"code": "52", "name": "NARINO"},
+      {"code": "54", "name": "NORT SANTANDER"},
+      {"code": "63", "name": "QUINDÍO"},
+      {"code": "66", "name": "RISARALDA"},
+      {"code": "68", "name": "SANTANDER"},
+      {"code": "70", "name": "SUCRE"},
+      {"code": "73", "name": "TOLIMA"},
+      {"code": "76", "name": "VLL DEL CAUCA"},
+      {"code": "81", "name": "ARAUCA"},
+      {"code": "85", "name": "CASANARE"},
+      {"code": "86", "name": "PUTUMAYO"},
+      {"code": "88", "name": "SAN ANDRÉS"},
+      {"code": "91", "name": "AMAZONAS"},
+      {"code": "94", "name": "GUAINÍA"},
+      {"code": "95", "name": "GUAVIARE"},
+      {"code": "97", "name": "VAUPÉS"},
+      {"code": "99", "name": "VICHADA"},
+    ];
+
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Container(
@@ -336,9 +390,53 @@ class _ClientesPageState extends State<ClientesPage>
                 type: TextInputType.emailAddress,
                 isEmail: true,
               ),
-              _input(
-                controller: departamentoCtrl,
-                label: 'Departamento',
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: DropdownButtonFormField<String>(
+                  value: departamentoSeleccionado,
+                  decoration: const InputDecoration(
+                    labelText: 'Departamento',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: departamentos.map((dep) {
+                    return DropdownMenuItem<String>(
+                      value: dep["code"],
+                      child: Text(dep["name"]!),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      departamentoSeleccionado = value;
+                    });
+
+                    _listMunicipios(departamentoSeleccionado);
+                  },
+                  validator: (value) =>
+                      value == null ? 'Campo obligatorio' : null,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: DropdownButtonFormField<String>(
+                  value: municipioSeleccionado,
+                  decoration: const InputDecoration(
+                    labelText: 'Municipio',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _municipios.map((mun) {
+                    return DropdownMenuItem<String>(
+                      value: mun["code"],
+                      child: Text(mun["name"]!),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      municipioSeleccionado = value;
+                    });
+                  },
+                  validator: (value) =>
+                      value == null ? 'Campo obligatorio' : null,
+                ),
               ),
               _input(
                 controller: ciudadCtrl,
@@ -368,11 +466,15 @@ class _ClientesPageState extends State<ClientesPage>
                             "telefono": telefonoCtrl.text,
                             "direccion": direccionCtrl.text,
                             "ciudad": ciudadCtrl.text,
-                            "departamento": departamentoCtrl.text,
+                            "departamento": departamentoSeleccionado.toString(),
                             "correo": correoCtrl.text,
                           };
 
-                          try {
+                          print("*****************************************");
+                          print(cliente);
+                          print("*****************************************");
+
+                          /*try {
                             final http.Response response =
                                 await _createCustomerLead(cliente);
                             final Map<String, dynamic> resultado =
@@ -402,7 +504,7 @@ class _ClientesPageState extends State<ClientesPage>
                             }
                           } catch (e) {
                             print(e);
-                          }
+                          }*/
                         }
                       },
                 child: Container(

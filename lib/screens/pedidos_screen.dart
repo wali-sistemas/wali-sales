@@ -979,10 +979,6 @@ class _MyDialogState extends State<MyDialog> {
       fullStock = _stock[0]['stockFull'];
     }
 
-    print("---------------------");
-    print(whsCodeStockItem);
-    print("---------------------");
-
     if (isVisibleBod == true) {
       if (whsCodeStockItem == null) {
         fullStock = 0;

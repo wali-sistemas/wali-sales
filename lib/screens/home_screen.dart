@@ -170,7 +170,7 @@ class _HomePageState extends State<HomePage> {
             selectedItemColor: Colors.white,
             unselectedItemColor: const Color.fromRGBO(1, 39, 80, 1),
             selectedFontSize: 8,
-            unselectedFontSize: 12.5,
+            unselectedFontSize: 12.6,
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.data_saver_off_outlined),
