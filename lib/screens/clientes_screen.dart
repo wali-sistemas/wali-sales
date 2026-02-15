@@ -175,11 +175,13 @@ class _ClientesPageState extends State<ClientesPage>
 
   Future<void> _listMunicipios(String? codeDepartment) async {
     final String apiUrl =
-        'http://192.168.10.69:8080/manager/res/pedbox/list-municipios/IGB?departamento=$codeDepartment';
+        'http://wali.igbcolombia.com:8080/manager/res/pedbox/list-municipios/IGB?departamento=$codeDepartment';
 
     final response = await http.get(Uri.parse(apiUrl));
-    Map<String, dynamic> resp = jsonDecode(response.body);
-    final data = resp['content'];
+
+    List<dynamic> resp = jsonDecode(response.body);
+    final data = resp;
+
     if (!mounted) return;
     setState(
       () {
@@ -442,6 +444,60 @@ class _ClientesPageState extends State<ClientesPage>
                 controller: ciudadCtrl,
                 label: 'Ciudad',
               ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12, right: 6),
+                      child: DropdownButtonFormField<String>(
+                        value: municipioSeleccionado,
+                        decoration: const InputDecoration(
+                          labelText: 'Municipio 1',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: _municipios.map((mun) {
+                          return DropdownMenuItem<String>(
+                            value: mun["code"],
+                            child: Text(mun["name"]!),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            //municipioSeleccionado1 = value;
+                          });
+                        },
+                        validator: (value) =>
+                            value == null ? 'Campo obligatorio' : null,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12, left: 6),
+                      child: DropdownButtonFormField<String>(
+                        value: municipioSeleccionado,
+                        decoration: const InputDecoration(
+                          labelText: 'Municipio 2',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: _municipios.map((mun) {
+                          return DropdownMenuItem<String>(
+                            value: mun["code"],
+                            child: Text(mun["name"]!),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            //municipioSeleccionado2 = value;
+                          });
+                        },
+                        validator: (value) =>
+                            value == null ? 'Campo obligatorio' : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               _input(
                 controller: direccionCtrl,
                 label: 'Dirección',
@@ -467,6 +523,7 @@ class _ClientesPageState extends State<ClientesPage>
                             "direccion": direccionCtrl.text,
                             "ciudad": ciudadCtrl.text,
                             "departamento": departamentoSeleccionado.toString(),
+                            "municipio": municipioSeleccionado.toString(),
                             "correo": correoCtrl.text,
                           };
 
