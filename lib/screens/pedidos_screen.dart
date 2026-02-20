@@ -39,8 +39,8 @@ class _PedidosPageState extends State<PedidosPage>
   GetStorage storage = GetStorage();
   List clientesGuardados = [];
   String dropdownvalue2 = 'Elija un destino';
-  String nit = "";
-  String urlImagenItem = "";
+  String nit = '';
+  String urlImagenItem = '';
 
   late final Future<void> _itemsFuture;
 
@@ -51,44 +51,44 @@ class _PedidosPageState extends State<PedidosPage>
   }
 
   final pedidoJson = {
-    "cardCode": "C890911260",
-    "cardName": "TRANSALGAR SA",
-    "nit": "890911260-7",
-    "comments": "Prueba Sistemas",
-    "companyName": "IGB",
-    "numAtCard": "20230307C8909112602322276",
-    "shipToCode": "CR 52 A 39 57",
-    "payToCode": "CR 52 A 39 57",
-    "slpCode": 22,
-    "discountPercent": 0.0,
-    "detailSalesOrder": [
+    'cardCode': 'C890911260',
+    'cardName': 'TRANSALGAR SA',
+    'nit': '890911260-7',
+    'comments': 'Prueba Sistemas',
+    'companyName': 'IGB',
+    'numAtCard': '20230307C8909112602322276',
+    'shipToCode': 'CR 52 A 39 57',
+    'payToCode': 'CR 52 A 39 57',
+    'slpCode': 22,
+    'discountPercent': 0.0,
+    'detailSalesOrder': [
       {
-        "quantity": 2,
-        "itemCode": "TY1003",
-        "itemName": "(**)LLANTA 90-90-17 TL SPORT TOURING.TS692/TIMSUN_CONV",
-        "whsCode": "01"
+        'quantity': 2,
+        'itemCode': 'TY1003',
+        'itemName': '(**)LLANTA 90-90-17 TL SPORT TOURING.TS692/TIMSUN_CONV',
+        'whsCode': '01'
       },
       {
-        "quantity": 3,
-        "itemCode": "ED0023",
-        "itemName": "AMORTIGUADOR TRAS NITROX NEGRO.DISCOVER 135 SUPREM",
-        "whsCode": "05"
+        'quantity': 3,
+        'itemCode': 'ED0023',
+        'itemName': 'AMORTIGUADOR TRAS NITROX NEGRO.DISCOVER 135 SUPREM',
+        'whsCode': '05'
       }
     ]
   };
 
   final pedidoTemp = {
-    "cardCode": "",
-    "cardName": "",
-    "nit": "",
-    "comments": "",
-    "companyName": "IGB",
-    "numAtCard": "",
-    "shipToCode": "",
-    "payToCode": "",
-    "slpCode": 0,
-    "discountPercent": 0.0,
-    "docTotal": ""
+    'cardCode': '',
+    'cardName': '',
+    'nit': '',
+    'comments': '',
+    'companyName': 'IGB',
+    'numAtCard': '',
+    'shipToCode': '',
+    'payToCode': '',
+    'slpCode': 0,
+    'discountPercent': 0.0,
+    'docTotal': ''
   };
 
   Future<void> _leerDatos() async {
@@ -110,7 +110,7 @@ class _PedidosPageState extends State<PedidosPage>
   void _launchWhatsApp(String cellular) async {
     try {
       final Uri whatsappUri = Uri.parse(
-          'https://wa.me/+57$cellular?text=${Uri.encodeComponent("Hola, Sr(Sra) soy su asesor de venta.")}');
+          'https://wa.me/+57$cellular?text=${Uri.encodeComponent('Hola, Sr(Sra) soy su asesor de venta.')}');
 
       if (await canLaunchUrl(whatsappUri)) {
         await launchUrl(whatsappUri);
@@ -136,13 +136,13 @@ class _PedidosPageState extends State<PedidosPage>
               color: Colors.white,
             ),
             onTap: () {
-              if (GetStorage().read('estadoPedido') == "nuevo") {
+              if (GetStorage().read('estadoPedido') == 'nuevo') {
                 Navigator.pushReplacement(
                     context, MaterialPageRoute(builder: (_) => HomePage()));
               } else {
                 showExitEditOrderConfirmation(
                   context,
-                  "Estás editando un pedido. Si sales, perderás los cambios.\n\n¿Deseas salir definitivamente?",
+                  'Estás editando un pedido. Si sales, perderás los cambios.\n\n¿Deseas salir definitivamente?',
                 );
               }
             },
@@ -257,7 +257,7 @@ class _PedidosPageState extends State<PedidosPage>
 
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);
-    final data = resp["content"];
+    final data = resp['content'];
 
     if (!mounted) return;
 
@@ -321,7 +321,7 @@ class _PedidosPageState extends State<PedidosPage>
       i++;
     }
     _direcciones = datosClientesArr[indice]['addresses'];
-    String dirs = "";
+    String dirs = '';
     _direcciones.forEach(
       (element) {
         dirs = dirs + element['lineNum'] + '\n';
@@ -465,9 +465,9 @@ class _PedidosPageState extends State<PedidosPage>
                         pointsTxt,
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      if (empresa == "IGB")
+                      if (empresa == 'IGB')
                         Text('Puntos los Calidosos', textAlign: TextAlign.left),
-                      if (empresa == "VARROC")
+                      if (empresa == 'VARROC')
                         Text('Puntos en CLUB VIP', textAlign: TextAlign.left),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -497,9 +497,9 @@ class _PedidosPageState extends State<PedidosPage>
                             icon: Icon(Icons.mail_outline),
                             onPressed: () async {
                               final Email email = Email(
-                                subject: "Asesor de ventas",
-                                body: "Cordial saludo señor(ar), " +
-                                    datosClientesArr[indice]['cardName'],
+                                subject: 'Asesor de ventas',
+                                body:
+                                    'Cordial saludo señor(a), ${datosClientesArr[indice]['cardName']}',
                                 recipients: [datosClientesArr[indice]['email']],
                               );
                               try {
@@ -529,7 +529,7 @@ class _PedidosPageState extends State<PedidosPage>
                               int indice = findItemIndex(
                                   direccionesEnvioAsesor, newValue);
                               storage.write(
-                                "dirEnvio",
+                                'dirEnvio',
                                 direccionesEnvio[indice],
                               );
                               dropdownvalue2 = newValue!;
@@ -625,7 +625,7 @@ class _PedidosPageState extends State<PedidosPage>
                       trailing: IconButton(
                         icon: const Icon(Icons.add),
                         onPressed: () {
-                          storage.write("index", index);
+                          storage.write('index', index);
 
                           showDialog(
                             context: context,
@@ -706,9 +706,9 @@ class _MyDialogState extends State<MyDialog> {
   List<dynamic> itemsPedido = [];
   List _stockFull = [];
   String dropdownvalueBodega = 'Elija una bodega';
-  String mensaje = "";
+  String mensaje = '';
   String? whsCodeStockItem;
-  String zona = "";
+  String zona = '';
   bool btnAgregarActivo = false;
   bool btnSoldOutActivo = false;
   bool textoVisible = false;
@@ -721,21 +721,21 @@ class _MyDialogState extends State<MyDialog> {
   final Connectivity _connectivity = Connectivity();
 
   final Map<String, dynamic> itemTemp = {
-    "quantity": "",
-    "itemCode": "",
-    "itemName": "",
-    "group": "",
-    "whsCode": "",
-    "presentation": "",
-    "price": "",
-    "discountItem": "",
-    "discountPorc": "",
-    "iva": ""
+    'quantity': '',
+    'itemCode': '',
+    'itemName': '',
+    'group': '',
+    'whsCode': '',
+    'presentation': '',
+    'price': '',
+    'discountItem': '',
+    'discountPorc': '',
+    'iva': ''
   };
 
   final Map<String, dynamic> actualizarPedidoGuardado = {
-    "id": "",
-    "docNum": ""
+    'id': '',
+    'docNum': ''
   };
 
   List _itemsGuardados = [];
@@ -749,9 +749,6 @@ class _MyDialogState extends State<MyDialog> {
   }
 
   Future<void> _initData() async {
-    // zona
-    //zona = GetStorage().read('zona') ?? "01";
-    // index
     index = GetStorage().read('index') ?? 0;
     // items
     await _listarItems();
@@ -780,7 +777,7 @@ class _MyDialogState extends State<MyDialog> {
 
     final List stockTemp = [];
     for (final j in _stockFull) {
-      if (_itemsGuardados[index]["itemCode"] == j["itemCode"]) {
+      if (_itemsGuardados[index]['itemCode'] == j['itemCode']) {
         stockTemp.add(j);
       }
     }
@@ -800,7 +797,7 @@ class _MyDialogState extends State<MyDialog> {
 
       final response = await http.get(Uri.parse(apiUrl));
       final Map<String, dynamic> resp = jsonDecode(response.body);
-      final data = resp["content"];
+      final data = resp['content'];
 
       if (!mounted) return;
       setState(() {
@@ -820,8 +817,8 @@ class _MyDialogState extends State<MyDialog> {
     final response = await http.get(Uri.parse(apiUrl));
     final Map<String, dynamic> resp = jsonDecode(response.body);
 
-    if (resp["code"] == 0) {
-      final data = resp["content"];
+    if (resp['code'] == 0) {
+      final data = resp['content'];
       return data[0]['stockFull'];
     }
     return 0;
@@ -858,18 +855,18 @@ class _MyDialogState extends State<MyDialog> {
 
   Future<void> insertPedidoDb() async {
     final Pedido newPedido = Pedido(
-      cardCode: "C12345",
-      cardName: "Cliente Ejemplo",
-      comments: "Pedido de prueba",
-      companyName: "Empresa Ejemplo",
-      numAtCard: "123456",
-      shipToCode: "S123",
-      payToCode: "P123",
+      cardCode: 'C12345',
+      cardName: 'Cliente Ejemplo',
+      comments: 'Pedido de prueba',
+      companyName: 'Empresa Ejemplo',
+      numAtCard: '123456',
+      shipToCode: 'S123',
+      payToCode: 'P123',
       slpCode: 5,
       discountPercent: 0.1,
       docTotal: 100.0,
-      lineNum: "L001",
-      detailSalesOrder: "Detalle del pedido",
+      lineNum: 'L001',
+      detailSalesOrder: 'Detalle del pedido',
     );
 
     final DatabaseHelper dbHelper = DatabaseHelper();
@@ -892,13 +889,13 @@ class _MyDialogState extends State<MyDialog> {
       headers: const <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
-          "itemCode": itemCode,
-          "itemName": itemName,
-          "quantity": quantity,
-          "slpCode": usuario,
-          "companyName": empresa,
-          "origen": origen,
-          "whsName": whsName,
+          'itemCode': itemCode,
+          'itemName': itemName,
+          'quantity': quantity,
+          'slpCode': usuario,
+          'companyName': empresa,
+          'origen': origen,
+          'whsName': whsName,
         },
       ),
     );
@@ -940,22 +937,22 @@ class _MyDialogState extends State<MyDialog> {
     int cantItemAdd = 0;
 
     // Activar seleccion de bodega para las llantas
-    if (_itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-        _itemsGuardados[index]["marca"] == 'XCELINK') {
+    if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
+        _itemsGuardados[index]['marca'] == 'XCELINK') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
       isVisibleBod = true;
     }
 
     // Activar seleccion de bodega para los lubricantes REVO
-    if (_itemsGuardados[index]["subgrupo"] == 'LUBRICANTES' &&
-        _itemsGuardados[index]["marca"] == 'REVO LUBRICANTES') {
+    if (_itemsGuardados[index]['subgrupo'] == 'LUBRICANTES' &&
+        _itemsGuardados[index]['marca'] == 'REVO LUBRICANTES') {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ', 'COTA'];
       isVisibleBod = true;
     }
 
     // Activar seleccion de bodega para las llantas TIMSUN
-    if (_itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-        _itemsGuardados[index]["marca"] == 'TIMSUN') {
+    if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
+        _itemsGuardados[index]['marca'] == 'TIMSUN') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ', 'MEDELLÍN'];
       isVisibleBod = true;
     }
@@ -965,8 +962,8 @@ class _MyDialogState extends State<MyDialog> {
     if (itemsPedidoSaved != null) {
       final List<dynamic> itemsAddDetail = itemsPedidoSaved;
       for (final j in itemsAddDetail) {
-        if (_itemsGuardados[index]["itemCode"] == j["itemCode"]) {
-          cantItemAdd = int.parse(j["quantity"]);
+        if (_itemsGuardados[index]['itemCode'] == j['itemCode']) {
+          cantItemAdd = int.parse(j['quantity']);
           alertItemAdd = true;
           break;
         }
@@ -1063,12 +1060,12 @@ class _MyDialogState extends State<MyDialog> {
                         whsCode = '26';
                         break;
                       case 'MEDELLÍN':
-                        if (_itemsGuardados[index]["grupo"] == 'LLANTAS' &&
-                            _itemsGuardados[index]["marca"] == 'TIMSUN') {
+                        if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
+                            _itemsGuardados[index]['marca'] == 'TIMSUN') {
                           whsCode = '60';
-                        } else if (_itemsGuardados[index]["subgrupo"] ==
+                        } else if (_itemsGuardados[index]['subgrupo'] ==
                                 'LUBRICANTES' &&
-                            _itemsGuardados[index]["marca"] ==
+                            _itemsGuardados[index]['marca'] ==
                                 'REVO LUBRICANTES') {
                           whsCode = '01';
                         } else {
@@ -1121,9 +1118,9 @@ class _MyDialogState extends State<MyDialog> {
             focusNode: _focusNode,
             keyboardType: TextInputType.number,
             onChanged: (text) {
-              if (empresa == "REDPLAS") {
+              if (empresa == 'REDPLAS') {
                 _setMensajeEstado(
-                  msg: "",
+                  msg: '',
                   visible: false,
                   agregar: true,
                   soldOut: false,
@@ -1133,7 +1130,7 @@ class _MyDialogState extends State<MyDialog> {
 
               if (text.isEmpty) {
                 _setMensajeEstado(
-                  msg: "",
+                  msg: '',
                   visible: false,
                   agregar: false,
                   soldOut: false,
@@ -1143,7 +1140,7 @@ class _MyDialogState extends State<MyDialog> {
 
               if (!areAllCharactersNumbers(text)) {
                 _setMensajeEstado(
-                  msg: "Cantidad debe ser numérica",
+                  msg: 'Cantidad debe ser numérica',
                   visible: true,
                   agregar: false,
                   soldOut: false,
@@ -1154,7 +1151,7 @@ class _MyDialogState extends State<MyDialog> {
               final regex = RegExp(r'^(0|[1-9][0-9]*)$');
               if (!regex.hasMatch(text)) {
                 _setMensajeEstado(
-                  msg: "Cantidad contiene 0 a la izq",
+                  msg: 'Cantidad contiene 0 a la izq',
                   visible: true,
                   agregar: false,
                   soldOut: false,
@@ -1166,7 +1163,7 @@ class _MyDialogState extends State<MyDialog> {
 
               if (cant < 1) {
                 _setMensajeEstado(
-                  msg: "Cantidad debe ser mayor a 0",
+                  msg: 'Cantidad debe ser mayor a 0',
                   visible: true,
                   agregar: false,
                   soldOut: false,
@@ -1176,7 +1173,7 @@ class _MyDialogState extends State<MyDialog> {
 
               if (cant > fullStock) {
                 _setMensajeEstado(
-                  msg: "Cantidad es mayor al stock",
+                  msg: 'Cantidad es mayor al stock',
                   visible: true,
                   agregar: false,
                   soldOut: true,
@@ -1185,7 +1182,7 @@ class _MyDialogState extends State<MyDialog> {
               }
 
               _setMensajeEstado(
-                msg: "",
+                msg: '',
                 visible: false,
                 agregar: true,
                 soldOut: false,
@@ -1246,35 +1243,35 @@ class _MyDialogState extends State<MyDialog> {
                           _itemsGuardados[index]['itemCode'],
                           _itemsGuardados[index]['itemName'],
                           int.parse(cantidadController.text),
-                          "PEDIDO",
+                          'PEDIDO',
                           whsName,
                         );
                         final bool res = jsonDecode(response.body);
 
                         if (res) {
                           _setMensajeEstado(
-                            msg: "Agotado reportado con éxito",
+                            msg: 'Agotado reportado con éxito',
                             visible: true,
                             agregar: false,
                             soldOut: false,
-                            limpiarCantidad: "",
+                            limpiarCantidad: '',
                           );
                         } else {
                           _setMensajeEstado(
-                            msg: "No se pudo reportar el agotado",
+                            msg: 'No se pudo reportar el agotado',
                             visible: true,
                             agregar: false,
                             soldOut: true,
-                            limpiarCantidad: "",
+                            limpiarCantidad: '',
                           );
                         }
                       } catch (_) {
                         _setMensajeEstado(
-                          msg: "No se pudo reportar el agotado",
+                          msg: 'No se pudo reportar el agotado',
                           visible: true,
                           agregar: false,
                           soldOut: true,
-                          limpiarCantidad: "",
+                          limpiarCantidad: '',
                         );
                       }
                     }
@@ -1291,7 +1288,7 @@ class _MyDialogState extends State<MyDialog> {
                           (dropdownvalueBodega.isEmpty ||
                               dropdownvalueBodega == 'Elija una bodega')) {
                         _setMensajeEstado(
-                          msg: "Elija una bodega",
+                          msg: 'Elija una bodega',
                           visible: true,
                           agregar: true,
                           soldOut: false,
@@ -1299,45 +1296,45 @@ class _MyDialogState extends State<MyDialog> {
                         return;
                       }
 
-                      itemTemp["quantity"] = cantidadController.text;
-                      itemTemp["itemCode"] = _itemsGuardados[index]["itemCode"];
-                      itemTemp["itemName"] = _itemsGuardados[index]["itemName"];
-                      itemTemp["group"] = _itemsGuardados[index]["grupo"];
-                      itemTemp["presentation"] =
-                          _itemsGuardados[index]["presentation"] ?? "";
-                      itemTemp["price"] =
-                          _itemsGuardados[index]["price"].toString();
-                      itemTemp["discountItem"] =
-                          _itemsGuardados[index]["discountItem"].toString();
-                      itemTemp["discountPorc"] =
-                          _itemsGuardados[index]["discountPorc"].toString();
-                      itemTemp["whsCode"] = whsCodeStockItem == null
+                      itemTemp['quantity'] = cantidadController.text;
+                      itemTemp['itemCode'] = _itemsGuardados[index]['itemCode'];
+                      itemTemp['itemName'] = _itemsGuardados[index]['itemName'];
+                      itemTemp['group'] = _itemsGuardados[index]['grupo'];
+                      itemTemp['presentation'] =
+                          _itemsGuardados[index]['presentation'] ?? '';
+                      itemTemp['price'] =
+                          _itemsGuardados[index]['price'].toString();
+                      itemTemp['discountItem'] =
+                          _itemsGuardados[index]['discountItem'].toString();
+                      itemTemp['discountPorc'] =
+                          _itemsGuardados[index]['discountPorc'].toString();
+                      itemTemp['whsCode'] = whsCodeStockItem == null
                           ? "01"
                           : whsCodeStockItem.toString();
-                      itemTemp["iva"] =
-                          _itemsGuardados[index]["iva"].toString();
+                      itemTemp['iva'] =
+                          _itemsGuardados[index]['iva'].toString();
 
                       itemsPedido.add(Map<String, dynamic>.from(itemTemp));
 
-                      final int precioI = _itemsGuardados[index]["price"];
+                      final int precioI = _itemsGuardados[index]['price'];
                       final double precioD = precioI.toDouble();
                       final int discountI =
-                          _itemsGuardados[index]["discountPorc"];
+                          _itemsGuardados[index]['discountPorc'];
                       final double discountD = discountI.toDouble();
                       final int discountItemI =
-                          _itemsGuardados[index]["discountItem"];
+                          _itemsGuardados[index]['discountItem'];
                       final double discountItemD = discountItemI.toDouble();
-                      final int ivaI = _itemsGuardados[index]["iva"];
+                      final int ivaI = _itemsGuardados[index]['iva'];
                       final double ivaD = ivaI.toDouble();
 
                       final Item newItem = Item(
                         idPedido: idPedidoDb,
                         quantity: int.parse(cantidadController.text),
-                        itemCode: _itemsGuardados[index]["itemCode"],
-                        itemName: _itemsGuardados[index]["itemName"],
-                        grupo: _itemsGuardados[index]["grupo"],
+                        itemCode: _itemsGuardados[index]['itemCode'],
+                        itemName: _itemsGuardados[index]['itemName'],
+                        grupo: _itemsGuardados[index]['grupo'],
                         whsCode: whsCodeStockItem,
-                        presentation: _itemsGuardados[index]["presentation"],
+                        presentation: _itemsGuardados[index]['presentation'],
                         price: precioD,
                         discountItem: discountItemD,
                         discountPorc: discountD,
@@ -1355,11 +1352,11 @@ class _MyDialogState extends State<MyDialog> {
 
                         int repetido = 0;
                         for (final j in itemsPedidoLocal) {
-                          if (itemTemp["itemCode"] == j["itemCode"] &&
-                              itemTemp["whsCode"] == j["whsCode"]) {
-                            final int cant = int.parse(j["quantity"]!) +
-                                int.parse(itemTemp["quantity"]!);
-                            j["quantity"] = cant.toString();
+                          if (itemTemp['itemCode'] == j['itemCode'] &&
+                              itemTemp['whsCode'] == j['whsCode']) {
+                            final int cant = int.parse(j['quantity']!) +
+                                int.parse(itemTemp['quantity']!);
+                            j['quantity'] = cant.toString();
                             repetido = 1;
                             break;
                           }
@@ -1430,14 +1427,14 @@ class _DetallePedidoState extends State<DetallePedido> {
             children: const [
               Icon(Icons.error, color: Colors.orange),
               SizedBox(width: 8),
-              Text("Atención!"),
+              Text('Atención!'),
             ],
           ),
           content: Text(message),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("NO"),
+              child: const Text('NO'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1454,7 +1451,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                   (Route<dynamic> route) => false,
                 );
               },
-              child: const Text("SI"),
+              child: const Text('SI'),
             ),
           ],
         );
@@ -1472,21 +1469,21 @@ class _DetallePedidoState extends State<DetallePedido> {
             children: const [
               Icon(Icons.error, color: Colors.orange),
               SizedBox(width: 8),
-              Text("Atención!"),
+              Text('Atención!'),
             ],
           ),
           content: Text(message),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("NO"),
+              child: const Text('NO'),
             ),
             ElevatedButton(
               onPressed: () {
                 borrarItemDetalle(itemCode);
                 Navigator.pop(context);
               },
-              child: const Text("SI"),
+              child: const Text('SI'),
             ),
           ],
         );
@@ -1494,13 +1491,7 @@ class _DetallePedidoState extends State<DetallePedido> {
     );
   }
 
-  String _zonaActual() {
-    final zona = GetStorage().read('zona');
-    return (zona == null) ? "01" : zona.toString();
-  }
-
-  int _stockDisponibleParaItem(
-      String itemCode, String zona, String whsFallback) {
+  int _stockDisponibleParaItem(String itemCode, String whsCode) {
     final stockFull = GetStorage().read('stockFull');
     if (stockFull == null) return 0;
 
@@ -1508,7 +1499,7 @@ class _DetallePedidoState extends State<DetallePedido> {
 
     // Busca el item
     final List matches =
-        _stockFull2.where((j) => j["itemCode"] == itemCode).toList();
+        _stockFull2.where((j) => j['itemCode'] == itemCode).toList();
 
     if (matches.isEmpty) return 0;
 
@@ -1516,7 +1507,7 @@ class _DetallePedidoState extends State<DetallePedido> {
     int stockZona = 0;
 
     for (final bodega in inventario) {
-      if (bodega['whsCode'] == zona && (bodega['quantity'] as num) > 0) {
+      if (bodega['whsCode'] == whsCode && (bodega['quantity'] as num) > 0) {
         stockItem = bodega['whsCode'];
         stockZona = (bodega['quantity'] as num).toInt();
         break;
@@ -1524,18 +1515,16 @@ class _DetallePedidoState extends State<DetallePedido> {
     }
 
     if (stockZona == 0) {
-      stockItem = whsFallback;
+      stockItem = whsCode;
     }
 
     return stockZona;
   }
 
   void _incrementarCantidad(int index) {
-    final String itemCode = listaItems[index]["itemCode"].toString();
-    final String whsCode = listaItems[index]["whsCode"].toString();
-    final String zona = _zonaActual();
-
-    final int stockZona = _stockDisponibleParaItem(itemCode, zona, whsCode);
+    final String itemCode = listaItems[index]['itemCode'].toString();
+    final String whsCode = listaItems[index]['whsCode'].toString();
+    final int stockZona = _stockDisponibleParaItem(itemCode, whsCode);
 
     final double actual =
         double.parse(listaItems[index]['quantity'].toString());
@@ -1548,7 +1537,7 @@ class _DetallePedidoState extends State<DetallePedido> {
       });
 
       storage.write('itemsPedido', listaItems);
-      storage.write("cantidadItem", 0);
+      storage.write('cantidadItem', 0);
       return;
     }
 
@@ -1556,10 +1545,10 @@ class _DetallePedidoState extends State<DetallePedido> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("No hay stock disponible"),
+          title: const Text('No hay stock disponible'),
           actions: [
             TextButton(
-              child: const Text("Aceptar"),
+              child: const Text('Aceptar'),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],
@@ -1567,7 +1556,7 @@ class _DetallePedidoState extends State<DetallePedido> {
       },
     );
 
-    storage.write("cantidadItem", 0);
+    storage.write('cantidadItem', 0);
   }
 
   void _decrementarCantidad(int index) {
@@ -1589,10 +1578,10 @@ class _DetallePedidoState extends State<DetallePedido> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("La cantidad de ítems es menor a 1"),
+          title: const Text('La cantidad de ítems es menor a 1'),
           actions: [
             TextButton(
-              child: const Text("Aceptar"),
+              child: const Text('Aceptar'),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],
@@ -1615,7 +1604,7 @@ class _DetallePedidoState extends State<DetallePedido> {
     return SafeArea(
       child: listaItems.isEmpty
           ? const Text(
-              "No se encontraron ítems agregados para mostar",
+              'No se encontraron ítems agregados para mostar',
               textAlign: TextAlign.center,
             )
           : Column(
@@ -1628,12 +1617,12 @@ class _DetallePedidoState extends State<DetallePedido> {
                       onPressed: () {
                         showAlertDetailItems(
                           context,
-                          "¿Está seguro de borrar todos los ítems?",
+                          '¿Está seguro de borrar todos los ítems?',
                         );
                       },
                     ),
                     const Text(
-                      'Borrar todo',
+                      'Eliminar todos los registros',
                       style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.bold,
@@ -1690,10 +1679,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                                           context,
                                           listaItems[index]['itemCode']
                                               .toString(),
-                                          "¿Está seguro de borrar el ítem " +
-                                              listaItems[index]['itemCode']
-                                                  .toString() +
-                                              "?",
+                                          '¿Está seguro de borrar el ítem ${listaItems[index]['itemCode']}?',
                                         );
                                       },
                                     ),
@@ -1784,8 +1770,8 @@ class _TotalPedidoState extends State<TotalPedido> {
     final dirEnvio = GetStorage().read('dirEnvio');
 
     final DateTime now = DateTime.now();
-    String formatter = DateFormat('hhmm').format(now).replaceAll(":", "");
-    final String fecha = DateFormat("yyyyMMdd").format(now);
+    String formatter = DateFormat('hhmm').format(now).replaceAll(':', '');
+    final String fecha = DateFormat('yyyyMMdd').format(now);
 
     String numAtCard;
     final pedidoGuardado = GetStorage().read('pedidoGuardado');
@@ -1809,16 +1795,16 @@ class _TotalPedidoState extends State<TotalPedido> {
       body: jsonEncode(
         <String, dynamic>{
           'cardCode': pedidoFinal['cardCode'],
-          "comments": observacionesController.text,
-          "companyName": empresa,
-          "numAtCard": numAtCard,
-          "shipToCode": dirEnvio,
-          "payToCode": pedidoFinal['payToCode'],
-          "slpCode": pedidoFinal['slpCode'],
-          "discountPercent": pedidoFinal['discountPercent'].toString(),
-          "docTotal": pedidoFinal['docTotal'],
-          "lineNum": pedidoFinal['lineNum'],
-          "detailSalesOrder": GetStorage().read('itemsPedido'),
+          'comments': observacionesController.text,
+          'companyName': empresa,
+          'numAtCard': numAtCard,
+          'shipToCode': dirEnvio,
+          'payToCode': pedidoFinal['payToCode'],
+          'slpCode': pedidoFinal['slpCode'],
+          'discountPercent': pedidoFinal['discountPercent'].toString(),
+          'docTotal': pedidoFinal['docTotal'],
+          'lineNum': pedidoFinal['lineNum'],
+          'detailSalesOrder': GetStorage().read('itemsPedido'),
         },
       ),
     );
@@ -1833,8 +1819,8 @@ class _TotalPedidoState extends State<TotalPedido> {
     final dirEnvio = GetStorage().read('dirEnvio');
 
     final DateTime now = DateTime.now();
-    String formatter = DateFormat('hhmm').format(now).replaceAll(":", "");
-    final String fecha = DateFormat("yyyyMMdd").format(now);
+    String formatter = DateFormat('hhmm').format(now).replaceAll(':', '');
+    final String fecha = DateFormat('yyyyMMdd').format(now);
     final String numAtCard =
         fecha + pedidoFinal['cardCode'].toString() + formatter;
 
@@ -1843,20 +1829,20 @@ class _TotalPedidoState extends State<TotalPedido> {
       headers: const <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
-          "cardCode": pedidoFinal['cardCode'],
-          "comments": observacionesController.text,
-          "companyName": empresa,
-          "numAtCard": numAtCard,
-          "status": "G",
-          "shipToCode": dirEnvio,
-          "payToCode": pedidoFinal['payToCode'],
-          "slpCode": pedidoFinal['slpCode'],
-          "discountPercent": pedidoFinal['discountPercent'].toString(),
-          "docTotal": pedidoFinal['docTotal'],
-          "assignedShipToCode": null,
-          "lineNum": pedidoFinal['lineNum'],
-          "cardName": pedidoFinal['cardName'],
-          "detailSalesOrderSave": GetStorage().read('itemsPedido'),
+          'cardCode': pedidoFinal['cardCode'],
+          'comments': observacionesController.text,
+          'companyName': empresa,
+          'numAtCard': numAtCard,
+          'status': 'G',
+          'shipToCode': dirEnvio,
+          'payToCode': pedidoFinal['payToCode'],
+          'slpCode': pedidoFinal['slpCode'],
+          'discountPercent': pedidoFinal['discountPercent'].toString(),
+          'docTotal': pedidoFinal['docTotal'],
+          'assignedShipToCode': null,
+          'lineNum': pedidoFinal['lineNum'],
+          'cardName': pedidoFinal['cardName'],
+          'detailSalesOrderSave': GetStorage().read('itemsPedido'),
         },
       ),
     );
@@ -1878,7 +1864,7 @@ class _TotalPedidoState extends State<TotalPedido> {
       }
     }
 
-    storage.write("stockFull", _stockFull);
+    storage.write('stockFull', _stockFull);
     return 1;
   }
 
@@ -1961,10 +1947,10 @@ class _TotalPedidoState extends State<TotalPedido> {
             ElevatedButton(
               onPressed: () {
                 storage.remove('observaciones');
-                storage.remove("pedido");
-                storage.remove("itemsPedido");
-                storage.remove("dirEnvio");
-                storage.remove("pedidoGuardado");
+                storage.remove('pedido');
+                storage.remove('itemsPedido');
+                storage.remove('dirEnvio');
+                storage.remove('pedidoGuardado');
                 storage.write('estadoPedido', 'nuevo');
 
                 final DatabaseHelper dbHelper = DatabaseHelper();
@@ -2006,7 +1992,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                 children: const [
                   Icon(Icons.error, color: Colors.orange),
                   SizedBox(width: 8),
-                  Text("Atención!"),
+                  Text('Atención!'),
                 ],
               ),
               content: Text(message),
@@ -2018,7 +2004,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                           Navigator.pop(context);
                         }
                       : null,
-                  child: const Text("NO"),
+                  child: const Text('NO'),
                 ),
                 ElevatedButton(
                   onPressed: btnConfirmarEnvio && !isProcessing
@@ -2029,26 +2015,26 @@ class _TotalPedidoState extends State<TotalPedido> {
                             message = 'Guardando pedido. Por favor espere...';
                           });
 
-                          final String codigo = pedidoFinal["slpCode"];
+                          final String codigo = pedidoFinal['slpCode'];
                           final int slpInt = int.parse(codigo);
-                          final String descS = pedidoFinal["discountPercent"];
+                          final String descS = pedidoFinal['discountPercent'];
                           final double descD = double.parse(descS);
-                          final String totS = pedidoFinal["docTotal"];
+                          final String totS = pedidoFinal['docTotal'];
                           final double totD = double.parse(totS);
 
                           final Pedido pedidoF = Pedido(
-                            cardCode: pedidoFinal["cardCode"],
-                            cardName: pedidoFinal["cardName"],
-                            comments: pedidoFinal["comments"],
-                            companyName: pedidoFinal["companyName"],
-                            numAtCard: pedidoFinal["numAtCard"],
-                            shipToCode: pedidoFinal["shipToCode"],
-                            payToCode: pedidoFinal["payToCode"],
+                            cardCode: pedidoFinal['cardCode'],
+                            cardName: pedidoFinal['cardName'],
+                            comments: pedidoFinal['comments'],
+                            companyName: pedidoFinal['companyName'],
+                            numAtCard: pedidoFinal['numAtCard'],
+                            shipToCode: pedidoFinal['shipToCode'],
+                            payToCode: pedidoFinal['payToCode'],
                             slpCode: slpInt,
                             discountPercent: descD,
                             docTotal: totD,
-                            lineNum: pedidoFinal["lineNum"],
-                            detailSalesOrder: "Detalle del pedido",
+                            lineNum: pedidoFinal['lineNum'],
+                            detailSalesOrder: 'Detalle del pedido',
                           );
 
                           insertPedidoDb(pedidoF);
@@ -2065,7 +2051,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 jsonDecode(response.body);
 
                             if (response.statusCode == 200 &&
-                                resultado['content'] != "") {
+                                resultado['content'] != '') {
                               final http.Response responseGeo =
                                   await createRecordGeoLocation(
                                 locationData.latitude.toString(),
@@ -2083,7 +2069,7 @@ class _TotalPedidoState extends State<TotalPedido> {
 
                                 showAlertPedidoEnviado(
                                   context,
-                                  "Pedido Guardado: ${resultado['content']}",
+                                  'Pedido Guardado: ${resultado['content']}',
                                 );
 
                                 final pg = GetStorage().read('pedidoGuardado');
@@ -2120,7 +2106,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                           }
                         }
                       : null,
-                  child: const Text("SI"),
+                  child: const Text('SI'),
                 ),
               ],
             );
@@ -2152,7 +2138,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                 children: const [
                   Icon(Icons.error, color: Colors.orange),
                   SizedBox(width: 8),
-                  Text("Atención!"),
+                  Text('Atención!'),
                 ],
               ),
               content: Text(message),
@@ -2164,7 +2150,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                           Navigator.pop(context);
                         }
                       : null,
-                  child: const Text("NO"),
+                  child: const Text('NO'),
                 ),
                 ElevatedButton(
                   onPressed: btnConfirmarEnvio && !isProcessing
@@ -2186,7 +2172,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 jsonDecode(response.body);
 
                             if (response.statusCode == 200 &&
-                                resultado['content'] != "") {
+                                resultado['content'] != '') {
                               final http.Response responseGeo =
                                   await createRecordGeoLocation(
                                 locationData.latitude.toString(),
@@ -2204,7 +2190,7 @@ class _TotalPedidoState extends State<TotalPedido> {
 
                                 showAlertPedidoEnviado(
                                   context,
-                                  "Pedido: ${resultado['content']}",
+                                  'Pedido: ${resultado['content']}',
                                 );
 
                                 final pg = GetStorage()
@@ -2246,7 +2232,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                           }
                         }
                       : null,
-                  child: const Text("SI"),
+                  child: const Text('SI'),
                 ),
               ],
             );
@@ -2355,11 +2341,11 @@ class _TotalPedidoState extends State<TotalPedido> {
       headers: const <String, String>{'Content-Type': 'application/json'},
       body: jsonEncode(
         <String, dynamic>{
-          "slpCode": slpCode,
-          "latitude": latitude,
-          "longitude": longitude,
-          "companyName": companyName,
-          "docType": docType
+          'slpCode': slpCode,
+          'latitude': latitude,
+          'longitude': longitude,
+          'companyName': companyName,
+          'docType': docType
         },
       ),
     );
@@ -2370,7 +2356,7 @@ class _TotalPedidoState extends State<TotalPedido> {
     final NumberFormat numberFormat = NumberFormat.simpleCurrency();
 
     if (GetStorage().read('pedido') == null) {
-      return const Text("Sin ítems para pedido");
+      return const Text('Sin ítems para pedido');
     }
 
     Map<String, dynamic> pedidoFinal = GetStorage().read('pedido');
@@ -2412,8 +2398,8 @@ class _TotalPedidoState extends State<TotalPedido> {
     double iva = 0.0;
     for (final element in itemsPedidoLocal) {
       final subt =
-          double.parse(element["price"]) * double.parse(element["quantity"]);
-      final ivaTemp = (double.parse(element["iva"].toString()) * subt) / 100;
+          double.parse(element['price']) * double.parse(element['quantity']);
+      final ivaTemp = (double.parse(element['iva'].toString()) * subt) / 100;
       iva += ivaTemp;
     }
 
@@ -2421,7 +2407,7 @@ class _TotalPedidoState extends State<TotalPedido> {
     String subtotalTxt = numberFormat.format(subtotal);
 
     String descuento = pedidoFinal['discountPercent'];
-    String estadoPedido = "";
+    String estadoPedido = '';
 
     final double total = subtotal -
         (subtotal * (double.parse(descuento).toInt() / 100)) +
@@ -2452,14 +2438,14 @@ class _TotalPedidoState extends State<TotalPedido> {
       if (GetStorage().read('estadoPedido') != null) {
         estadoPedido = GetStorage().read('estadoPedido');
       } else {
-        estadoPedido = "desconocido";
+        estadoPedido = 'desconocido';
       }
 
-      if (estadoPedido == "nuevo") {
+      if (estadoPedido == 'nuevo') {
         storage.remove('observaciones');
       }
 
-      if (estadoPedido == "guardado") {
+      if (estadoPedido == 'guardado') {
         observacionesController.text = pedidoFinal['comments'].toString();
       }
     }
@@ -2487,32 +2473,32 @@ class _TotalPedidoState extends State<TotalPedido> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "Cant de ítems: $cantidadItems",
+                        'Cant de ítems: $cantidadItems',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "Subtotal: $subtotalTxt",
+                        'Subtotal: $subtotalTxt',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "Descuento: %$descuento",
+                        'Descuento: %$descuento',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "Iva: $ivaTxt",
+                        'Iva: $ivaTxt',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "Total: $totalDocTxt",
+                        'Total: $totalDocTxt',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        "Observaciones:",
+                        'Observaciones:',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
@@ -2527,7 +2513,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                             pedidoFinal['comments'] =
                                 observacionesController.text;
                             storage.write(
-                                "observaciones", observacionesController.text);
+                                'observaciones', observacionesController.text);
                           },
                           style: const TextStyle(color: Colors.black),
                           decoration: InputDecoration(
@@ -2573,19 +2559,19 @@ class _TotalPedidoState extends State<TotalPedido> {
                             final items = GetStorage().read('itemsPedido');
 
                             if (dir == null ||
-                                dir == "" ||
-                                dir == "Elija un destino") {
+                                dir == '' ||
+                                dir == 'Elija un destino') {
                               showAlertErrorDir(
                                 context,
-                                "Obligatorio seleccionar la dirección de destino.",
+                                'Obligatorio seleccionar la dirección de destino.',
                               );
                               return;
                             }
 
-                            if (items == null || items == "") {
+                            if (items == null || items == '') {
                               showAlertErrorDir(
                                 context,
-                                "Obligatorio agregar ítems en detalle.",
+                                'Obligatorio agregar ítems en detalle.',
                               );
                               return;
                             }
@@ -2596,7 +2582,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 locationData.longitude == 0.0) {
                               showAlertErrorDir(
                                 context,
-                                "Active la ubicación del móvil, y presione de nuevo guardar pedido.",
+                                'Active la ubicación del móvil, y presione de nuevo guardar pedido.',
                               );
                               Geolocator.getCurrentPosition(
                                 desiredAccuracy: LocationAccuracy.high,
@@ -2608,7 +2594,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                               context,
                               pedidoFinal,
                               true,
-                              "¿Está seguro que deseea enviar el pedido?",
+                              '¿Está seguro que deseea enviar el pedido?',
                               locationData,
                             );
                           },
@@ -2646,19 +2632,19 @@ class _TotalPedidoState extends State<TotalPedido> {
                             final items = GetStorage().read('itemsPedido');
 
                             if (dir == null ||
-                                dir == "" ||
-                                dir == "Elija un destino") {
+                                dir == '' ||
+                                dir == 'Elija un destino') {
                               showAlertErrorDir(
                                 context,
-                                "Obligatorio seleccionar la dirección de destino.",
+                                'Obligatorio seleccionar la dirección de destino.',
                               );
                               return;
                             }
 
-                            if (items == null || items == "") {
+                            if (items == null || items == '') {
                               showAlertErrorDir(
                                 context,
-                                "Obligatorio agregar ítems en detalle.",
+                                'Obligatorio agregar ítems en detalle.',
                               );
                               return;
                             }
@@ -2669,7 +2655,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 locationData.longitude == 0.0) {
                               showAlertErrorDir(
                                 context,
-                                "Active la ubicación del móvil, y presione de nuevo enviar pedido.",
+                                'Active la ubicación del móvil, y presione de nuevo enviar pedido.',
                               );
                               Geolocator.getCurrentPosition(
                                 desiredAccuracy: LocationAccuracy.high,
@@ -2681,7 +2667,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                               context,
                               pedidoFinal,
                               true,
-                              "¿Está seguro que deseea guardar el pedido?",
+                              '¿Está seguro que deseea guardar el pedido?',
                               locationData,
                             );
                           },

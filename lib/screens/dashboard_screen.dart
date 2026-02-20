@@ -690,10 +690,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       );
                     }
 
-                    final int count = (empresa == 'IGB') ? 8 : 7;
+                    final int count = (empresa == 'IGB') ? 9 : 7;
 
                     return Container(
-                      height: 500,
+                      height: empresa == 'IGB' ? 550 : 450,
                       padding: const EdgeInsets.all(15),
                       child: RotatedBox(
                         quarterTurns: 1,

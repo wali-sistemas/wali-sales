@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
@@ -23,6 +25,46 @@ class _ClientesPageState extends State<ClientesPage>
 
   List _clientes = [];
   List _municipios = [];
+  List _calles = [
+    {"code": "CL", "name": "CALLE"},
+    {"code": "CR", "name": "CARRERA"},
+    {"code": "AV", "name": "AVENIDA"},
+    {"code": "CIR", "name": "CIRCULAR"},
+    {"code": "DG", "name": "DIAGONAL"},
+    {"code": "TV", "name": "TRANSVERSAL"},
+    {"code": "MZ", "name": "MANZANA"},
+    {"code": "KM", "name": "KILOMETRO"},
+    {"code": "LT", "name": "LOTE"},
+    {"code": "VRD", "name": "VEREDA"},
+    {"code": "AUT", "name": "AUTOPISTA"}
+  ];
+  List _letras = [
+    {"code": "-", "name": "-"},
+    {"code": "A", "name": "A"},
+    {"code": "B", "name": "B"},
+    {"code": "C", "name": "C"},
+    {"code": "D", "name": "D"},
+    {"code": "E", "name": "E"},
+    {"code": "F", "name": "F"},
+    {"code": "G", "name": "G"},
+    {"code": "H", "name": "H"},
+    {"code": "I", "name": "I"},
+  ];
+  List _ubicaciones = [
+    {"code": "-", "name": "-"},
+    {"code": "SUR", "name": "SUR"},
+    {"code": "ESTE", "name": "ESTE"},
+    {"code": "OESTE", "name": "OESTE"},
+    {"code": "NORTE", "name": "NORTE"},
+  ];
+  List _viviendas = [
+    {"code": "-", "name": "-"},
+    {"code": "CONJ", "name": "CONJUNTO"},
+    {"code": "ED", "name": "EDIFICIO"},
+    {"code": "UR", "name": "UNIDAD RESIDENCIAL"},
+    {"code": "CA", "name": "CASA"},
+    {"code": "APTO", "name": "APARTAMENTO"},
+  ];
   final String codigo = GetStorage().read('slpCode');
   final GetStorage storage = GetStorage();
   final String empresa = GetStorage().read('empresa');
@@ -41,8 +83,20 @@ class _ClientesPageState extends State<ClientesPage>
   final TextEditingController ciudadCtrl = TextEditingController();
   final TextEditingController departamentoCtrl = TextEditingController();
   final TextEditingController correoCtrl = TextEditingController();
+  final TextEditingController nro1Ctrl = TextEditingController();
+  final TextEditingController nro2Ctrl = TextEditingController();
+  final TextEditingController nro3Ctrl = TextEditingController();
 
   bool btnProspectoActivo = false;
+
+  String? departamentoSeleccionado;
+  String? municipioSeleccionado;
+  String? calleSeleccionado;
+  String? letraSeleccionado1;
+  String? letraSeleccionado2;
+  String? ubicacionSeleccionado1;
+  String? ubicacionSeleccionado2;
+  String? viviendaSeleccionado;
 
   @override
   void initState() {
@@ -160,14 +214,15 @@ class _ClientesPageState extends State<ClientesPage>
       body: jsonEncode(
         <String, dynamic>{
           "document": cliente["documento"],
-          "cardName": cliente["razonSocial"].toString().toUpperCase(),
+          "cardName": cliente["razonSocial"].toString(),
           "cellular": cliente["telefono"],
           "mail": cliente["correo"].toString().toUpperCase(),
           "slpCode": usuario,
           "companyName": empresa,
-          "address": cliente["direccion"].toString().toUpperCase(),
-          "departament": cliente["departamento"].toString().toUpperCase(),
-          "city": cliente["ciudad"].toString().toUpperCase()
+          "address": cliente["direccion"].toString(),
+          "departament": cliente["departamento"].toString(),
+          "municipio": cliente["municipio"].toString(),
+          "city": cliente["ciudad"].toString()
         },
       ),
     );
@@ -325,8 +380,20 @@ class _ClientesPageState extends State<ClientesPage>
     );
   }
 
-  String? departamentoSeleccionado;
-  String? municipioSeleccionado;
+  void _actualizarDireccion() {
+    direccionCtrl.text = [
+      calleSeleccionado ?? '',
+      nro1Ctrl.text,
+      letraSeleccionado1 ?? '',
+      ubicacionSeleccionado1 ?? '',
+      nro2Ctrl.text,
+      letraSeleccionado2 ?? '',
+      nro3Ctrl.text,
+      ubicacionSeleccionado2 ?? '',
+      viviendaSeleccionado ?? '',
+    ].where((e) => e != null && e.toString().trim().isNotEmpty).join(' ');
+  }
+
   Widget prospecto(BuildContext context) {
     final List<Map<String, String>> departamentos = [
       {"code": "05", "name": "ANTIOQUIA"},
@@ -372,25 +439,41 @@ class _ClientesPageState extends State<ClientesPage>
           key: _formKey,
           child: Column(
             children: [
+              Text(
+                "*Aplica únicamente para clientes de contado.",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
               _input(
                 controller: documentoCtrl,
                 label: 'Documento',
                 type: TextInputType.number,
+                requiredField: true,
               ),
               _input(
                 controller: razonCtrl,
                 label: 'Nombre completo',
+                requiredField: true,
               ),
               _input(
                 controller: telefonoCtrl,
                 label: 'Teléfono',
                 type: TextInputType.phone,
+                requiredField: true,
               ),
               _input(
                 controller: correoCtrl,
                 label: 'Correo',
                 type: TextInputType.emailAddress,
                 isEmail: true,
+                requiredField: true,
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -443,56 +526,243 @@ class _ClientesPageState extends State<ClientesPage>
               _input(
                 controller: ciudadCtrl,
                 label: 'Ciudad',
+                requiredField: true,
               ),
               Row(
                 children: [
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12, right: 6),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: DropdownButtonFormField<String>(
-                        value: municipioSeleccionado,
+                        value: calleSeleccionado,
+                        isExpanded: true,
                         decoration: const InputDecoration(
-                          labelText: 'Municipio 1',
+                          labelText: 'Calle',
                           border: OutlineInputBorder(),
+                          isDense: true,
                         ),
-                        items: _municipios.map((mun) {
+                        items: _calles.map((calle) {
                           return DropdownMenuItem<String>(
-                            value: mun["code"],
-                            child: Text(mun["name"]!),
+                            value: calle["code"],
+                            child: Text(
+                              calle["name"]!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           );
                         }).toList(),
                         onChanged: (value) {
                           setState(() {
-                            //municipioSeleccionado1 = value;
+                            calleSeleccionado = value;
                           });
+                          _actualizarDireccion();
                         },
                         validator: (value) =>
                             value == null ? 'Campo obligatorio' : null,
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12, left: 6),
+                      padding: const EdgeInsets.only(bottom: 0),
+                      child: _input(
+                        controller: nro1Ctrl,
+                        label: '#',
+                        requiredField: true,
+                        type: TextInputType.number,
+                        onChanged: (value) {
+                          _actualizarDireccion();
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: DropdownButtonFormField<String>(
-                        value: municipioSeleccionado,
+                        value: letraSeleccionado1,
+                        isExpanded: true,
                         decoration: const InputDecoration(
-                          labelText: 'Municipio 2',
+                          labelText: 'Letra',
                           border: OutlineInputBorder(),
+                          isDense: true,
                         ),
-                        items: _municipios.map((mun) {
+                        items: _letras.map((letra) {
                           return DropdownMenuItem<String>(
-                            value: mun["code"],
-                            child: Text(mun["name"]!),
+                            value: letra["code"],
+                            child: Text(
+                              letra["name"]!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           );
                         }).toList(),
                         onChanged: (value) {
                           setState(() {
-                            //municipioSeleccionado2 = value;
+                            letraSeleccionado1 = value;
                           });
+                          _actualizarDireccion();
                         },
-                        validator: (value) =>
-                            value == null ? 'Campo obligatorio' : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: DropdownButtonFormField<String>(
+                        value: ubicacionSeleccionado1,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'ubic..',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: _ubicaciones.map((ubicacion) {
+                          return DropdownMenuItem<String>(
+                            value: ubicacion["code"],
+                            child: Text(
+                              ubicacion["name"]!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            ubicacionSeleccionado1 = value;
+                          });
+                          _actualizarDireccion();
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 0),
+                      child: _input(
+                        controller: nro2Ctrl,
+                        label: '#',
+                        type: TextInputType.number,
+                        onChanged: (value) {
+                          _actualizarDireccion();
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: DropdownButtonFormField<String>(
+                        value: letraSeleccionado2,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Letra',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: _letras.map((letra) {
+                          return DropdownMenuItem<String>(
+                            value: letra["code"],
+                            child: Text(
+                              letra["name"]!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            letraSeleccionado2 = value;
+                          });
+                          _actualizarDireccion();
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 0),
+                      child: _input(
+                        controller: nro3Ctrl,
+                        label: '#',
+                        type: TextInputType.number,
+                        onChanged: (value) {
+                          _actualizarDireccion();
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: DropdownButtonFormField<String>(
+                        value: ubicacionSeleccionado2,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'ubic..',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: _ubicaciones.map((ubicacion) {
+                          return DropdownMenuItem<String>(
+                            value: ubicacion["code"],
+                            child: Text(
+                              ubicacion["name"]!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            ubicacionSeleccionado2 = value;
+                          });
+                          _actualizarDireccion();
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: DropdownButtonFormField<String>(
+                        value: viviendaSeleccionado,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Tipo',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: _viviendas.map((vivienda) {
+                          return DropdownMenuItem<String>(
+                            value: vivienda["code"],
+                            child: Text(
+                              vivienda["name"]!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            viviendaSeleccionado = value;
+                          });
+                          _actualizarDireccion();
+                        },
                       ),
                     ),
                   ),
@@ -501,6 +771,9 @@ class _ClientesPageState extends State<ClientesPage>
               _input(
                 controller: direccionCtrl,
                 label: 'Dirección',
+                onChanged: (_) => _actualizarDireccion(),
+                enabled: false,
+                requiredField: true,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -518,20 +791,16 @@ class _ClientesPageState extends State<ClientesPage>
 
                           final cliente = <String, String>{
                             "documento": documentoCtrl.text,
-                            "razonSocial": razonCtrl.text,
+                            "razonSocial": razonCtrl.text.toUpperCase(),
                             "telefono": telefonoCtrl.text,
                             "direccion": direccionCtrl.text,
-                            "ciudad": ciudadCtrl.text,
+                            "ciudad": ciudadCtrl.text.toUpperCase(),
                             "departamento": departamentoSeleccionado.toString(),
                             "municipio": municipioSeleccionado.toString(),
-                            "correo": correoCtrl.text,
+                            "correo": correoCtrl.text.toUpperCase(),
                           };
 
-                          print("*****************************************");
-                          print(cliente);
-                          print("*****************************************");
-
-                          /*try {
+                          try {
                             final http.Response response =
                                 await _createCustomerLead(cliente);
                             final Map<String, dynamic> resultado =
@@ -546,7 +815,9 @@ class _ClientesPageState extends State<ClientesPage>
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Prospecto creado.'),
+                                  content: Text(
+                                    '¡Listo! El prospecto se creó correctamente.',
+                                  ),
                                 ),
                               );
                             } else {
@@ -559,9 +830,7 @@ class _ClientesPageState extends State<ClientesPage>
                               );
                               setState(() => btnProspectoActivo = false);
                             }
-                          } catch (e) {
-                            print(e);
-                          }*/
+                          } catch (e) {}
                         }
                       },
                 child: Container(
@@ -596,28 +865,41 @@ class _ClientesPageState extends State<ClientesPage>
     required String label,
     TextInputType type = TextInputType.text,
     bool isEmail = false,
+    bool enabled = true,
+    Function(String)? onChanged,
+    bool requiredField = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: controller,
         keyboardType: type,
+        enabled: enabled,
+        onChanged: onChanged,
         decoration: const InputDecoration(
           border: OutlineInputBorder(),
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 12,
+          ),
         ).copyWith(labelText: label),
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) {
-            return 'Campo obligatorio';
-          }
+        validator: requiredField
+            ? (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Campo obligatorio';
+                }
 
-          if (isEmail) {
-            final emailReg = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-            if (!emailReg.hasMatch(value)) {
-              return 'Correo inválido';
-            }
-          }
-          return null;
-        },
+                if (isEmail) {
+                  final emailReg = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  if (!emailReg.hasMatch(value)) {
+                    return 'Correo inválido';
+                  }
+                }
+
+                return null;
+              }
+            : null,
       ),
     );
   }

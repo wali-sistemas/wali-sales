@@ -68,7 +68,7 @@ class EmployeePage extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     Text(
-                      "Carta Laboral",
+                      'Carta Laboral',
                       style: TextStyle(color: Colors.white),
                     ),
                   ],
@@ -97,7 +97,7 @@ class EmployeePage extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     Text(
-                      "Colillas de Pago",
+                      'Colillas de Pago',
                       style: TextStyle(color: Colors.white),
                     ),
                   ],
@@ -126,7 +126,7 @@ class EmployeePage extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     Text(
-                      "Estado femprobien",
+                      'Estado femprobien',
                       style: TextStyle(color: Colors.white),
                     ),
                   ],
@@ -146,30 +146,29 @@ Future<http.Response> _generateReportPaystub(
   String idLogo = '';
 
   switch (GetStorage().read('empresa')) {
-    case "IGB":
-      companyName = "IGB_NOVAWEB";
-      idLogo = "7";
+    case 'IGB':
+      companyName = 'IGB_NOVAWEB';
+      idLogo = '7';
       break;
-    case "VARROC":
-      companyName = "MTZ_NOVAWEB";
-      idLogo = "5";
+    case 'VARROC':
+      companyName = 'MTZ_NOVAWEB';
+      idLogo = '5';
       break;
-    case "REDPLAS":
+    case 'REDPLAS':
       companyName = 'VILNA_NOVAWEB';
-      idLogo = "6";
+      idLogo = '6';
       break;
   }
 
   final String url =
-      'http://wali.igbcolombia.com:8080/apiRest/wali/reports/paystub?schema=' +
-          companyName;
+      'http://wali.igbcolombia.com:8080/apiRest/wali/reports/paystub?schema=$companyName';
 
   Map<String, dynamic> data = {
-    "id": int.parse(id),
-    "year": int.parse(year),
-    "month": int.parse(month),
-    "day": int.parse(day),
-    "logo": idLogo.toString(),
+    'id': int.parse(id),
+    'year': int.parse(year),
+    'month': int.parse(month),
+    'day': int.parse(day),
+    'logo': idLogo.toString(),
   };
 
   Map<String, String> headers = {
@@ -191,27 +190,26 @@ Future<http.Response> _generateReportJobCertify(String id, String sendto) {
   String companyName = '';
 
   switch (GetStorage().read('empresa')) {
-    case "IGB":
-      companyName = "IGB_NOVAWEB";
+    case 'IGB':
+      companyName = 'IGB_NOVAWEB';
       break;
-    case "VARROC":
-      companyName = "MTZ_NOVAWEB";
+    case 'VARROC':
+      companyName = 'MTZ_NOVAWEB';
       break;
-    case "REDPLAS":
+    case 'REDPLAS':
       companyName = 'VILNA_NOVAWEB';
       break;
   }
 
   final String url =
-      'http://wali.igbcolombia.com:8080/apiRest/wali/reports/job-certify?schema=' +
-          companyName;
+      'http://wali.igbcolombia.com:8080/apiRest/wali/reports/job-certify?schema=$companyName';
 
   Map<String, dynamic> data = {
-    "id": int.parse(id),
-    "year": "2025",
-    "month": DateTime.now().month,
-    "day": 15,
-    "sendto": sendto.isEmpty ? "A QUIEN PUEDA INTERESAR" : sendto
+    'id': int.parse(id),
+    'year': '2025',
+    'month': DateTime.now().month,
+    'day': 15,
+    'sendto': sendto.isEmpty ? "A QUIEN PUEDA INTERESAR" : sendto
   };
 
   Map<String, String> headers = {
@@ -234,14 +232,14 @@ Future<http.Response> _generateReportAccountStatement(String id) {
       'http://wali.igbcolombia.com:8080/manager/res/report/generate-report';
 
   Map<String, dynamic> data = {
-    "id": id,
-    "copias": 1,
-    "documento": "accountStatement",
-    "companyName": "FEMPROBN_NOVAWEB",
-    "origen": "N",
-    "filtro": "",
-    "filtroSec": "",
-    "imprimir": false
+    'id': id,
+    'copias': 1,
+    'documento': 'accountStatement',
+    'companyName': 'FEMPROBN_NOVAWEB',
+    'origen': 'N',
+    'filtro': '',
+    'filtroSec': '',
+    'imprimir': false
   };
 
   Map<String, String> headers = {
@@ -350,22 +348,12 @@ class _JobCertifyEmployeeDataDialogState
 
               final Map<String, dynamic> resultado = jsonDecode(response.body);
 
-              if (response.statusCode == 200 && resultado['content'] != "") {
-                String companyName = '';
-                switch (GetStorage().read('empresa')) {
-                  case "VARROC":
-                    companyName = "MTZ";
-                    break;
-                  default:
-                    companyName = GetStorage().read('empresa');
-                }
+              if (response.statusCode == 200 && resultado['content'] != '') {
+                final empresa = GetStorage().read('empresa');
 
-                final Uri url = Uri.parse(
-                  "https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/" +
-                      companyName +
-                      "/employee/jobcertify/" +
-                      documentoController.text +
-                      ".pdf",
+                final url = Uri.parse(
+                  'https://drive.google.com/viewerng/viewer?embedded=true&url='
+                  'http://wali.igbcolombia.com:8080/shared/$empresa/employee/jobcertify/$documentoController.pdf',
                 );
 
                 if (await canLaunchUrl(url)) {
@@ -490,10 +478,12 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
               value: mesSeleccionado,
               decoration: const InputDecoration(labelText: 'Seleccionar mes'),
               items: meses
-                  .map((mes) => DropdownMenuItem<String>(
-                        value: mes,
-                        child: Text(mes),
-                      ))
+                  .map(
+                    (mes) => DropdownMenuItem<String>(
+                      value: mes,
+                      child: Text(mes),
+                    ),
+                  )
                   .toList(),
               onChanged: (valor) {
                 setState(() {
@@ -513,10 +503,12 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
               decoration:
                   const InputDecoration(labelText: 'Seleccionar periodo'),
               items: periodos
-                  .map((dia) => DropdownMenuItem<String>(
-                        value: dia,
-                        child: Text(dia),
-                      ))
+                  .map(
+                    (dia) => DropdownMenuItem<String>(
+                      value: dia,
+                      child: Text(dia),
+                    ),
+                  )
                   .toList(),
               onChanged: (valor) {
                 setState(() {
@@ -562,22 +554,12 @@ class _PaystubEmployeeDataDialogState extends State<PaystubEmployeeDataDialog> {
 
               final Map<String, dynamic> resultado = jsonDecode(response.body);
 
-              if (response.statusCode == 200 && resultado['content'] != "") {
-                String companyName = '';
-                switch (GetStorage().read('empresa')) {
-                  case "VARROC":
-                    companyName = "MTZ";
-                    break;
-                  default:
-                    companyName = GetStorage().read('empresa');
-                }
+              if (response.statusCode == 200 && resultado['content'] != '') {
+                final empresa = GetStorage().read('empresa');
 
-                final Uri url = Uri.parse(
-                  "https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/" +
-                      companyName +
-                      "/employee/paystub/" +
-                      documento +
-                      ".pdf",
+                final url = Uri.parse(
+                  'https://drive.google.com/viewerng/viewer?embedded=true&url='
+                  'http://wali.igbcolombia.com:8080/shared/$empresa/employee/paystub/$documento.pdf',
                 );
 
                 if (await canLaunchUrl(url)) {
@@ -696,11 +678,9 @@ class _AccountStatementEmployeeDataDialogState
 
               final Map<String, dynamic> resultado = jsonDecode(response.body);
 
-              if (response.statusCode == 200 && resultado['content'] != "") {
+              if (response.statusCode == 200 && resultado['content'] != '') {
                 final Uri url = Uri.parse(
-                  "https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/FEMPROBN_NOVAWEB/accountStatement/" +
-                      documentoController.text +
-                      ".pdf",
+                  'https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/FEMPROBN_NOVAWEB/accountStatement/$documentoController.pdf',
                 );
 
                 if (await canLaunchUrl(url)) {
