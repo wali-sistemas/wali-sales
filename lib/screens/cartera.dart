@@ -695,7 +695,7 @@ class CarteraPageState extends State<CarteraPage> {
 Future<http.Response> _generateReportDiscount(
     List<Map<String, dynamic>> detailCartera,
     String cardCode,
-    String cardName) {
+    String cardName) async {
   final String url =
       'http://wali.igbcolombia.com:8080/apiRest/wali/reports/financial-discounts?schema=' +
           GetStorage().read('empresa');
@@ -1142,7 +1142,7 @@ class CarteraDetalleState extends State<CarteraDetalle> {
                             : const SizedBox.shrink(),
                         IconButton(
                           icon: const Icon(Icons.picture_as_pdf_outlined),
-                          onPressed: () {
+                          onPressed: () async {
                             final Uri url = Uri.parse(
                               clienteDetalle['detailPortfolio'][index]['urlFE']
                                   .toString(),

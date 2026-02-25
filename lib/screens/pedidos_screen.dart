@@ -338,6 +338,7 @@ class _PedidosPageState extends State<PedidosPage>
     pedidoTemp['payToCode'] =
         datosClientesArr[indice]['addressToDef'].toString();
     pedidoTemp['slpCode'] = GetStorage().read('usuario');
+    pedidoTemp['region'] = datosClientesArr[indice]['region'].toString();
     pedidoTemp['discountPercent'] =
         datosClientesArr[indice]['discountCommercial'].toString();
     storage.write('pedido', pedidoTemp);
@@ -716,6 +717,7 @@ class _MyDialogState extends State<MyDialog> {
   final NumberFormat numberFormat = NumberFormat.simpleCurrency();
   final String usuario = GetStorage().read('usuario');
   final String empresa = GetStorage().read('empresa');
+  Map<String, dynamic> clienteSeleccionado = GetStorage().read('pedido');
   final TextEditingController cantidadController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   final Connectivity _connectivity = Connectivity();
@@ -880,7 +882,7 @@ class _MyDialogState extends State<MyDialog> {
   }
 
   Future<http.Response> _addItemSoldOut(String itemCode, String itemName,
-      int quantity, String origen, String whsName) {
+      int quantity, String origen, String whsName) async {
     const String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/add-item-sold-out';
 
@@ -953,7 +955,18 @@ class _MyDialogState extends State<MyDialog> {
     // Activar seleccion de bodega para las llantas TIMSUN
     if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
         _itemsGuardados[index]['marca'] == 'TIMSUN') {
-      bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ', 'MEDELLÍN'];
+      if (clienteSeleccionado['region'] == 'REGION ANTIOQUIA' ||
+          clienteSeleccionado['region'] == 'REGION NORTE' ||
+          clienteSeleccionado['region'] == 'REGION COSTA') {
+        bodegas = [
+          'Elija una bodega',
+          'MEDELLÍN',
+          'BOGOTÁ',
+          'CARTAGENA'
+        ];
+      } else {
+        bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ'];
+      }
       isVisibleBod = true;
     }
 
@@ -1704,8 +1717,7 @@ class _DetallePedidoState extends State<DetallePedido> {
                                         listaItems[index]['itemCode']
                                             .toString() +
                                         '\n' +
-                                        'Precio: ' +
-                                        precioTxt +
+                                        'Precio: $precioTxt' +
                                         '\n' +
                                         'Cant: ' +
                                         listaItems[index]['quantity']
@@ -1715,14 +1727,11 @@ class _DetallePedidoState extends State<DetallePedido> {
                                         listaItems[index]['whsCode']
                                             .toString() +
                                         '\n' +
-                                        'Subtotal: ' +
-                                        subtotalDetalleTxt +
+                                        'Subtotal: $subtotalDetalleTxt' +
                                         '\n' +
-                                        'Iva: ' +
-                                        ivaTxt +
+                                        'Iva: $ivaTxt' +
                                         '\n' +
-                                        'Total: ' +
-                                        totalDetalleTxt,
+                                        'Total: $totalDetalleTxt',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -1764,7 +1773,7 @@ class _TotalPedidoState extends State<TotalPedido> {
   }
 
   Future<http.Response> _enviarPedido(
-      BuildContext context, Map<String, dynamic> pedidoFinal) {
+      BuildContext context, Map<String, dynamic> pedidoFinal) async {
     const String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/create-order';
     final dirEnvio = GetStorage().read('dirEnvio');
@@ -1811,9 +1820,7 @@ class _TotalPedidoState extends State<TotalPedido> {
   }
 
   Future<http.Response> _guardarPedido(
-    BuildContext context,
-    Map<String, dynamic> pedidoFinal,
-  ) {
+      BuildContext context, Map<String, dynamic> pedidoFinal) async {
     const String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/save-order';
     final dirEnvio = GetStorage().read('dirEnvio');
@@ -2179,7 +2186,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                                 locationData.longitude.toString(),
                                 GetStorage().read('usuario'),
                                 empresa,
-                                'G',
+                                'P',
                               );
 
                               final Map<String, dynamic> res =
@@ -2327,12 +2334,11 @@ class _TotalPedidoState extends State<TotalPedido> {
   }
 
   Future<http.Response> createRecordGeoLocation(
-    String latitude,
-    String longitude,
-    String slpCode,
-    String companyName,
-    String docType,
-  ) {
+      String latitude,
+      String longitude,
+      String slpCode,
+      String companyName,
+      String docType) async {
     const String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/create-record-geo-location';
 

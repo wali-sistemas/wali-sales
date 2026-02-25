@@ -103,7 +103,7 @@ class _ClientesPageState extends State<ClientesPage>
     super.initState();
     sincClientes();
     sincronizarStock();
-    _fetchData();
+    //_fetchData();
   }
 
   @override
@@ -167,7 +167,7 @@ class _ClientesPageState extends State<ClientesPage>
     });
   }
 
-  Future<void> _fetchData() async {
+  /*Future<void> _fetchData() async {
     final cached = GetStorage().read('datosClientes');
     if (cached != null) {
       _clientes = cached;
@@ -202,7 +202,7 @@ class _ClientesPageState extends State<ClientesPage>
       _clientes = data;
       storage.write('datosClientes', _clientes);
     });
-  }
+  }*/
 
   Future<http.Response> _createCustomerLead(Map<String, String> cliente) async {
     final String apiUrl =

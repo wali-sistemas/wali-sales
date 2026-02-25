@@ -56,7 +56,7 @@ class _LoginFormState extends State<_LoginForm> {
   String dropdownvalue = 'Elija una empresa';
   String? usuario = "";
   String? clave = "";
-  String versionApp = "12.6";
+  String versionApp = "12.7";
   String isSincStock = "";
   String isSincItems = "";
   var loginForm;
@@ -148,9 +148,10 @@ class _LoginFormState extends State<_LoginForm> {
   }
 
   Future<http.Response> createRecordGeoLocation(String latitude,
-      String longitude, String slpCode, String companyName, String docType) {
+      String longitude, String slpCode, String companyName, String docType) async {
     final String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/create-record-geo-location';
+
     return http.post(
       Uri.parse(url),
       headers: <String, String>{'Content-Type': 'application/json'},

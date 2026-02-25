@@ -120,12 +120,11 @@ class _SincronizarPageState extends State<SincronizarPage> {
   }
 
   Future<http.Response?> createRecordGeoLocation(
-    String latitude,
-    String longitude,
-    String slpCode,
-    String companyName,
-    String docType,
-  ) async {
+      String latitude,
+      String longitude,
+      String slpCode,
+      String companyName,
+      String docType) async {
     const String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/create-record-geo-location';
 

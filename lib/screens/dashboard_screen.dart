@@ -505,20 +505,6 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
             const Divider(),
-            Center(
-              child: Column(
-                children: [
-                  const Text(
-                    'Efectividad de clientes',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Text(
-                    '%$efectividad',
-                    style: const TextStyle(fontSize: 20),
-                  ),
-                ],
-              ),
-            ),
             Container(
               margin: EdgeInsets.symmetric(
                 horizontal: MediaQuery.of(context).size.width * 0.1,
@@ -526,74 +512,97 @@ class _DashboardPageState extends State<DashboardPage> {
               child: FutureBuilder<Map<String, dynamic>>(
                 future: _barrasFuture,
                 builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    if (snapshot.data!["content"]
-                            .toString()
-                            .contains("Ocurrio un error") ||
-                        snapshot.data!["content"] ==
-                            "No se encontraron datos para graficar la efectividad.") {
-                    } else {
-                      base = (snapshot.data!["content"]["base"] as num).toInt();
-                      impacto =
-                          (snapshot.data!["content"]["impact"] as num).toInt();
-                      efectividad =
-                          (snapshot.data!["content"]["effectiveness"] as num)
-                              .toDouble();
-                      if (base <= 0 || impacto <= 0 || efectividad <= 0) {
-                        return const Text(
-                          'En el momento no tiene asignación de efectividad',
-                          textAlign: TextAlign.center,
-                        );
-                      }
-                    }
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 10),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  BarraGrafica(
-                                    color: const Color.fromRGBO(0, 55, 114, 1),
-                                    valor: base.toDouble(),
-                                    etiqueta: base.toString(),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  BarraGrafica(
-                                    color: const Color.fromRGBO(51, 51, 51, 1),
-                                    valor: impacto.toDouble(),
-                                    etiqueta: impacto.toString(),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            EtiquetaBullet(
-                              color: Color.fromRGBO(0, 55, 114, 1),
-                              texto: 'Clientes efectivos',
-                            ),
-                            EtiquetaBullet(
-                              color: Color.fromRGBO(51, 51, 51, 1),
-                              texto: 'Presupuestado',
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  } else if (snapshot.hasError) {
+                  if (snapshot.hasError) {
                     return const Text(
                       'En el momento no tiene asignación de efectividad',
                       textAlign: TextAlign.center,
                     );
                   }
-                  return const CircularProgressIndicator();
+
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final content = snapshot.data!["content"];
+
+                  if (content.toString().contains("Ocurrio un error") ||
+                      content ==
+                          "No se encontraron datos para graficar la efectividad.") {
+                    return const Text(
+                      'En el momento no tiene asignación de efectividad',
+                      textAlign: TextAlign.center,
+                    );
+                  }
+
+                  final int baseLocal = (content["base"] as num).toInt();
+                  final int impactoLocal = (content["impact"] as num).toInt();
+                  final double efectividadLocal =
+                      (content["effectiveness"] as num).toDouble();
+
+                  if (baseLocal <= 0 ||
+                      impactoLocal <= 0 ||
+                      efectividadLocal <= 0) {
+                    return const Text(
+                      'En el momento no tiene asignación de efectividad',
+                      textAlign: TextAlign.center,
+                    );
+                  }
+
+                  return Column(
+                    children: [
+                      const Text(
+                        'Efectividad de clientes',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Text(
+                        '%${efectividadLocal.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    BarraGrafica(
+                                      color:
+                                          const Color.fromRGBO(0, 55, 114, 1),
+                                      valor: baseLocal.toDouble(),
+                                      etiqueta: baseLocal.toString(),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    BarraGrafica(
+                                      color:
+                                          const Color.fromRGBO(51, 51, 51, 1),
+                                      valor: impactoLocal.toDouble(),
+                                      etiqueta: impactoLocal.toString(),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              EtiquetaBullet(
+                                color: Color.fromRGBO(0, 55, 114, 1),
+                                texto: 'Clientes efectivos',
+                              ),
+                              EtiquetaBullet(
+                                color: Color.fromRGBO(51, 51, 51, 1),
+                                texto: 'Presupuestado',
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
                 },
               ),
             ),

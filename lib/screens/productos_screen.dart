@@ -401,7 +401,7 @@ class _MyDialogState extends State<MyDialog> {
   }
 
   Future<http.Response> _addItemSoldOut(String itemCode, String itemName,
-      int quantity, String origen, String whsName) {
+      int quantity, String origen, String whsName) async {
     const String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/add-item-sold-out';
 

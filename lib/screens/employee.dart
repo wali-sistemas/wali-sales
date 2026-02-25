@@ -141,7 +141,7 @@ class EmployeePage extends StatelessWidget {
 }
 
 Future<http.Response> _generateReportPaystub(
-    String id, String year, String month, String day) {
+    String id, String year, String month, String day) async {
   String companyName = '';
   String idLogo = '';
 
@@ -186,7 +186,8 @@ Future<http.Response> _generateReportPaystub(
   );
 }
 
-Future<http.Response> _generateReportJobCertify(String id, String sendto) {
+Future<http.Response> _generateReportJobCertify(
+    String id, String sendto) async {
   String companyName = '';
 
   switch (GetStorage().read('empresa')) {
@@ -227,7 +228,7 @@ Future<http.Response> _generateReportJobCertify(String id, String sendto) {
   );
 }
 
-Future<http.Response> _generateReportAccountStatement(String id) {
+Future<http.Response> _generateReportAccountStatement(String id) async {
   final String url =
       'http://wali.igbcolombia.com:8080/manager/res/report/generate-report';
 
