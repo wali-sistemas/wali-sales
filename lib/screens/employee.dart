@@ -207,8 +207,8 @@ Future<http.Response> _generateReportJobCertify(
 
   Map<String, dynamic> data = {
     'id': int.parse(id),
-    'year': '2025',
-    'month': DateTime.now().month,
+    'year': '2026',
+    'month': DateTime.now().month - 1,
     'day': 15,
     'sendto': sendto.isEmpty ? "A QUIEN PUEDA INTERESAR" : sendto
   };
@@ -351,10 +351,11 @@ class _JobCertifyEmployeeDataDialogState
 
               if (response.statusCode == 200 && resultado['content'] != '') {
                 final empresa = GetStorage().read('empresa');
+                final documento = documentoController.text;
 
                 final url = Uri.parse(
                   'https://drive.google.com/viewerng/viewer?embedded=true&url='
-                  'http://wali.igbcolombia.com:8080/shared/$empresa/employee/jobcertify/$documentoController.pdf',
+                  'http://wali.igbcolombia.com:8080/shared/$empresa/employee/jobcertify/$documento.pdf',
                 );
 
                 if (await canLaunchUrl(url)) {
@@ -680,8 +681,9 @@ class _AccountStatementEmployeeDataDialogState
               final Map<String, dynamic> resultado = jsonDecode(response.body);
 
               if (response.statusCode == 200 && resultado['content'] != '') {
+                final document = documentoController.text;
                 final Uri url = Uri.parse(
-                  'https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/FEMPROBN_NOVAWEB/accountStatement/$documentoController.pdf',
+                  'https://drive.google.com/viewerng/viewer?embedded=true&url=http://wali.igbcolombia.com:8080/shared/FEMPROBN_NOVAWEB/accountStatement/$document.pdf',
                 );
 
                 if (await canLaunchUrl(url)) {
