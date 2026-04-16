@@ -821,6 +821,9 @@ class _MyDialogState extends State<MyDialog> {
 
     if (resp['code'] == 0) {
       final data = resp['content'];
+      print("::::::::::::::::::::::::::::::::::::::::::::::");
+      print(data[0]['stockFull']);
+      print("::::::::::::::::::::::::::::::::::::::::::::::");
       return data[0]['stockFull'];
     }
     return 0;
@@ -942,7 +945,7 @@ class _MyDialogState extends State<MyDialog> {
     if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
         _itemsGuardados[index]['marca'] == 'XCELINK') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
-      isVisibleBod = true;
+      //isVisibleBod = true;
     }
 
     // Activar seleccion de bodega para los lubricantes REVO
@@ -958,16 +961,11 @@ class _MyDialogState extends State<MyDialog> {
       if (clienteSeleccionado['region'] == 'REGION ANTIOQUIA' ||
           clienteSeleccionado['region'] == 'REGION NORTE' ||
           clienteSeleccionado['region'] == 'REGION COSTA') {
-        bodegas = [
-          'Elija una bodega',
-          'MEDELLÍN',
-          'BOGOTÁ',
-          'CARTAGENA'
-        ];
+        bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ', 'CARTAGENA'];
       } else {
         bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ'];
       }
-      isVisibleBod = true;
+      //isVisibleBod = true;
     }
 
     // Validar si ya existe el item en itemsPedido (solo para mostrar icono)
@@ -1007,20 +1005,22 @@ class _MyDialogState extends State<MyDialog> {
       }
 
       // Buscar primero la bodega de la zona
-      for (final bodega in _inventario) {
-        if (bodega['quantity'] > 0 && bodega['whsCode'] == zona) {
-          whsCodeStockItem = bodega['whsCode'];
-          fullStock = bodega['quantity'];
-          break;
+      if (isVisibleBod) {
+        for (final bodega in _inventario) {
+          if (bodega['quantity'] > 0 && bodega['whsCode'] == zona) {
+            whsCodeStockItem = bodega['whsCode'];
+            fullStock = bodega['quantity'];
+            break;
+          }
         }
       }
 
       // Si no hay stock en la zona, usar la que más tenga
-      if (whsCodeStockItem == null && _inventario.isNotEmpty) {
+      /*if (whsCodeStockItem == null && _inventario.isNotEmpty) {
         final mejor = _inventario.first;
         whsCodeStockItem = mejor['whsCode'];
         fullStock = mejor['quantity'];
-      }
+      }*/
 
       // Sumar el stock total
       for (final bodega in _inventario) {
@@ -1073,10 +1073,10 @@ class _MyDialogState extends State<MyDialog> {
                         whsCode = '26';
                         break;
                       case 'MEDELLÍN':
-                        if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
+                        /*if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
                             _itemsGuardados[index]['marca'] == 'TIMSUN') {
                           whsCode = '60';
-                        } else if (_itemsGuardados[index]['subgrupo'] ==
+                        } else*/ if (_itemsGuardados[index]['subgrupo'] ==
                                 'LUBRICANTES' &&
                             _itemsGuardados[index]['marca'] ==
                                 'REVO LUBRICANTES') {
