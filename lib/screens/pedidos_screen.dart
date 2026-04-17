@@ -694,6 +694,65 @@ class DetailScreen extends StatelessWidget {
   }
 }
 
+List<Map<String, dynamic>> asignarBodegasPorMayorStock({
+  required int cantidadSolicitada,
+  required List<Map<String, dynamic>> stockWarehouses,
+}) {
+  if (cantidadSolicitada <= 0) {
+    throw Exception('La cantidad solicitada debe ser mayor a cero');
+  }
+
+  // Filtrar solo bodegas con stock disponible
+  final bodegasDisponibles = stockWarehouses
+      .where((bodega) => (bodega['quantity'] as int) > 0)
+      .map((bodega) => {
+            'whsCode': bodega['whsCode'],
+            'quantity': bodega['quantity'],
+          })
+      .toList();
+
+  if (bodegasDisponibles.isEmpty) {
+    throw Exception('No hay stock disponible en ninguna bodega');
+  }
+
+  // Calcular stock total disponible
+  final stockTotal = bodegasDisponibles.fold<int>(
+    0,
+    (sum, bodega) => sum + (bodega['quantity'] as int),
+  );
+
+  if (cantidadSolicitada > stockTotal) {
+    throw Exception(
+      'Stock insuficiente. Solicitado: $cantidadSolicitada, disponible: $stockTotal',
+    );
+  }
+
+  // Ordenar de mayor a menor stock
+  bodegasDisponibles.sort(
+    (a, b) => (b['quantity'] as int).compareTo(a['quantity'] as int),
+  );
+
+  int restante = cantidadSolicitada;
+  final List<Map<String, dynamic>> asignacion = [];
+
+  for (final bodega in bodegasDisponibles) {
+    if (restante == 0) break;
+
+    final int stockBodega = bodega['quantity'] as int;
+    final int cantidadAAsignar =
+        restante <= stockBodega ? restante : stockBodega;
+
+    asignacion.add({
+      'whsCode': bodega['whsCode'],
+      'quantity': cantidadAAsignar,
+    });
+
+    restante -= cantidadAAsignar;
+  }
+
+  return asignacion;
+}
+
 class _MyDialogState extends State<MyDialog> {
   int index = 0;
   int idPedidoDb = 0;
@@ -1050,7 +1109,7 @@ class _MyDialogState extends State<MyDialog> {
           ],
         ),
         Text('Stock: $fullStock'),
-        Text('Precio: $precioTxt'),
+        Text('Preciooooooo: $precioTxt'),
         SizedBox(
           width: 250,
           child: isVisibleBod
@@ -1076,7 +1135,8 @@ class _MyDialogState extends State<MyDialog> {
                         /*if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
                             _itemsGuardados[index]['marca'] == 'TIMSUN') {
                           whsCode = '60';
-                        } else*/ if (_itemsGuardados[index]['subgrupo'] ==
+                        } else*/
+                        if (_itemsGuardados[index]['subgrupo'] ==
                                 'LUBRICANTES' &&
                             _itemsGuardados[index]['marca'] ==
                                 'REVO LUBRICANTES') {
@@ -1309,26 +1369,41 @@ class _MyDialogState extends State<MyDialog> {
                         return;
                       }
 
-                      itemTemp['quantity'] = cantidadController.text;
-                      itemTemp['itemCode'] = _itemsGuardados[index]['itemCode'];
-                      itemTemp['itemName'] = _itemsGuardados[index]['itemName'];
-                      itemTemp['group'] = _itemsGuardados[index]['grupo'];
-                      itemTemp['presentation'] =
-                          _itemsGuardados[index]['presentation'] ?? '';
-                      itemTemp['price'] =
-                          _itemsGuardados[index]['price'].toString();
-                      itemTemp['discountItem'] =
-                          _itemsGuardados[index]['discountItem'].toString();
-                      itemTemp['discountPorc'] =
-                          _itemsGuardados[index]['discountPorc'].toString();
-                      itemTemp['whsCode'] = whsCodeStockItem == null
-                          ? "01"
-                          : whsCodeStockItem.toString();
-                      itemTemp['iva'] =
-                          _itemsGuardados[index]['iva'].toString();
+                      final item = _itemsGuardados[index]['itemCode'];
+                      int cantidad = int.tryParse(cantidadController.text) ?? 0;
 
-                      itemsPedido.add(Map<String, dynamic>.from(itemTemp));
+                      final resultado = asignarBodegasPorMayorStock(
+                        cantidadSolicitada: cantidad,
+                        stockWarehouses:
+                            List<Map<String, dynamic>>.from(_inventario),
+                      );
 
+                      print("************************");
+                      print(resultado);
+                      print("************************");
+
+                      for (final j in resultado) {
+                        itemTemp['quantity'] = j['quantity'].toString();
+                        itemTemp['itemCode'] =
+                            _itemsGuardados[index]['itemCode'];
+                        itemTemp['itemName'] =
+                            _itemsGuardados[index]['itemName'];
+                        itemTemp['group'] = _itemsGuardados[index]['grupo'];
+                        itemTemp['presentation'] =
+                            _itemsGuardados[index]['presentation'] ?? '';
+                        itemTemp['price'] =
+                            _itemsGuardados[index]['price'].toString();
+                        itemTemp['discountItem'] =
+                            _itemsGuardados[index]['discountItem'].toString();
+                        itemTemp['discountPorc'] =
+                            _itemsGuardados[index]['discountPorc'].toString();
+                        itemTemp['whsCode'] = j['whsCode'].toString();
+                        itemTemp['iva'] =
+                            _itemsGuardados[index]['iva'].toString();
+
+                        itemsPedido.add(Map<String, dynamic>.from(itemTemp));
+                      }
+                    
                       final int precioI = _itemsGuardados[index]['price'];
                       final double precioD = precioI.toDouble();
                       final int discountI =
