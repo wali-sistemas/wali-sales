@@ -1456,7 +1456,7 @@ class _MyDialogState extends State<MyDialog> {
 
                         itemsPedido.add(Map<String, dynamic>.from(itemTemp));
                       }
-                    
+
                       final int precioI = _itemsGuardados[index]['price'];
                       final double precioD = precioI.toDouble();
                       final int discountI =
@@ -2633,6 +2633,39 @@ class _TotalPedidoState extends State<TotalPedido> {
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
+                      Transform.translate(
+                        offset: const Offset(-8, 0),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 6),
+                            Transform.scale(
+                              scale: 1.5,
+                              child: Checkbox(
+                                value: isChecked,
+                                activeColor:
+                                    const Color.fromRGBO(0, 55, 114, 1),
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                onChanged: (value) {
+                                  setState(() {
+                                    isChecked = value ?? false;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            const Text(
+                              'Marcar la orden como retenida',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       const Text(
                         'Observaciones:',
                         style: TextStyle(fontWeight: FontWeight.bold),
@@ -2662,34 +2695,6 @@ class _TotalPedidoState extends State<TotalPedido> {
                             hintStyle: const TextStyle(color: Colors.black),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Transform.scale(
-                                scale: 1.5,
-                                child: Checkbox(
-                                  value: isChecked,
-                                  activeColor:
-                                      const Color.fromRGBO(0, 55, 114, 1),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      isChecked = value ?? false;
-                                    });
-                                  },
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              Text(
-                                'Retener pedido',
-                                style: TextStyle(fontSize: 15),
-                              ),
-                            ],
-                          )
-                        ],
                       ),
                       const SizedBox(height: 10),
                     ],
