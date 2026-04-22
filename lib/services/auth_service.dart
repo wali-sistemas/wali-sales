@@ -102,6 +102,15 @@ class AuthService extends ChangeNotifier {
 
         await storage2.write('slpCode', data0['slpCode']);
 
+        var whsTires = <String>[
+          data0['whsTire1'].toString(),
+          data0['whsTire2'].toString(),
+          data0['whsTire3'].toString(),
+          data0['whsTire4'].toString(),
+        ];
+
+        await storage2.write('whsTiresDef', jsonEncode(whsTires));
+
         if (version != data0['appVersion']?.toString()) {
           return "Versión antigua. Actualiza la app.";
         }

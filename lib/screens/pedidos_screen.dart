@@ -694,63 +694,120 @@ class DetailScreen extends StatelessWidget {
   }
 }
 
-List<Map<String, dynamic>> asignarBodegasPorMayorStock({
-  required int cantidadSolicitada,
+List<Map<String, dynamic>> asignarBodegasLlantasConPrioridad({
+  required int quantity,
   required List<Map<String, dynamic>> stockWarehouses,
+  required List<String> priorityWhsTires,
 }) {
-  if (cantidadSolicitada <= 0) {
-    throw Exception('La cantidad solicitada debe ser mayor a cero');
-  }
+  try {
+    if (quantity <= 0) {
+      throw Exception('La cantidad solicitada debe ser mayor a cero');
+    }
 
-  // Filtrar solo bodegas con stock disponible
-  final bodegasDisponibles = stockWarehouses
-      .where((bodega) => (bodega['quantity'] as int) > 0)
-      .map((bodega) => {
-            'whsCode': bodega['whsCode'],
-            'quantity': bodega['quantity'],
-          })
-      .toList();
+    if (stockWarehouses.isEmpty) {
+      throw Exception('No se recibieron bodegas para validar stock');
+    }
 
-  if (bodegasDisponibles.isEmpty) {
-    throw Exception('No hay stock disponible en ninguna bodega');
-  }
+    // Normalizar datos y filtrar solo bodegas con stock disponible
+    final List<Map<String, dynamic>> bodegasDisponibles = stockWarehouses
+        .map((bodega) => {
+              'whsCode': bodega['whsCode'].toString(),
+              'quantity': (bodega['quantity'] as num).toInt(),
+            })
+        .where((bodega) => (bodega['quantity'] as int) > 0)
+        .toList();
 
-  // Calcular stock total disponible
-  final stockTotal = bodegasDisponibles.fold<int>(
-    0,
-    (sum, bodega) => sum + (bodega['quantity'] as int),
-  );
+    if (bodegasDisponibles.isEmpty) {
+      throw Exception('No hay stock disponible en ninguna bodega');
+    }
 
-  if (cantidadSolicitada > stockTotal) {
-    throw Exception(
-      'Stock insuficiente. Solicitado: $cantidadSolicitada, disponible: $stockTotal',
+    // Calcular stock total disponible
+    final int stockTotal = bodegasDisponibles.fold<int>(
+      0,
+      (sum, bodega) => sum + (bodega['quantity'] as int),
     );
+
+    if (quantity > stockTotal) {
+      throw Exception(
+        'Stock insuficiente. Solicitado: $quantity, disponible: $stockTotal',
+      );
+    }
+
+    // Crear mapa para acceso rápido por código de bodega
+    final Map<String, Map<String, dynamic>> mapaBodegas = {
+      for (final bodega in bodegasDisponibles)
+        bodega['whsCode'] as String: bodega
+    };
+
+    int restante = quantity;
+    final List<Map<String, dynamic>> asignacion = [];
+    final Set<String> bodegasUsadas = {};
+
+    // Consumir según prioridad
+    for (final whs in priorityWhsTires) {
+      if (restante == 0) break;
+
+      final String codigo = whs.toString();
+      final bodega = mapaBodegas[codigo];
+
+      if (bodega == null) {
+        continue;
+      }
+
+      final int stockBodega = bodega['quantity'] as int;
+
+      if (stockBodega <= 0) {
+        continue;
+      }
+
+      final int cantidadAAsignar =
+          restante <= stockBodega ? restante : stockBodega;
+
+      asignacion.add({
+        'whsCode': codigo,
+        'quantity': cantidadAAsignar,
+      });
+
+      restante -= cantidadAAsignar;
+      bodegasUsadas.add(codigo);
+    }
+
+    // Si aún falta cantidad, usar las demás bodegas por mayor stock
+    if (restante > 0) {
+      final List<Map<String, dynamic>> bodegasRestantes = bodegasDisponibles
+          .where((bodega) => !bodegasUsadas.contains(bodega['whsCode']))
+          .toList();
+
+      bodegasRestantes.sort(
+        (a, b) => (b['quantity'] as int).compareTo(a['quantity'] as int),
+      );
+
+      for (final bodega in bodegasRestantes) {
+        if (restante == 0) break;
+
+        final int stockBodega = bodega['quantity'] as int;
+        final int cantidadAAsignar =
+            restante <= stockBodega ? restante : stockBodega;
+
+        asignacion.add({
+          'whsCode': bodega['whsCode'],
+          'quantity': cantidadAAsignar,
+        });
+
+        restante -= cantidadAAsignar;
+      }
+    }
+
+    if (restante > 0) {
+      throw Exception('No fue posible completar la asignación de bodegas');
+    }
+
+    return asignacion;
+  } on Exception {
+    rethrow;
+  } catch (e) {
+    throw Exception('Error al asignar bodegas: $e');
   }
-
-  // Ordenar de mayor a menor stock
-  bodegasDisponibles.sort(
-    (a, b) => (b['quantity'] as int).compareTo(a['quantity'] as int),
-  );
-
-  int restante = cantidadSolicitada;
-  final List<Map<String, dynamic>> asignacion = [];
-
-  for (final bodega in bodegasDisponibles) {
-    if (restante == 0) break;
-
-    final int stockBodega = bodega['quantity'] as int;
-    final int cantidadAAsignar =
-        restante <= stockBodega ? restante : stockBodega;
-
-    asignacion.add({
-      'whsCode': bodega['whsCode'],
-      'quantity': cantidadAAsignar,
-    });
-
-    restante -= cantidadAAsignar;
-  }
-
-  return asignacion;
 }
 
 class _MyDialogState extends State<MyDialog> {
@@ -880,9 +937,6 @@ class _MyDialogState extends State<MyDialog> {
 
     if (resp['code'] == 0) {
       final data = resp['content'];
-      print("::::::::::::::::::::::::::::::::::::::::::::::");
-      print(data[0]['stockFull']);
-      print("::::::::::::::::::::::::::::::::::::::::::::::");
       return data[0]['stockFull'];
     }
     return 0;
@@ -1109,7 +1163,7 @@ class _MyDialogState extends State<MyDialog> {
           ],
         ),
         Text('Stock: $fullStock'),
-        Text('Preciooooooo: $precioTxt'),
+        Text('Precio: $precioTxt'),
         SizedBox(
           width: 250,
           child: isVisibleBod
@@ -1369,18 +1423,17 @@ class _MyDialogState extends State<MyDialog> {
                         return;
                       }
 
-                      final item = _itemsGuardados[index]['itemCode'];
-                      int cantidad = int.tryParse(cantidadController.text) ?? 0;
-
-                      final resultado = asignarBodegasPorMayorStock(
-                        cantidadSolicitada: cantidad,
-                        stockWarehouses:
-                            List<Map<String, dynamic>>.from(_inventario),
+                      List<String> prioridadesWhs = List<String>.from(
+                        jsonDecode(GetStorage().read('whsTiresDef') ?? '[]'),
                       );
 
-                      print("************************");
-                      print(resultado);
-                      print("************************");
+                      int qty = int.tryParse(cantidadController.text) ?? 0;
+
+                      final resultado = asignarBodegasLlantasConPrioridad(
+                          quantity: qty,
+                          stockWarehouses:
+                              List<Map<String, dynamic>>.from(_inventario),
+                          priorityWhsTires: prioridadesWhs);
 
                       for (final j in resultado) {
                         itemTemp['quantity'] = j['quantity'].toString();
@@ -1840,6 +1893,7 @@ class _TotalPedidoState extends State<TotalPedido> {
   bool cargando = false;
   bool btnPedidoActivo = false;
   bool btnGuardarActivo = false;
+  bool isChecked = false;
 
   @override
   void dispose() {
@@ -1888,6 +1942,7 @@ class _TotalPedidoState extends State<TotalPedido> {
           'discountPercent': pedidoFinal['discountPercent'].toString(),
           'docTotal': pedidoFinal['docTotal'],
           'lineNum': pedidoFinal['lineNum'],
+          'holdOrder': isChecked,
           'detailSalesOrder': GetStorage().read('itemsPedido'),
         },
       ),
@@ -2608,6 +2663,35 @@ class _TotalPedidoState extends State<TotalPedido> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 10),
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Transform.scale(
+                                scale: 1.5,
+                                child: Checkbox(
+                                  value: isChecked,
+                                  activeColor:
+                                      const Color.fromRGBO(0, 55, 114, 1),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      isChecked = value ?? false;
+                                    });
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                'Retener pedido',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
