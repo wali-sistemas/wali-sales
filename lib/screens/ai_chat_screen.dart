@@ -109,7 +109,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       nombreAsesor = "Asesor";
     } else {
       List<String> partes = nombreAsesor.toString().split(" ");
-      print(partes.length);
+      //print(partes.length);
       if (partes.length > 2) {
         String primerNombre = partes.first;
         String primerApellido = partes[partes.length - 2];
