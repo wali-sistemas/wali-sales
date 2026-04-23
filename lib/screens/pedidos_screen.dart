@@ -2673,6 +2673,7 @@ class _TotalPedidoState extends State<TotalPedido> {
                       const SizedBox(height: 10),
                       SizedBox(
                         width: 400,
+                        height: 120,
                         child: TextField(
                           maxLines: 7,
                           controller: observacionesController,
