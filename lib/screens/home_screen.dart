@@ -167,8 +167,8 @@ class _HomePageState extends State<HomePage> {
             type: BottomNavigationBarType.fixed,
             currentIndex: _selectedScreenIndex,
             onTap: _selectScreen,
-            selectedItemColor: Colors.white,
-            unselectedItemColor: const Color.fromRGBO(1, 39, 80, 1),
+            selectedItemColor: const Color.fromRGBO(1, 39, 80, 1),
+            unselectedItemColor: const Color.fromRGBO(210, 232, 255, 1),
             selectedFontSize: 8,
             unselectedFontSize: 12.7,
             items: const [
@@ -182,7 +182,7 @@ class _HomePageState extends State<HomePage> {
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.sync),
-                label: 'Sincronizar',
+                label: 'Sincr',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.person_rounded),

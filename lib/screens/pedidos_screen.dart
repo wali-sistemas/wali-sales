@@ -19,6 +19,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+bool isChecked = false;
+
 class PedidosPage extends StatefulWidget {
   const PedidosPage({Key? key}) : super(key: key);
 
@@ -166,29 +168,31 @@ class _PedidosPageState extends State<PedidosPage>
             ),
           ),
           bottom: const TabBar(
+            labelColor: const Color.fromRGBO(1, 39, 80, 1),
+            unselectedLabelColor: Colors.white,
             tabs: [
               Tab(
                 child: Text(
                   'Cliente',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(fontSize: 12),
                 ),
               ),
               Tab(
                 child: Text(
                   'Items',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(fontSize: 12),
                 ),
               ),
               Tab(
                 child: Text(
                   'Detalle',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(fontSize: 12),
                 ),
               ),
               Tab(
                 child: Text(
                   'Total',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(fontSize: 12),
                 ),
               ),
             ],
@@ -1053,21 +1057,17 @@ class _MyDialogState extends State<MyDialog> {
     bool isVisibleBod = false;
     bool alertItemAdd = false;
     int cantItemAdd = 0;
-
     // Activar seleccion de bodega para las llantas
     if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
         _itemsGuardados[index]['marca'] == 'XCELINK') {
       bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI'];
-      //isVisibleBod = true;
     }
-
     // Activar seleccion de bodega para los lubricantes REVO
     if (_itemsGuardados[index]['subgrupo'] == 'LUBRICANTES' &&
         _itemsGuardados[index]['marca'] == 'REVO LUBRICANTES') {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ', 'COTA'];
       isVisibleBod = true;
     }
-
     // Activar seleccion de bodega para las llantas TIMSUN
     if (_itemsGuardados[index]['grupo'] == 'LLANTAS' &&
         _itemsGuardados[index]['marca'] == 'TIMSUN') {
@@ -1078,9 +1078,7 @@ class _MyDialogState extends State<MyDialog> {
       } else {
         bodegas = ['Elija una bodega', 'CARTAGENA', 'CALI', 'BOGOTÁ'];
       }
-      //isVisibleBod = true;
     }
-
     // Validar si ya existe el item en itemsPedido (solo para mostrar icono)
     final itemsPedidoSaved = GetStorage().read('itemsPedido');
     if (itemsPedidoSaved != null) {
@@ -1116,7 +1114,6 @@ class _MyDialogState extends State<MyDialog> {
           }
         }
       }
-
       // Buscar primero la bodega de la zona
       if (isVisibleBod) {
         for (final bodega in _inventario) {
@@ -1127,14 +1124,6 @@ class _MyDialogState extends State<MyDialog> {
           }
         }
       }
-
-      // Si no hay stock en la zona, usar la que más tenga
-      /*if (whsCodeStockItem == null && _inventario.isNotEmpty) {
-        final mejor = _inventario.first;
-        whsCodeStockItem = mejor['whsCode'];
-        fullStock = mejor['quantity'];
-      }*/
-
       // Sumar el stock total
       for (final bodega in _inventario) {
         stockSuma += bodega['quantity'];
@@ -1196,7 +1185,7 @@ class _MyDialogState extends State<MyDialog> {
                                 'REVO LUBRICANTES') {
                           whsCode = '01';
                         } else {
-                          whsCode = '01';
+                          whsCode = '60';
                         }
                         break;
                       case 'BOGOTÁ':
@@ -1429,89 +1418,202 @@ class _MyDialogState extends State<MyDialog> {
 
                       int qty = int.tryParse(cantidadController.text) ?? 0;
 
-                      final resultado = asignarBodegasLlantasConPrioridad(
-                          quantity: qty,
+                      final List<Map<String, dynamic>> itemsGenerados = [];
+                      final Map<String, dynamic> itemActual =
+                          Map<String, dynamic>.from(_itemsGuardados[index]);
+
+                      final int cantidadSolicitada =
+                          int.tryParse(qty.toString()) ??
+                              int.tryParse(cantidadController.text.trim()) ??
+                              0;
+                      final double precio = double.tryParse(
+                              (itemActual['price'] ?? 0).toString()) ??
+                          0;
+                      final double descuento = double.tryParse(
+                              (itemActual['discountPorc'] ?? 0).toString()) ??
+                          0;
+                      final double descuentoItem = double.tryParse(
+                              (itemActual['discountItem'] ?? 0).toString()) ??
+                          0;
+                      final double iva = double.tryParse(
+                              (itemActual['iva'] ?? 0).toString()) ??
+                          0;
+
+                      if (_itemsGuardados[index]['subgrupo'] == 'LUBRICANTES' &&
+                          _itemsGuardados[index]['marca'] ==
+                              'REVO LUBRICANTES') {
+                        final String bodegaLubricante =
+                            whsCodeStockItem.toString().trim();
+
+                        if (cantidadSolicitada > 0 &&
+                            bodegaLubricante.isNotEmpty) {
+                          final Map<String, dynamic> itemLubricante = {
+                            'itemCode':
+                                (itemActual['itemCode'] ?? '').toString(),
+                            'itemName':
+                                (itemActual['itemName'] ?? '').toString(),
+                            'group': (itemActual['grupo'] ?? '').toString(),
+                            'presentation':
+                                (itemActual['presentation'] ?? '').toString(),
+                            'price': precio.toString(),
+                            'discountItem': descuentoItem.toString(),
+                            'discountPorc': descuento.toString(),
+                            'iva': iva.toString(),
+                            'quantity': cantidadSolicitada.toString(),
+                            'whsCode': bodegaLubricante,
+                          };
+
+                          itemsGenerados.add(itemLubricante);
+                        }
+                      } else {
+                        final List<Map<String, dynamic>> resultado =
+                            asignarBodegasLlantasConPrioridad(
+                          quantity: cantidadSolicitada,
                           stockWarehouses:
                               List<Map<String, dynamic>>.from(_inventario),
-                          priorityWhsTires: prioridadesWhs);
+                          priorityWhsTires: prioridadesWhs,
+                        );
 
-                      for (final j in resultado) {
-                        itemTemp['quantity'] = j['quantity'].toString();
-                        itemTemp['itemCode'] =
-                            _itemsGuardados[index]['itemCode'];
-                        itemTemp['itemName'] =
-                            _itemsGuardados[index]['itemName'];
-                        itemTemp['group'] = _itemsGuardados[index]['grupo'];
-                        itemTemp['presentation'] =
-                            _itemsGuardados[index]['presentation'] ?? '';
-                        itemTemp['price'] =
-                            _itemsGuardados[index]['price'].toString();
-                        itemTemp['discountItem'] =
-                            _itemsGuardados[index]['discountItem'].toString();
-                        itemTemp['discountPorc'] =
-                            _itemsGuardados[index]['discountPorc'].toString();
-                        itemTemp['whsCode'] = j['whsCode'].toString();
-                        itemTemp['iva'] =
-                            _itemsGuardados[index]['iva'].toString();
+                        for (final Map<String, dynamic> asignacion
+                            in resultado) {
+                          final int cantidadAsignada = int.tryParse(
+                                (asignacion['quantity'] ??
+                                        asignacion['asignado'] ??
+                                        0)
+                                    .toString(),
+                              ) ??
+                              0;
 
-                        itemsPedido.add(Map<String, dynamic>.from(itemTemp));
+                          final String bodegaAsignada =
+                              (asignacion['whsCode'] ?? '').toString().trim();
+
+                          // No agregar líneas vacías.
+                          if (cantidadAsignada <= 0 || bodegaAsignada.isEmpty) {
+                            continue;
+                          }
+
+                          final Map<String, dynamic> itemLlanta = {
+                            'itemCode':
+                                (itemActual['itemCode'] ?? '').toString(),
+                            'itemName':
+                                (itemActual['itemName'] ?? '').toString(),
+                            'group': (itemActual['grupo'] ?? '').toString(),
+                            'presentation':
+                                (itemActual['presentation'] ?? '').toString(),
+                            'price': precio.toString(),
+                            'discountItem': descuentoItem.toString(),
+                            'discountPorc': descuento.toString(),
+                            'iva': iva.toString(),
+                            'quantity': cantidadAsignada.toString(),
+                            'whsCode': bodegaAsignada,
+                          };
+
+                          itemsGenerados.add(itemLlanta);
+                        }
+                      }
+                      // Agregar todas las líneas generadas a la lista actual.
+                      for (final Map<String, dynamic> itemGenerado
+                          in itemsGenerados) {
+                        itemsPedido.add(
+                          Map<String, dynamic>.from(itemGenerado),
+                        );
+                      }
+                      // Guardar cada línea en la base de datos.
+                      for (final Map<String, dynamic> itemGenerado
+                          in itemsGenerados) {
+                        final int cantidadItem =
+                            int.tryParse(itemGenerado['quantity'].toString()) ??
+                                0;
+
+                        final String bodegaItem =
+                            (itemGenerado['whsCode'] ?? '').toString();
+
+                        if (cantidadItem <= 0 || bodegaItem.isEmpty) {
+                          continue;
+                        }
+
+                        final Item newItem = Item(
+                          idPedido: idPedidoDb,
+                          quantity: cantidadItem,
+                          itemCode: (itemGenerado['itemCode'] ?? '').toString(),
+                          itemName: (itemGenerado['itemName'] ?? '').toString(),
+                          grupo: (itemGenerado['group'] ?? '').toString(),
+                          whsCode: bodegaItem,
+                          presentation:
+                              (itemGenerado['presentation'] ?? '').toString(),
+                          price: precio,
+                          discountItem: descuentoItem,
+                          discountPorc: descuento,
+                          iva: iva,
+                        );
+
+                        insertItemDb(newItem);
+                      }
+                      // Actualizar el detalle después de insertar todos los registros.
+                      listarItemDb();
+                      // Leer los registros existentes de GetStorage.
+                      final dynamic saved = GetStorage().read('itemsPedido');
+                      final List<Map<String, dynamic>> itemsAlmacenados = [];
+
+                      if (saved != null && saved is List) {
+                        for (final dynamic item in saved) {
+                          if (item is Map) {
+                            itemsAlmacenados.add(
+                              Map<String, dynamic>.from(item),
+                            );
+                          }
+                        }
                       }
 
-                      final int precioI = _itemsGuardados[index]['price'];
-                      final double precioD = precioI.toDouble();
-                      final int discountI =
-                          _itemsGuardados[index]['discountPorc'];
-                      final double discountD = discountI.toDouble();
-                      final int discountItemI =
-                          _itemsGuardados[index]['discountItem'];
-                      final double discountItemD = discountItemI.toDouble();
-                      final int ivaI = _itemsGuardados[index]['iva'];
-                      final double ivaD = ivaI.toDouble();
+                      for (final Map<String, dynamic> itemGenerado
+                          in itemsGenerados) {
+                        final String itemCodeGenerado =
+                            (itemGenerado['itemCode'] ?? '').toString();
 
-                      final Item newItem = Item(
-                        idPedido: idPedidoDb,
-                        quantity: int.parse(cantidadController.text),
-                        itemCode: _itemsGuardados[index]['itemCode'],
-                        itemName: _itemsGuardados[index]['itemName'],
-                        grupo: _itemsGuardados[index]['grupo'],
-                        whsCode: whsCodeStockItem,
-                        presentation: _itemsGuardados[index]['presentation'],
-                        price: precioD,
-                        discountItem: discountItemD,
-                        discountPorc: discountD,
-                        iva: ivaD,
-                      );
+                        final String bodegaGenerada =
+                            (itemGenerado['whsCode'] ?? '').toString();
 
-                      insertItemDb(newItem);
-                      listarItemDb();
+                        final int cantidadGenerada = int.tryParse(
+                              (itemGenerado['quantity'] ?? 0).toString(),
+                            ) ??
+                            0;
 
-                      final saved = GetStorage().read('itemsPedido');
-                      if (saved == null) {
-                        storage.write('itemsPedido', itemsPedido);
-                      } else {
-                        itemsPedidoLocal = saved;
+                        bool repetido = false;
 
-                        int repetido = 0;
-                        for (final j in itemsPedidoLocal) {
-                          if (itemTemp['itemCode'] == j['itemCode'] &&
-                              itemTemp['whsCode'] == j['whsCode']) {
-                            final int cant = int.parse(j['quantity']!) +
-                                int.parse(itemTemp['quantity']!);
-                            j['quantity'] = cant.toString();
-                            repetido = 1;
+                        for (final Map<String, dynamic> itemGuardado
+                            in itemsAlmacenados) {
+                          final String itemCodeGuardado =
+                              (itemGuardado['itemCode'] ?? '').toString();
+
+                          final String bodegaGuardada =
+                              (itemGuardado['whsCode'] ?? '').toString();
+
+                          if (itemCodeGenerado == itemCodeGuardado &&
+                              bodegaGenerada == bodegaGuardada) {
+                            final int cantidadGuardada = int.tryParse(
+                                  (itemGuardado['quantity'] ?? 0).toString(),
+                                ) ??
+                                0;
+
+                            itemGuardado['quantity'] =
+                                (cantidadGuardada + cantidadGenerada)
+                                    .toString();
+
+                            repetido = true;
                             break;
                           }
                         }
 
-                        if (repetido == 0) {
-                          itemsPedidoLocal
-                              .add(Map<String, dynamic>.from(itemTemp));
+                        if (!repetido) {
+                          itemsAlmacenados.add(
+                            Map<String, dynamic>.from(itemGenerado),
+                          );
                         }
-
-                        storage.write('itemsPedido', itemsPedidoLocal);
                       }
-
+                      // Guardar la lista completa.
+                      storage.write('itemsPedido', itemsAlmacenados);
                       storage.write('index', index);
+
                       Navigator.pop(context);
                     }
                   : null,
@@ -1745,8 +1847,12 @@ class _DetallePedidoState extends State<DetallePedido> {
     return SafeArea(
       child: listaItems.isEmpty
           ? const Text(
-              'No se encontraron ítems agregados para mostar',
+              '\n\nNo se encontraron ítems agregados para mostar',
               textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13.0,
+                fontStyle: FontStyle.italic,
+              ),
             )
           : Column(
               children: [
@@ -1893,7 +1999,6 @@ class _TotalPedidoState extends State<TotalPedido> {
   bool cargando = false;
   bool btnPedidoActivo = false;
   bool btnGuardarActivo = false;
-  bool isChecked = false;
 
   @override
   void dispose() {

@@ -10,7 +10,7 @@ class NotificationsService {
         message,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 20,
+          fontSize: 13,
         ),
       ),
     );

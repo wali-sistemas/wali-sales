@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
+import 'package:productos_app/services/services.dart';
 import 'buscador_clientes.dart';
 import 'package:productos_app/screens/home_screen.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:productos_app/screens/screens.dart';
+import 'package:geolocator/geolocator.dart';
 
 class ClientesPage extends StatefulWidget {
   const ClientesPage({Key? key}) : super(key: key);
@@ -23,6 +27,7 @@ class _ClientesPageState extends State<ClientesPage>
 
   List _clientes = [];
   List _municipios = [];
+  List _historialVisitas = [];
   List _calles = [
     {"code": "CL", "name": "CALLE"},
     {"code": "CR", "name": "CARRERA"},
@@ -78,7 +83,7 @@ class _ClientesPageState extends State<ClientesPage>
   final TextEditingController razonCtrl = TextEditingController();
   final TextEditingController telefonoCtrl = TextEditingController();
   final TextEditingController direccionCtrl = TextEditingController();
-  final TextEditingController ciudadCtrl = TextEditingController();
+  final TextEditingController barrioCtrl = TextEditingController();
   final TextEditingController departamentoCtrl = TextEditingController();
   final TextEditingController correoCtrl = TextEditingController();
   final TextEditingController nro1Ctrl = TextEditingController();
@@ -101,7 +106,6 @@ class _ClientesPageState extends State<ClientesPage>
     super.initState();
     sincClientes();
     sincronizarStock();
-    //_fetchData();
   }
 
   @override
@@ -110,7 +114,7 @@ class _ClientesPageState extends State<ClientesPage>
     razonCtrl.dispose();
     telefonoCtrl.dispose();
     direccionCtrl.dispose();
-    ciudadCtrl.dispose();
+    barrioCtrl.dispose();
     departamentoCtrl.dispose();
     correoCtrl.dispose();
     super.dispose();
@@ -165,43 +169,6 @@ class _ClientesPageState extends State<ClientesPage>
     });
   }
 
-  /*Future<void> _fetchData() async {
-    final cached = GetStorage().read('datosClientes');
-    if (cached != null) {
-      _clientes = cached;
-      if (mounted) setState(() {});
-      return;
-    }
-
-    final String apiUrl =
-        'http://wali.igbcolombia.com:8080/manager/res/app/customers/$codigo/$empresa';
-
-    final response = await http.get(Uri.parse(apiUrl));
-    final Map<String, dynamic> resp = jsonDecode(response.body);
-
-    final codigoError = resp['code'];
-    if (codigoError == -1) {
-      final String texto = 'No se encontraron clientes para el asesor ' +
-          codigo +
-          ' en la empresa ' +
-          empresa;
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(texto)),
-        );
-      }
-    }
-
-    final data = resp['content'];
-    if (!mounted) return;
-
-    setState(() {
-      _clientes = data;
-      storage.write('datosClientes', _clientes);
-    });
-  }*/
-
   Future<http.Response> _createCustomerLead(Map<String, String> cliente) async {
     final String apiUrl =
         'http://wali.igbcolombia.com:8080/manager/res/app/create-customer-lead';
@@ -220,7 +187,7 @@ class _ClientesPageState extends State<ClientesPage>
           "address": cliente["direccion"].toString(),
           "departament": cliente["departamento"].toString(),
           "municipio": cliente["municipio"].toString(),
-          "city": cliente["ciudad"].toString()
+          "province": cliente["barrio"].toString()
         },
       ),
     );
@@ -243,10 +210,93 @@ class _ClientesPageState extends State<ClientesPage>
     );
   }
 
+  Future<void> _listHistoryVisitByCustomer(
+      String? slpCode, String? cardCode) async {
+    setState(() {
+      _historialVisitas = [];
+    });
+
+    final String apiUrl =
+        'http://wali.igbcolombia.com:8080/manager/res/app/list-history-visit/IGB?slpcode=$slpCode&cardcode=$cardCode';
+
+    final response = await http.get(Uri.parse(apiUrl));
+
+    final List<dynamic> resp = jsonDecode(response.body);
+
+    if (!mounted) return;
+
+    setState(() {
+      _historialVisitas = resp;
+    });
+  }
+
+  Future<http.Response> _createRecordGeoLocation(
+      String latitude,
+      String longitude,
+      String slpCode,
+      String companyName,
+      String docType,
+      String cardCode) async {
+    final String url =
+        'http://wali.igbcolombia.com:8080/manager/res/app/create-record-geo-location';
+
+    return http.post(
+      Uri.parse(url),
+      headers: <String, String>{'Content-Type': 'application/json'},
+      body: jsonEncode(
+        <String, dynamic>{
+          "slpCode": slpCode,
+          "latitude": latitude,
+          "longitude": longitude,
+          "companyName": companyName,
+          "docType": docType,
+          "cardCode": cardCode,
+        },
+      ),
+    );
+  }
+
+  Future<Position> _activeteLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return new Position(
+          longitude: 0.0,
+          latitude: 0.0,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          altitudeAccuracy: 0.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+        );
+      } else {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        return position;
+      }
+    } catch (e) {
+      return new Position(
+        longitude: 0.0,
+        latitude: 0.0,
+        timestamp: DateTime.now(),
+        accuracy: 0.0,
+        altitude: 0.0,
+        altitudeAccuracy: 0.0,
+        heading: 0.0,
+        headingAccuracy: 0.0,
+        speed: 0.0,
+        speedAccuracy: 0.0,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -287,17 +337,19 @@ class _ClientesPageState extends State<ClientesPage>
             ),
           ),
           bottom: const TabBar(
+            labelColor: const Color.fromRGBO(1, 39, 80, 1),
+            unselectedLabelColor: Colors.white,
             tabs: [
               Tab(
                 child: Text(
                   'Clientes',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(fontSize: 12),
                 ),
               ),
               Tab(
                 child: Text(
                   'Prospecto',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(fontSize: 12),
                 ),
               ),
             ],
@@ -314,60 +366,520 @@ class _ClientesPageState extends State<ClientesPage>
   }
 
   Widget clientes(BuildContext context) {
+    DateTime now = DateTime.now();
+    String year = DateFormat('yyyy').format(now);
+    String monthName = DateFormat('MMMM', 'es_ES').format(now);
+
+    void showHistorialVisitasCliente(
+        BuildContext context, String cardCode, String cardName) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (BuildContext context) {
+          return Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.70,
+            ),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    16,
+                    12,
+                    8,
+                    8,
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Icon(
+                          Icons.history,
+                          color: Color.fromRGBO(
+                            30,
+                            129,
+                            235,
+                            1,
+                          ),
+                          size: 25,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Historial de visitas',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              cardName + "\n" + cardCode,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.view_day_outlined,
+                        size: 18,
+                        color: Colors.black54,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        year + ' - ' + monthName,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${_historialVisitas.length} visitas',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_historialVisitas.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 40,
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.history_toggle_off,
+                          size: 45,
+                          color: Colors.black26,
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          'No hay historial de visitas',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Flexible(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(
+                        12,
+                        0,
+                        12,
+                        20,
+                      ),
+                      shrinkWrap: true,
+                      itemCount: _historialVisitas.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 5),
+                      itemBuilder: (context, index) {
+                        final visita = _historialVisitas[index];
+                        final String numero = visita[0].toString();
+                        final String fecha = visita[1]?.toString() ?? '';
+                        final String hora = visita[2]?.toString() ?? '';
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color.fromRGBO(
+                              250,
+                              251,
+                              253,
+                              1,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.black12,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 34,
+                                height: 34,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: const Color.fromRGBO(
+                                    30,
+                                    129,
+                                    235,
+                                    0.10,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  numero,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromRGBO(
+                                      30,
+                                      129,
+                                      235,
+                                      1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 17,
+                                color: Colors.black54,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  fecha,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              const Icon(
+                                Icons.access_time_outlined,
+                                size: 17,
+                                color: Colors.black54,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                hora,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    void showConfirmVisitDialog(BuildContext context, String cardCode) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          bool isLoading = false;
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: const Text(
+                  '¿Confirmar visita?',
+                  textAlign: TextAlign.center,
+                ),
+                content: isLoading
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Espere por favor...',
+                            style: TextStyle(
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      )
+                    : null,
+                actionsAlignment: MainAxisAlignment.center,
+                actions: [
+                  TextButton(
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            storage.remove('dirEnvio');
+
+                            if (GetStorage().read('itemsPedido') != null) {
+                              itemsPedidoLocal =
+                                  GetStorage().read('itemsPedido');
+                              pedidoLocal = GetStorage().read('pedido');
+                            }
+                            if (pedidoLocal['cardCode'] != cardCode &&
+                                itemsPedidoLocal.isNotEmpty) {
+                              Navigator.pop(context);
+
+                              showAlertDialogItemsInShoppingCart(
+                                  context, cardCode);
+                            } else {
+                              storage.write('estadoPedido', 'nuevo');
+                              storage.write('nit', cardCode);
+                              storage.write('cardCode', cardCode);
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PedidosPage(),
+                                ),
+                              );
+                            }
+                          },
+                    child: const Icon(
+                      Icons.close,
+                      size: 28,
+                      color: Colors.black,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            try {
+                              Position locationData = await _activeteLocation();
+                              if (locationData.latitude == 0.0 ||
+                                  locationData.longitude == 0.0) {
+                                NotificationsService.showSnackbar(
+                                  "Active la ubicación del móvil para poder continuar.",
+                                );
+                                await Geolocator.getCurrentPosition(
+                                  desiredAccuracy: LocationAccuracy.high,
+                                );
+                                if (context.mounted) {
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                }
+                                return;
+                              }
+
+                              http.Response response =
+                                  await _createRecordGeoLocation(
+                                locationData.latitude.toString(),
+                                locationData.longitude.toString(),
+                                GetStorage().read('slpCode'),
+                                GetStorage().read('empresa'),
+                                'V',
+                                cardCode,
+                              );
+
+                              Map<String, dynamic> res =
+                                  jsonDecode(response.body);
+                              if (res['code'] == 0) {
+                                storage.remove('dirEnvio');
+                                if (GetStorage().read('itemsPedido') != null) {
+                                  itemsPedidoLocal =
+                                      GetStorage().read('itemsPedido');
+                                  pedidoLocal = GetStorage().read('pedido');
+                                }
+                                if (pedidoLocal['cardCode'] != cardCode &&
+                                    itemsPedidoLocal.isNotEmpty) {
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+
+                                    showAlertDialogItemsInShoppingCart(
+                                      context,
+                                      cardCode,
+                                    );
+                                  }
+                                } else {
+                                  storage.write(
+                                    'estadoPedido',
+                                    'nuevo',
+                                  );
+                                  storage.write('nit', cardCode);
+                                  storage.write(
+                                    'cardCode',
+                                    cardCode,
+                                  );
+
+                                  if (context.mounted) {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const PedidosPage(),
+                                      ),
+                                    );
+                                  }
+                                }
+                              } else {
+                                NotificationsService.showSnackbar(
+                                  res['content'],
+                                );
+                                if (context.mounted) {
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                }
+                              }
+                            } catch (e) {
+                              NotificationsService.showSnackbar(
+                                "Ups, algo falló. Inténtalo nuevamente.",
+                              );
+                              if (context.mounted) {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                              }
+                            }
+                          },
+                    child: const Icon(
+                      Icons.check,
+                      size: 28,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    }
+
     return SafeArea(
       child: ListView.builder(
         itemCount: _clientes.length,
         itemBuilder: (context, index) {
           final String cardCode = _clientes[index]['cardCode'];
+          final String cardName = _clientes[index]['cardName'] ?? '';
           final bool isLead = cardCode.startsWith('L');
+          final String locationVisit = _clientes[index]['locationVisit'] ?? '';
           return Card(
+            elevation: 1,
+            margin: const EdgeInsets.symmetric(
+              horizontal: 4,
+              vertical: 2,
+            ),
             child: Container(
               color: isLead
                   ? const Color.fromRGBO(230, 230, 230, 1)
                   : const Color.fromRGBO(250, 251, 253, 1),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: ListTile(
-                  title: Text(
-                    '$cardCode - ${_clientes[index]['cardName']}',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: isLead ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                  trailing: TextButton.icon(
-                    onPressed: () {
-                      storage.remove('dirEnvio');
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 0,
+                ),
+                minLeadingWidth: 30,
+                horizontalTitleGap: 5,
+                dense: true,
+                visualDensity: const VisualDensity(
+                  horizontal: 0,
+                  vertical: -2,
+                ),
+                leading: locationVisit == 'Y'
+                    ? InkWell(
+                        onTap: () async {
+                          await _listHistoryVisitByCustomer(
+                              GetStorage().read('slpCode'), cardCode);
+                          if (!mounted) return;
 
-                      if (GetStorage().read('itemsPedido') != null) {
-                        itemsPedidoLocal = GetStorage().read('itemsPedido');
-                        pedidoLocal = GetStorage().read('pedido');
-                      }
-
-                      if (pedidoLocal['cardCode'] != cardCode &&
-                          itemsPedidoLocal.isNotEmpty) {
-                        showAlertDialogItemsInShoppingCart(
-                          context,
-                          cardCode,
-                        );
-                      } else {
-                        storage.write('estadoPedido', 'nuevo');
-                        storage.write('nit', _clientes[index]['nit']);
-                        storage.write('cardCode', cardCode);
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PedidosPage(),
+                          showHistorialVisitasCliente(
+                              context, cardCode, cardName);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: const SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: Icon(
+                            Icons.location_pin,
+                            color: Colors.black54,
+                            size: 22,
                           ),
-                        );
-                      }
-                    },
-                    label: const Text(''),
-                    icon: const Icon(
-                      Icons.add,
-                      color: Colors.black54,
-                    ),
+                        ),
+                      )
+                    : null,
+                title: Text(
+                  '$cardCode' + '\n' + '${_clientes[index]['cardName']}',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: isLead ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                trailing: IconButton(
+                  onPressed: () {
+                    showConfirmVisitDialog(
+                      context,
+                      cardCode,
+                    );
+                  },
+                  tooltip: 'Crear pedido',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(
+                    Icons.add_rounded,
+                    color: Colors.black54,
+                    size: 25,
                   ),
                 ),
               ),
@@ -454,6 +966,7 @@ class _ClientesPageState extends State<ClientesPage>
                 label: 'Documento',
                 type: TextInputType.number,
                 requiredField: true,
+                onlyNumbers: true,
               ),
               _input(
                 controller: razonCtrl,
@@ -465,6 +978,7 @@ class _ClientesPageState extends State<ClientesPage>
                 label: 'Teléfono',
                 type: TextInputType.phone,
                 requiredField: true,
+                onlyNumbers: true,
               ),
               _input(
                 controller: correoCtrl,
@@ -491,7 +1005,6 @@ class _ClientesPageState extends State<ClientesPage>
                     setState(() {
                       departamentoSeleccionado = value;
                     });
-
                     _listMunicipios(departamentoSeleccionado);
                   },
                   validator: (value) =>
@@ -522,8 +1035,8 @@ class _ClientesPageState extends State<ClientesPage>
                 ),
               ),
               _input(
-                controller: ciudadCtrl,
-                label: 'Ciudad',
+                controller: barrioCtrl,
+                label: 'Barrio',
                 requiredField: true,
               ),
               Row(
@@ -792,7 +1305,7 @@ class _ClientesPageState extends State<ClientesPage>
                             "razonSocial": razonCtrl.text.toUpperCase(),
                             "telefono": telefonoCtrl.text,
                             "direccion": direccionCtrl.text,
-                            "ciudad": ciudadCtrl.text.toUpperCase(),
+                            "barrio": barrioCtrl.text.toUpperCase(),
                             "departamento": departamentoSeleccionado.toString(),
                             "municipio": municipioSeleccionado.toString(),
                             "correo": correoCtrl.text.toUpperCase(),
@@ -803,7 +1316,6 @@ class _ClientesPageState extends State<ClientesPage>
                                 await _createCustomerLead(cliente);
                             final Map<String, dynamic> resultado =
                                 jsonDecode(response.body);
-
                             if (resultado["code"] >= 0) {
                               Navigator.pushReplacement(
                                 context,
@@ -828,7 +1340,10 @@ class _ClientesPageState extends State<ClientesPage>
                               );
                               setState(() => btnProspectoActivo = false);
                             }
-                          } catch (e) {}
+                          } catch (e) {
+                            NotificationsService.showSnackbar(
+                                "Ups, algo falló. Inténtalo nuevamente.");
+                          }
                         }
                       },
                 child: Container(
@@ -858,15 +1373,15 @@ class _ClientesPageState extends State<ClientesPage>
     );
   }
 
-  Widget _input({
-    required TextEditingController controller,
-    required String label,
-    TextInputType type = TextInputType.text,
-    bool isEmail = false,
-    bool enabled = true,
-    Function(String)? onChanged,
-    bool requiredField = false,
-  }) {
+  Widget _input(
+      {required TextEditingController controller,
+      required String label,
+      TextInputType type = TextInputType.text,
+      bool isEmail = false,
+      bool enabled = true,
+      Function(String)? onChanged,
+      bool requiredField = false,
+      bool onlyNumbers = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
@@ -874,6 +1389,8 @@ class _ClientesPageState extends State<ClientesPage>
         keyboardType: type,
         enabled: enabled,
         onChanged: onChanged,
+        inputFormatters:
+            onlyNumbers ? [FilteringTextInputFormatter.digitsOnly] : null,
         decoration: const InputDecoration(
           border: OutlineInputBorder(),
           isDense: true,
@@ -882,22 +1399,26 @@ class _ClientesPageState extends State<ClientesPage>
             horizontal: 12,
           ),
         ).copyWith(labelText: label),
-        validator: requiredField
-            ? (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Campo obligatorio';
-                }
-
-                if (isEmail) {
-                  final emailReg = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                  if (!emailReg.hasMatch(value)) {
-                    return 'Correo inválido';
-                  }
-                }
-
-                return null;
+        validator: (value) {
+          if (requiredField && (value == null || value.trim().isEmpty)) {
+            return 'Campo obligatorio';
+          }
+          if (value != null && value.isNotEmpty) {
+            if (isEmail) {
+              final emailReg = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$');
+              if (!emailReg.hasMatch(value)) {
+                return 'Correo inválido';
               }
-            : null,
+            }
+            if (onlyNumbers) {
+              final numberReg = RegExp(r'^[0-9]+$');
+              if (!numberReg.hasMatch(value)) {
+                return 'Solo se permiten números';
+              }
+            }
+          }
+          return null;
+        },
       ),
     );
   }

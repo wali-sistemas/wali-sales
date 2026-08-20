@@ -147,8 +147,12 @@ class _LoginFormState extends State<_LoginForm> {
     }
   }
 
-  Future<http.Response> createRecordGeoLocation(String latitude,
-      String longitude, String slpCode, String companyName, String docType) async {
+  Future<http.Response> createRecordGeoLocation(
+      String latitude,
+      String longitude,
+      String slpCode,
+      String companyName,
+      String docType) async {
     final String url =
         'http://wali.igbcolombia.com:8080/manager/res/app/create-record-geo-location';
 
@@ -340,9 +344,9 @@ class _LoginFormState extends State<_LoginForm> {
                                   loginForm.email,
                                 );
                                 Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => HomePage()));
+                                  context,
+                                  MaterialPageRoute(builder: (_) => HomePage()),
+                                );
                               } else {
                                 NotificationsService.showSnackbar(
                                   res['content'],

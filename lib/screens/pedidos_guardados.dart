@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:productos_app/screens/pedidos_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:productos_app/screens/home_screen.dart';
+import 'package:productos_app/services/notifications_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:productos_app/widgets/carrito.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -138,40 +139,51 @@ class _PedidosGuardadosPageState extends State<PedidosGuardadosPage> {
     setState(() => pedidosG = pedidos);
   }
 
-  void showConfirmOrderSave(BuildContext context, int idOrder, String message) {
+  void showConfirmOrderSave(
+      BuildContext pageContext, int idOrder, String message) {
     showDialog(
-      context: context,
+      context: pageContext,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Row(
-            children: const [
+          title: const Row(
+            children: [
               Icon(Icons.error, color: Colors.orange),
               SizedBox(width: 8),
-              Text("Atención!"),
+              Text("¡Atención!"),
             ],
           ),
           content: Text(message),
           actions: [
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
               child: const Text("NO"),
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
 
-                await actualizarEstadoPedGuardado(idOrder);
-                storage.remove('pedidoGuardado');
+                try {
+                  await actualizarEstadoPedGuardado(idOrder);
+                  await storage.remove('pedidoGuardado');
 
-                if (!mounted) return;
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
-                  (Route<dynamic> route) => false,
-                );
+                  if (!mounted) return;
+
+                  Navigator.of(pageContext).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (_) => HomePage(),
+                    ),
+                    (Route<dynamic> route) => false,
+                  );
+                } catch (e) {
+                  NotificationsService.showSnackbar(
+                    "Ocurrio un error. Intentelo de nuevo.",
+                  );
+                }
               },
-              child: const Text("SI"),
+              child: const Text("SÍ"),
             ),
           ],
         );
