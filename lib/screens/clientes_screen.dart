@@ -521,7 +521,7 @@ class _ClientesPageState extends State<ClientesPage>
                         12,
                         0,
                         12,
-                        20,
+                        80,
                       ),
                       shrinkWrap: true,
                       itemCount: _historialVisitas.length,
