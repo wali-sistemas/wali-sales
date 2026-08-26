@@ -1064,7 +1064,8 @@ class _MyDialogState extends State<MyDialog> {
     }
     // Activar seleccion de bodega para los lubricantes REVO
     if (_itemsGuardados[index]['subgrupo'] == 'LUBRICANTES' &&
-        _itemsGuardados[index]['marca'] == 'REVO LUBRICANTES') {
+        (_itemsGuardados[index]['marca'] == 'REVO LUBRICANTES' ||
+            _itemsGuardados[index]['marca'] == 'MTZ LUBRICANTES')) {
       bodegas = ['Elija una bodega', 'MEDELLÍN', 'BOGOTÁ', 'COTA'];
       isVisibleBod = true;
     }
@@ -1440,8 +1441,10 @@ class _MyDialogState extends State<MyDialog> {
                           0;
 
                       if (_itemsGuardados[index]['subgrupo'] == 'LUBRICANTES' &&
-                          _itemsGuardados[index]['marca'] ==
-                              'REVO LUBRICANTES') {
+                          (_itemsGuardados[index]['marca'] ==
+                                  'REVO LUBRICANTES' ||
+                              _itemsGuardados[index]['marca'] ==
+                                  'MTZ LUBRICANTES')) {
                         final String bodegaLubricante =
                             whsCodeStockItem.toString().trim();
 

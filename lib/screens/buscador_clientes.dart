@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:productos_app/screens/pedidos_screen.dart';
+import 'package:productos_app/services/notifications_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 List clientesGuardados = [];
 List<String> allNames = ['Cliente'];
@@ -43,7 +47,71 @@ class CustomSearchDelegateClientes extends SearchDelegate {
     );
   }
 
-  showAlertDialogItemsInShoppingCart(BuildContext context, String nit) {
+  Future<Position> _activeteLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return new Position(
+          longitude: 0.0,
+          latitude: 0.0,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          altitudeAccuracy: 0.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+        );
+      } else {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        return position;
+      }
+    } catch (e) {
+      return new Position(
+        longitude: 0.0,
+        latitude: 0.0,
+        timestamp: DateTime.now(),
+        accuracy: 0.0,
+        altitude: 0.0,
+        altitudeAccuracy: 0.0,
+        heading: 0.0,
+        headingAccuracy: 0.0,
+        speed: 0.0,
+        speedAccuracy: 0.0,
+      );
+    }
+  }
+
+  Future<http.Response> _createRecordGeoLocation(
+      String latitude,
+      String longitude,
+      String slpCode,
+      String companyName,
+      String docType,
+      String cardCode) async {
+    final String url =
+        'http://wali.igbcolombia.com:8080/manager/res/app/create-record-geo-location';
+
+    return http.post(
+      Uri.parse(url),
+      headers: <String, String>{'Content-Type': 'application/json'},
+      body: jsonEncode(
+        <String, dynamic>{
+          "slpCode": slpCode,
+          "latitude": latitude,
+          "longitude": longitude,
+          "companyName": companyName,
+          "docType": docType,
+          "cardCode": cardCode,
+        },
+      ),
+    );
+  }
+
+  void showAlertDialogItemsInShoppingCart(BuildContext context, String nit) {
     final Widget cancelButton = ElevatedButton(
       onPressed: () {
         Navigator.pop(context);
@@ -100,6 +168,232 @@ class CustomSearchDelegateClientes extends SearchDelegate {
     );
   }
 
+  void showConfirmVisitDialog(BuildContext context, dynamic cliente) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        bool isLoading = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final String cardCode = cliente['cardCode'].toString();
+            return AlertDialog(
+              title: const Text(
+                '¿Confirmar visita?',
+                textAlign: TextAlign.center,
+              ),
+              content: isLoading
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Espere por favor...',
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    )
+                  : null,
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          if (GetStorage().read('itemsPedido') == null) {
+                            storage.remove('itemsPedido');
+                            storage.remove('pedidoGuardado');
+
+                            storage.write('estadoPedido', 'nuevo');
+                            storage.write('nit', cliente['nit']);
+                            storage.write('cardCode', cliente['cardCode']);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PedidosPage(),
+                              ),
+                            );
+                          } else {
+                            pedidoLocal = GetStorage().read('pedido');
+                            itemsPedidoLocal = GetStorage().read('itemsPedido');
+
+                            if (GetStorage().read('estadoPedido') ==
+                                'guardado') {
+                              storage.write('nit', cliente['nit']);
+                              storage.write('cardCode', cliente['cardCode']);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PedidosPage(),
+                                ),
+                              );
+                            } else {
+                              if (pedidoLocal['cardCode'] !=
+                                      cliente['cardCode'] &&
+                                  itemsPedidoLocal.length > 0) {
+                                showAlertDialogItemsInShoppingCart(
+                                  context,
+                                  cliente['cardCode'],
+                                );
+                              } else {
+                                storage.write('estadoPedido', 'nuevo');
+                                storage.write('nit', cliente['nit']);
+                                storage.write('cardCode', cliente['cardCode']);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const PedidosPage(),
+                                  ),
+                                );
+                              }
+                            }
+                          }
+                        },
+                  child: const Icon(
+                    Icons.close,
+                    size: 28,
+                    color: Colors.black,
+                  ),
+                ),
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          setState(() {
+                            isLoading = true;
+                          });
+
+                          try {
+                            Position locationData = await _activeteLocation();
+
+                            if (locationData.latitude == 0.0 ||
+                                locationData.longitude == 0.0) {
+                              NotificationsService.showSnackbar(
+                                "Active la ubicación del móvil para poder continuar.",
+                              );
+
+                              try {
+                                await Geolocator.getCurrentPosition(
+                                  desiredAccuracy: LocationAccuracy.high,
+                                );
+                              } catch (_) {}
+                              if (context.mounted) {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                              }
+                              return;
+                            }
+
+                            http.Response response =
+                                await _createRecordGeoLocation(
+                              locationData.latitude.toString(),
+                              locationData.longitude.toString(),
+                              GetStorage().read('slpCode'),
+                              GetStorage().read('empresa'),
+                              'V',
+                              cardCode,
+                            );
+
+                            Map<String, dynamic> res =
+                                jsonDecode(response.body);
+                            if (res['code'] != 0) {
+                              NotificationsService.showSnackbar(
+                                res['content'] ??
+                                    'No fue posible registrar la visita.',
+                              );
+                              if (context.mounted) {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                              }
+                              return;
+                            }
+
+                            if (GetStorage().read('itemsPedido') == null) {
+                              storage.remove('itemsPedido');
+                              storage.remove('pedidoGuardado');
+
+                              storage.write('estadoPedido', 'nuevo');
+                              storage.write('nit', cliente['nit']);
+                              storage.write('cardCode', cliente['cardCode']);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PedidosPage(),
+                                ),
+                              );
+                            } else {
+                              pedidoLocal = GetStorage().read('pedido');
+                              itemsPedidoLocal =
+                                  GetStorage().read('itemsPedido');
+
+                              if (GetStorage().read('estadoPedido') ==
+                                  'guardado') {
+                                storage.write('nit', cliente['nit']);
+                                storage.write('cardCode', cliente['cardCode']);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const PedidosPage(),
+                                  ),
+                                );
+                              } else {
+                                if (pedidoLocal['cardCode'] !=
+                                        cliente['cardCode'] &&
+                                    itemsPedidoLocal.length > 0) {
+                                  showAlertDialogItemsInShoppingCart(
+                                    context,
+                                    cliente['cardCode'],
+                                  );
+                                } else {
+                                  storage.write('estadoPedido', 'nuevo');
+                                  storage.write('nit', cliente['nit']);
+                                  storage.write(
+                                      'cardCode', cliente['cardCode']);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const PedidosPage(),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          } catch (e) {
+                            NotificationsService.showSnackbar(
+                              "Ups, algo falló. Inténtalo nuevamente.",
+                            );
+
+                            if (context.mounted) {
+                              setState(() {
+                                isLoading = false;
+                              });
+                            }
+                          }
+                        },
+                  child: const Icon(
+                    Icons.check,
+                    size: 28,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget buildResults(BuildContext context) {
     if (GetStorage().read('datosClientes') == null) {
@@ -138,44 +432,7 @@ class CustomSearchDelegateClientes extends SearchDelegate {
               ),
               trailing: TextButton.icon(
                 onPressed: () {
-                  if (GetStorage().read('itemsPedido') == null) {
-                    storage.remove('itemsPedido');
-                    storage.remove('pedidoGuardado');
-
-                    storage.write('estadoPedido', 'nuevo');
-                    storage.write('nit', _clientesBusqueda[index]['nit']);
-                    storage.write(
-                        'cardCode', _clientesBusqueda[index]['cardCode']);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PedidosPage(),
-                      ),
-                    );
-                  } else {
-                    pedidoLocal = GetStorage().read('pedido');
-                    itemsPedidoLocal = GetStorage().read('itemsPedido');
-
-                    if (pedidoLocal['cardCode'] !=
-                            _clientesBusqueda[index]['cardCode'] &&
-                        itemsPedidoLocal.length > 0) {
-                      showAlertDialogItemsInShoppingCart(
-                        context,
-                        _clientesBusqueda[index]['cardCode'],
-                      );
-                    } else {
-                      storage.write('estadoPedido', 'nuevo');
-                      storage.write('nit', _clientesBusqueda[index]['nit']);
-                      storage.write(
-                          'cardCode', _clientesBusqueda[index]['cardCode']);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PedidosPage(),
-                        ),
-                      );
-                    }
-                  }
+                  showConfirmVisitDialog(context, _clientesBusqueda[index]);
                 },
                 label: const Text(''),
                 icon: const Icon(Icons.add),
@@ -219,55 +476,7 @@ class CustomSearchDelegateClientes extends SearchDelegate {
         leading: Icon(query.isEmpty ? Icons.history : Icons.search),
         trailing: TextButton.icon(
           onPressed: () {
-            if (GetStorage().read('itemsPedido') == null) {
-              storage.remove('itemsPedido');
-              storage.remove('pedidoGuardado');
-
-              storage.write('estadoPedido', 'nuevo');
-              storage.write('nit', _clientesBusqueda2[index]['nit']);
-              storage.write('cardCode', _clientesBusqueda2[index]['cardCode']);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PedidosPage(),
-                ),
-              );
-            } else {
-              pedidoLocal = GetStorage().read('pedido');
-              itemsPedidoLocal = GetStorage().read('itemsPedido');
-
-              if (GetStorage().read('estadoPedido') == 'guardado') {
-                storage.write('nit', _clientesBusqueda2[index]['nit']);
-                storage.write(
-                    'cardCode', _clientesBusqueda2[index]['cardCode']);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PedidosPage(),
-                  ),
-                );
-              } else {
-                if (pedidoLocal['cardCode'] !=
-                        _clientesBusqueda2[index]['cardCode'] &&
-                    itemsPedidoLocal.length > 0) {
-                  showAlertDialogItemsInShoppingCart(
-                    context,
-                    _clientesBusqueda2[index]['cardCode'],
-                  );
-                } else {
-                  storage.write('estadoPedido', 'nuevo');
-                  storage.write('nit', _clientesBusqueda2[index]['nit']);
-                  storage.write(
-                      'cardCode', _clientesBusqueda2[index]['cardCode']);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PedidosPage(),
-                    ),
-                  );
-                }
-              }
-            }
+            showConfirmVisitDialog(context, _clientesBusqueda2[index]);
           },
           label: const Text(''),
           icon: const Icon(Icons.add),
