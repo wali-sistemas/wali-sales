@@ -1180,13 +1180,17 @@ class _MyDialogState extends State<MyDialog> {
                             _itemsGuardados[index]['marca'] == 'TIMSUN') {
                           whsCode = '60';
                         } else*/
-                        if (_itemsGuardados[index]['subgrupo'] ==
-                                'LUBRICANTES' &&
-                            _itemsGuardados[index]['marca'] ==
-                                'REVO LUBRICANTES') {
-                          whsCode = '01';
+                        if (empresa == 'VARROC') {
+                          whsCode = '32';
                         } else {
-                          whsCode = '60';
+                          if (_itemsGuardados[index]['subgrupo'] ==
+                                  'LUBRICANTES' &&
+                              _itemsGuardados[index]['marca'] ==
+                                  'REVO LUBRICANTES') {
+                            whsCode = '01';
+                          } else {
+                            whsCode = '60';
+                          }
                         }
                         break;
                       case 'BOGOTÁ':
